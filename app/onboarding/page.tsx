@@ -44,13 +44,20 @@ export default function OnboardingPage() {
         .single();
 
       if (prof) {
-        setProfile(prof as Profile);
-        setFirstName(prof.first_name ?? "");
-        setLastName(prof.last_name ?? "");
-        setDesiredRole(prof.desired_role ?? "");
-      }
+  // ✅ Se il profilo è già completo, l’onboarding non deve comparire
+  if (prof.profile_status === "complete") {
+    window.location.href = "/profile";
+    return;
+  }
 
-      setLoading(false);
+  setProfile(prof as Profile);
+  setFirstName(prof.first_name ?? "");
+  setLastName(prof.last_name ?? "");
+  setDesiredRole(prof.desired_role ?? "");
+}
+
+setLoading(false);
+
     })();
   }, []);
 

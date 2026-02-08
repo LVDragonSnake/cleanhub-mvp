@@ -46,13 +46,13 @@ export default function ProfilePage() {
         return;
       }
 
-      // ✅ Se è azienda, /profile non deve mostrare la UI worker
+      // Se è azienda -> /company
       if ((prof?.user_type ?? "worker") === "company") {
         window.location.href = "/company";
         return;
       }
 
-      // ✅ Se worker ma non ha completato onboarding, manda lì (se lo usi ancora)
+      // Se non completo -> onboarding
       if ((prof?.profile_status ?? "incomplete") !== "complete") {
         window.location.href = "/onboarding";
         return;
@@ -72,10 +72,7 @@ export default function ProfilePage() {
       return;
     }
 
-    const { data, error } = await supabase.storage
-      .from("cvs")
-      .createSignedUrl(profile.cv_url, 60 * 5);
-
+    const { data, error } = await supabase.storage.from("cvs").createSignedUrl(profile.cv_url, 60 * 5);
     if (error) {
       setCvMsg(error.message);
       return;

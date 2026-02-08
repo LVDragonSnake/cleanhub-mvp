@@ -12,7 +12,6 @@ type Profile = {
   profile_status: string | null;
   onboarding_step: number | null;
 
-  // campi worker "flat"
   worker_phone: string | null;
   worker_birth_date: string | null; // yyyy-mm-dd
   worker_birth_city: string | null;
@@ -29,7 +28,6 @@ type Profile = {
   worker_driving_license: string | null;
   worker_has_car: boolean | null;
 
-  // JSON per roba "complessa"
   worker_data: any;
 };
 
@@ -45,27 +43,26 @@ export default function OnboardingWorkerPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [meEmail, setMeEmail] = useState("");
   const [me, setMe] = useState<any>(null);
-
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [meEmail, setMeEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // step (1..3)
+  const [profile, setProfile] = useState<Profile | null>(null);
+
   const step = useMemo(() => {
     const s = profile?.onboarding_step ?? 1;
     return Math.min(Math.max(s, 1), 3);
   }, [profile?.onboarding_step]);
 
-  // STEP 1 - form
+  // STEP 1
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
   const [phone, setPhone] = useState("");
-  const [birthDate, setBirthDate] = useState(""); // yyyy-mm-dd
+  const [birthDate, setBirthDate] = useState("");
   const [birthCity, setBirthCity] = useState("");
   const [birthCountry, setBirthCountry] = useState("Italia");
-  const [gender, setGender] = useState<string>("");
+  const [gender, setGender] = useState("");
 
   const [resAddress, setResAddress] = useState("");
   const [resCity, setResCity] = useState("");
@@ -77,7 +74,7 @@ export default function OnboardingWorkerPage() {
   const [drivingLicense, setDrivingLicense] = useState("");
   const [hasCar, setHasCar] = useState(false);
 
-  // STEP 2 - lingue / preferenze (in worker_data)
+  // STEP 2 (in worker_data)
   const [lang1, setLang1] = useState("Italiano");
   const [lang1Compr, setLang1Compr] = useState("Buono");
   const [lang1Speak, setLang1Speak] = useState("Buono");
@@ -156,27 +153,24 @@ export default function OnboardingWorkerPage() {
       const p = prof as Profile;
       setProfile(p);
 
-      // prefill STEP1
+      // prefill step 1
       setFirstName(p.first_name ?? "");
       setLastName(p.last_name ?? "");
-
       setPhone(p.worker_phone ?? "");
       setBirthDate(p.worker_birth_date ?? "");
       setBirthCity(p.worker_birth_city ?? "");
       setBirthCountry(p.worker_birth_country ?? "Italia");
       setGender(p.worker_gender ?? "");
-
       setResAddress(p.worker_res_address ?? "");
       setResCity(p.worker_res_city ?? "");
       setResProvince(p.worker_res_province ?? "");
       setResCap(p.worker_res_cap ?? "");
-
       setCitizenship(p.worker_citizenship ?? "");
       setPermitType(p.worker_permit_type ?? "");
       setDrivingLicense(p.worker_driving_license ?? "");
       setHasCar(Boolean(p.worker_has_car ?? false));
 
-      // prefill STEP2 da worker_data
+      // prefill step 2 da worker_data
       const wd = (p.worker_data ?? {}) as any;
       const langs = Array.isArray(wd.languages) ? wd.languages : [];
       if (langs[0]) {
@@ -204,10 +198,8 @@ export default function OnboardingWorkerPage() {
 
   async function saveStep(nextStep: number) {
     if (!profile?.id) return;
-
     setError(null);
 
-    // validazione minima step 1
     if (nextStep >= 2) {
       if (!firstName.trim()) return setError("Inserisci il nome.");
       if (!lastName.trim()) return setError("Inserisci il cognome.");
@@ -254,25 +246,20 @@ export default function OnboardingWorkerPage() {
       .update({
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-
         worker_phone: phone.trim(),
         worker_birth_date: birthDate,
         worker_birth_city: birthCity.trim() || null,
         worker_birth_country: birthCountry.trim() || null,
         worker_gender: gender || null,
-
         worker_res_address: resAddress.trim() || null,
         worker_res_city: resCity.trim(),
         worker_res_province: resProvince.trim(),
         worker_res_cap: resCap.trim(),
-
         worker_citizenship: citizenship.trim() || null,
         worker_permit_type: permitType.trim() || null,
         worker_driving_license: drivingLicense.trim() || null,
         worker_has_car: hasCar,
-
         worker_data,
-
         onboarding_step: nextStep,
         profile_status: isComplete ? "complete" : "incomplete",
       })
@@ -288,24 +275,9 @@ export default function OnboardingWorkerPage() {
       p
         ? ({
             ...p,
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            worker_phone: phone.trim(),
-            worker_birth_date: birthDate,
-            worker_birth_city: birthCity.trim() || null,
-            worker_birth_country: birthCountry.trim() || null,
-            worker_gender: gender || null,
-            worker_res_address: resAddress.trim() || null,
-            worker_res_city: resCity.trim(),
-            worker_res_province: resProvince.trim(),
-            worker_res_cap: resCap.trim(),
-            worker_citizenship: citizenship.trim() || null,
-            worker_permit_type: permitType.trim() || null,
-            worker_driving_license: drivingLicense.trim() || null,
-            worker_has_car: hasCar,
-            worker_data,
             onboarding_step: nextStep,
             profile_status: isComplete ? "complete" : "incomplete",
+            worker_data,
           } as Profile)
         : p
     );
@@ -340,7 +312,6 @@ export default function OnboardingWorkerPage() {
         </div>
       )}
 
-      {/* STEP 1 */}
       {step === 1 && (
         <>
           <div style={{ marginTop: 14 }} className="small">
@@ -354,16 +325,16 @@ export default function OnboardingWorkerPage() {
           <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
 
           <label>Telefono *</label>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Es. 3331234567" />
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} />
 
           <label>Data di nascita *</label>
           <input value={birthDate} onChange={(e) => setBirthDate(e.target.value)} type="date" />
 
           <label>Città di nascita</label>
-          <input value={birthCity} onChange={(e) => setBirthCity(e.target.value)} placeholder="Es. Milano" />
+          <input value={birthCity} onChange={(e) => setBirthCity(e.target.value)} />
 
           <label>Paese di nascita</label>
-          <input value={birthCountry} onChange={(e) => setBirthCountry(e.target.value)} placeholder="Es. Italia" />
+          <input value={birthCountry} onChange={(e) => setBirthCountry(e.target.value)} />
 
           <label>Sesso</label>
           <select value={gender} onChange={(e) => setGender(e.target.value)}>
@@ -378,33 +349,29 @@ export default function OnboardingWorkerPage() {
           </div>
 
           <label>Indirizzo</label>
-          <input value={resAddress} onChange={(e) => setResAddress(e.target.value)} placeholder="Via, civico" />
+          <input value={resAddress} onChange={(e) => setResAddress(e.target.value)} />
 
           <label>Città (residenza) *</label>
           <input value={resCity} onChange={(e) => setResCity(e.target.value)} />
 
           <label>Provincia (residenza) *</label>
-          <input value={resProvince} onChange={(e) => setResProvince(e.target.value)} placeholder="Es. RM" />
+          <input value={resProvince} onChange={(e) => setResProvince(e.target.value)} />
 
           <label>CAP (residenza) *</label>
-          <input value={resCap} onChange={(e) => setResCap(e.target.value)} placeholder="Es. 00100" />
+          <input value={resCap} onChange={(e) => setResCap(e.target.value)} />
 
           <div style={{ marginTop: 14 }} className="small">
             <b>Documenti</b>
           </div>
 
           <label>Cittadinanza</label>
-          <input value={citizenship} onChange={(e) => setCitizenship(e.target.value)} placeholder="Es. Italiana" />
+          <input value={citizenship} onChange={(e) => setCitizenship(e.target.value)} />
 
           <label>Permesso di soggiorno (tipologia)</label>
-          <input
-            value={permitType}
-            onChange={(e) => setPermitType(e.target.value)}
-            placeholder="Es. A tempo indeterminato"
-          />
+          <input value={permitType} onChange={(e) => setPermitType(e.target.value)} />
 
           <label>Patente</label>
-          <input value={drivingLicense} onChange={(e) => setDrivingLicense(e.target.value)} placeholder="Es. B / Nessuna" />
+          <input value={drivingLicense} onChange={(e) => setDrivingLicense(e.target.value)} />
 
           <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10 }}>
             <input type="checkbox" checked={hasCar} onChange={(e) => setHasCar(e.target.checked)} style={{ margin: 0 }} />
@@ -417,7 +384,6 @@ export default function OnboardingWorkerPage() {
         </>
       )}
 
-      {/* STEP 2 */}
       {step === 2 && (
         <>
           <div style={{ marginTop: 14 }} className="small">
@@ -426,52 +392,12 @@ export default function OnboardingWorkerPage() {
 
           <label>Lingua 1</label>
           <input value={lang1} onChange={(e) => setLang1(e.target.value)} />
-          <div className="small" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <select value={lang1Compr} onChange={(e) => setLang1Compr(e.target.value)}>
-              <option>Base</option>
-              <option>Nella media</option>
-              <option>Buono</option>
-              <option>Ottimo</option>
-            </select>
-            <select value={lang1Speak} onChange={(e) => setLang1Speak(e.target.value)}>
-              <option>Base</option>
-              <option>Nella media</option>
-              <option>Buono</option>
-              <option>Ottimo</option>
-            </select>
-            <select value={lang1Write} onChange={(e) => setLang1Write(e.target.value)}>
-              <option>Base</option>
-              <option>Nella media</option>
-              <option>Buono</option>
-              <option>Ottimo</option>
-            </select>
-          </div>
 
           <label style={{ marginTop: 10 }}>Lingua 2 (opzionale)</label>
           <input value={lang2} onChange={(e) => setLang2(e.target.value)} />
-          <div className="small" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <select value={lang2Compr} onChange={(e) => setLang2Compr(e.target.value)}>
-              <option>Base</option>
-              <option>Nella media</option>
-              <option>Buono</option>
-              <option>Ottimo</option>
-            </select>
-            <select value={lang2Speak} onChange={(e) => setLang2Speak(e.target.value)}>
-              <option>Base</option>
-              <option>Nella media</option>
-              <option>Buono</option>
-              <option>Ottimo</option>
-            </select>
-            <select value={lang2Write} onChange={(e) => setLang2Write(e.target.value)}>
-              <option>Base</option>
-              <option>Nella media</option>
-              <option>Buono</option>
-              <option>Ottimo</option>
-            </select>
-          </div>
 
           <div style={{ marginTop: 14 }} className="small">
-            <b>Esperienze / preferenze (base)</b>
+            <b>Preferenze</b>
           </div>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
@@ -480,11 +406,7 @@ export default function OnboardingWorkerPage() {
           </label>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <input
-              type="checkbox"
-              checked={workClientContact}
-              onChange={(e) => setWorkClientContact(e.target.checked)}
-            />
+            <input type="checkbox" checked={workClientContact} onChange={(e) => setWorkClientContact(e.target.checked)} />
             Lavoro a contatto con persone/clienti
           </label>
 
@@ -499,11 +421,7 @@ export default function OnboardingWorkerPage() {
           </label>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <input
-              type="checkbox"
-              checked={workPublicPlaces}
-              onChange={(e) => setWorkPublicPlaces(e.target.checked)}
-            />
+            <input type="checkbox" checked={workPublicPlaces} onChange={(e) => setWorkPublicPlaces(e.target.checked)} />
             Lavoro in luoghi pubblici
           </label>
 
@@ -518,15 +436,10 @@ export default function OnboardingWorkerPage() {
         </>
       )}
 
-      {/* STEP 3 */}
       {step === 3 && (
         <>
           <div style={{ marginTop: 14 }} className="small">
             <b>Conferma</b>
-          </div>
-
-          <div className="small" style={{ marginTop: 10 }}>
-            Clicca “Completa” per chiudere l’onboarding.
           </div>
 
           <div style={{ display: "flex", gap: 10, marginTop: 12 }}>

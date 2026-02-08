@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient";
 
 type ProfileRow = {
   id: string;
@@ -67,9 +67,7 @@ export default function AdminPage() {
 
     const { data: profs, error: e } = await supabase
       .from("profiles")
-      .select(
-        "id,email,first_name,last_name,profile_status,onboarding_step,cv_url,user_type,created_at"
-      )
+      .select("id,email,first_name,last_name,profile_status,onboarding_step,cv_url,user_type,created_at")
       .order("created_at", { ascending: false })
       .limit(500);
 
@@ -85,9 +83,7 @@ export default function AdminPage() {
       if (onlyComplete && r.profile_status !== "complete") return false;
 
       if (!qq) return true;
-      const fullName = `${r.first_name ?? ""} ${r.last_name ?? ""}`
-        .trim()
-        .toLowerCase();
+      const fullName = `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim().toLowerCase();
       const em = (r.email ?? "").toLowerCase();
       return fullName.includes(qq) || em.includes(qq);
     });
@@ -97,53 +93,32 @@ export default function AdminPage() {
     setError(null);
     if (!row.cv_url) return;
 
-    const { data, error } = await supabase.storage
-      .from("cvs")
-      .createSignedUrl(row.cv_url, 60 * 5);
-
+    const { data, error } = await supabase.storage.from("cvs").createSignedUrl(row.cv_url, 60 * 5);
     if (error) return setError(error.message);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   }
 
-  // ✅ Azione “Rendi azienda” (chiama una API server-side sicura)
-  async function setUserType(row: ProfileRow, newType: "worker" | "company") {
+  async function setUserType(targetUserId: string, userType: "worker" | "company") {
+    setError(null);
+
     try {
-      setError(null);
-
-      const ok = window.confirm(
-        `Confermi che vuoi impostare questo profilo come "${newType}"?\n\n${row.email ?? row.id}`
-      );
-      if (!ok) return;
-
-      const { data: sess } = await supabase.auth.getSession();
-      const token = sess.session?.access_token;
-      if (!token) {
-        setError("Sessione non valida. Fai logout/login e riprova.");
-        return;
-      }
-
       const res = await fetch("/api/admin/set-user-type", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId: row.id, userType: newType }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId, userType }),
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json = await res.json();
 
       if (!res.ok) {
-        setError(json?.error || "Errore durante aggiornamento user_type");
+        setError(json?.error || `HTTP ${res.status}`);
         return;
       }
 
-      // aggiorna UI senza ricaricare tutto
-      setRows((prev) =>
-        prev.map((r) => (r.id === row.id ? { ...r, user_type: newType } : r))
-      );
+      // refresh list
+      await refresh();
     } catch (e: any) {
-      setError(e?.message || "Errore sconosciuto");
+      setError(e?.message || "Errore chiamando API");
     }
   }
 
@@ -223,20 +198,12 @@ export default function AdminPage() {
         />
 
         <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <input
-            type="checkbox"
-            checked={onlyWithCv}
-            onChange={(e) => setOnlyWithCv(e.target.checked)}
-          />
+          <input type="checkbox" checked={onlyWithCv} onChange={(e) => setOnlyWithCv(e.target.checked)} />
           Solo con CV
         </label>
 
         <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <input
-            type="checkbox"
-            checked={onlyComplete}
-            onChange={(e) => setOnlyComplete(e.target.checked)}
-          />
+          <input type="checkbox" checked={onlyComplete} onChange={(e) => setOnlyComplete(e.target.checked)} />
           Solo completi
         </label>
 
@@ -252,38 +219,23 @@ export default function AdminPage() {
         <table className="small" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                Nome
-              </th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                Email
-              </th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                Tipo
-              </th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                Status
-              </th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                CV
-              </th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                Azioni
-              </th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Nome</th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Email</th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Tipo</th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Status</th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>CV</th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Azioni</th>
             </tr>
           </thead>
+
           <tbody>
             {filtered.map((r) => (
               <tr key={r.id}>
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
                   {`${r.first_name ?? ""} ${r.last_name ?? ""}`.trim() || "—"}
                 </td>
-                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
-                  {r.email ?? "—"}
-                </td>
-                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
-                  {r.user_type ?? "—"}
-                </td>
+                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>{r.email ?? "—"}</td>
+                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>{r.user_type ?? "worker"}</td>
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
                   {r.profile_status ?? "—"} (step {r.onboarding_step ?? "-"})
                 </td>
@@ -304,8 +256,8 @@ export default function AdminPage() {
                 </td>
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button onClick={() => setUserType(r, "company")}>Rendi azienda</button>
-                    <button onClick={() => setUserType(r, "worker")}>Rendi worker</button>
+                    <button onClick={() => setUserType(r.id, "company")}>Rendi azienda</button>
+                    <button onClick={() => setUserType(r.id, "worker")}>Rendi worker</button>
                   </div>
                 </td>
               </tr>

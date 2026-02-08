@@ -3,62 +3,44 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
-type Profile = {
+type Row = {
   id: string;
   email: string | null;
   first_name: string | null;
   last_name: string | null;
-  user_type: string | null; // "worker" | "company"
   profile_status: string | null;
-  onboarding_step: number | null;
-  created_at?: string | null;
+  cv_url: string | null;
 };
 
 export default function CompanyPage() {
   const [loading, setLoading] = useState(true);
-  const [meEmail, setMeEmail] = useState<string>("");
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [rows, setRows] = useState<Row[]>([]);
+  const [q, setQ] = useState("");
+  const [onlyComplete, setOnlyComplete] = useState(true);
+  const [onlyWithCv, setOnlyWithCv] = useState(true);
 
   useEffect(() => {
     (async () => {
-      setError(null);
-
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
         window.location.href = "/login";
         return;
       }
-
-      const email = (data.user.email || "").toLowerCase();
-      setMeEmail(email);
-
-      const { data: prof, error: e } = await supabase
-        .from("profiles")
-        .select("id,email,first_name,last_name,user_type,profile_status,onboarding_step,created_at")
-        .eq("id", data.user.id)
-        .single();
-
-      if (e) {
-        setError(e.message);
-        setLoading(false);
-        return;
-      }
-
-      // Protezione: se non è company, fuori
-      if ((prof?.user_type ?? "worker") !== "company") {
-        window.location.href = "/profile";
-        return;
-      }
-
-      setProfile(prof as Profile);
-      setLoading(false);
+      load();
     })();
   }, []);
 
-  async function logout() {
-    await supabase.auth.signOut();
-    window.location.href = "/";
+  async function load() {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (onlyComplete) params.set("complete", "1");
+    if (onlyWithCv) params.set("cv", "1");
+
+    const res = await fetch(`/api/company/search-workers?${params.toString()}`);
+    const json = await res.json();
+    setRows(json.rows || []);
+    setLoading(false);
   }
 
   if (loading) return <div>Caricamento...</div>;
@@ -67,37 +49,57 @@ export default function CompanyPage() {
     <div className="card">
       <h2>Area Azienda</h2>
 
-      {error && (
-        <div className="small" style={{ marginTop: 10 }}>
-          {error}
-        </div>
-      )}
-
-      <div className="small" style={{ marginTop: 10 }}>
-        Loggato come: <b>{meEmail}</b>
+      <div className="small" style={{ marginBottom: 10 }}>
+        <input
+          placeholder="Cerca nome o email"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        <button onClick={load}>Cerca</button>
       </div>
 
-      <div className="small" style={{ marginTop: 12 }}>
-        <div>
-          Tipo: <b>{profile?.user_type ?? "—"}</b>
-        </div>
-        <div>
-          Stato profilo: <b>{profile?.profile_status ?? "—"}</b> (step{" "}
-          {profile?.onboarding_step ?? "—"})
-        </div>
-      </div>
+      <label>
+        <input
+          type="checkbox"
+          checked={onlyComplete}
+          onChange={(e) => setOnlyComplete(e.target.checked)}
+        />{" "}
+        Solo completi
+      </label>
+
+      <label style={{ marginLeft: 10 }}>
+        <input
+          type="checkbox"
+          checked={onlyWithCv}
+          onChange={(e) => setOnlyWithCv(e.target.checked)}
+        />{" "}
+        Solo con CV
+      </label>
+
+      <table className="small" style={{ width: "100%", marginTop: 14 }}>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>CV</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.id}>
+              <td>{`${r.first_name ?? ""} ${r.last_name ?? ""}`}</td>
+              <td>{r.email}</td>
+              <td>{r.profile_status}</td>
+              <td>{r.cv_url ? "✅" : "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
       <div className="nav" style={{ marginTop: 14 }}>
         <a href="/profile">Profilo</a>
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            logout();
-          }}
-        >
-          Logout
-        </a>
+        <a href="/logout">Logout</a>
       </div>
     </div>
   );

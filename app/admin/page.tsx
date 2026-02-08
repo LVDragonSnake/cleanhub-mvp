@@ -85,9 +85,7 @@ export default function AdminPage() {
       if (onlyComplete && r.profile_status !== "complete") return false;
 
       if (!qq) return true;
-      const fullName = `${r.first_name ?? ""} ${r.last_name ?? ""}`
-        .trim()
-        .toLowerCase();
+      const fullName = `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim().toLowerCase();
       const em = (r.email ?? "").toLowerCase();
       return fullName.includes(qq) || em.includes(qq);
     });
@@ -105,7 +103,7 @@ export default function AdminPage() {
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   }
 
-  async function setUserType(targetUserId: string, userType: "worker" | "company") {
+  async function setUserType(targetUserId: string, userType: "worker" | "company" | "client") {
     setError(null);
 
     try {
@@ -195,6 +193,7 @@ export default function AdminPage() {
 
       <div style={{ marginTop: 14 }} />
 
+      {/* CONTROLLI: layout pulito, checkbox allineati */}
       <div
         className="small"
         style={{
@@ -208,17 +207,16 @@ export default function AdminPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Cerca nome o email..."
-          style={{ minWidth: 260 }}
+          style={{ minWidth: 240 }}
         />
 
-        {/* ✅ checkbox allineate */}
         <label
           style={{
-            display: "inline-flex",
-            gap: 8,
+            display: "flex",
             alignItems: "center",
+            gap: 8,
             whiteSpace: "nowrap",
-            userSelect: "none",
+            cursor: "pointer",
           }}
         >
           <input
@@ -232,11 +230,11 @@ export default function AdminPage() {
 
         <label
           style={{
-            display: "inline-flex",
-            gap: 8,
+            display: "flex",
             alignItems: "center",
+            gap: 8,
             whiteSpace: "nowrap",
-            userSelect: "none",
+            cursor: "pointer",
           }}
         >
           <input
@@ -260,24 +258,12 @@ export default function AdminPage() {
         <table className="small" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                Nome
-              </th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                Email
-              </th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                Tipo
-              </th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                Status
-              </th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                CV
-              </th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
-                Azioni
-              </th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Nome</th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Email</th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Tipo</th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Status</th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>CV</th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Azioni</th>
             </tr>
           </thead>
 
@@ -287,9 +273,7 @@ export default function AdminPage() {
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
                   {`${r.first_name ?? ""} ${r.last_name ?? ""}`.trim() || "—"}
                 </td>
-                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
-                  {r.email ?? "—"}
-                </td>
+                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>{r.email ?? "—"}</td>
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
                   {r.user_type ?? "worker"}
                 </td>
@@ -315,6 +299,7 @@ export default function AdminPage() {
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button onClick={() => setUserType(r.id, "company")}>Rendi azienda</button>
                     <button onClick={() => setUserType(r.id, "worker")}>Rendi worker</button>
+                    <button onClick={() => setUserType(r.id, "client")}>Rendi cliente</button>
                   </div>
                 </td>
               </tr>

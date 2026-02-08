@@ -14,15 +14,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid userType" }, { status: 400 });
     }
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
     if (!url || !serviceKey) {
       return NextResponse.json({ error: "Missing Supabase env vars" }, { status: 500 });
     }
 
     const sb = createClient(url, serviceKey);
 
-    const { error } = await sb.from("profiles").update({ user_type: userType }).eq("id", targetUserId);
+    const { error } = await sb
+      .from("profiles")
+      .update({ user_type: userType })
+      .eq("id", targetUserId);
+
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

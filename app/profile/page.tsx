@@ -113,7 +113,14 @@ export default function ProfilePage() {
 
       <div style={{ marginTop: 14 }} />
 
-      <button onClick={generateCvLink}>Genera link CV</button>
+      {profile?.cv_url ? (
+  <button onClick={generateCvLink}>Genera link CV</button>
+) : (
+  <div className="small" style={{ marginTop: 10 }}>
+    Carica un CV per generare il link.
+  </div>
+)}
+
 
       {cvLink && (
         <div className="small" style={{ marginTop: 10 }}>

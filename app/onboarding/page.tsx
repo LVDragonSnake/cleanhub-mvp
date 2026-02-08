@@ -39,6 +39,17 @@ function isAdminEmail(email?: string | null) {
   return !!email && list.includes((email || "").toLowerCase());
 }
 
+/**
+ * IMPORTANTE:
+ * Deve essere UNA stringa literal (non concatenazioni con +),
+ * così Supabase/TS non ti tipizza `data` come GenericStringError.
+ */
+const PROFILE_SELECT = `id,email,first_name,last_name,user_type,profile_status,onboarding_step,
+worker_phone,worker_birth_date,worker_birth_city,worker_birth_country,worker_gender,
+worker_res_address,worker_res_city,worker_res_province,worker_res_cap,
+worker_citizenship,worker_permit_type,worker_driving_license,worker_has_car,
+worker_data` as const;
+
 export default function OnboardingWorkerPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -98,17 +109,10 @@ export default function OnboardingWorkerPage() {
       setMeEmail((auth.user.email || "").toLowerCase());
 
       const { data: prof, error: e } = await supabase
-  .from("profiles")
-  .select(
-    "id,email,first_name,last_name,user_type,profile_status,onboarding_step," +
-      "worker_phone,worker_birth_date,worker_birth_city,worker_birth_country,worker_gender," +
-      "worker_res_address,worker_res_city,worker_res_province,worker_res_cap," +
-      "worker_citizenship,worker_permit_type,worker_driving_license,worker_has_car," +
-      "worker_data"
-  )
-  .eq("id", auth.user.id)
-  .single();
-
+        .from("profiles")
+        .select(PROFILE_SELECT)
+        .eq("id", auth.user.id)
+        .single();
 
       if (e) {
         setError(e.message);
@@ -116,7 +120,10 @@ export default function OnboardingWorkerPage() {
         return;
       }
 
-      const t = (prof?.user_type ?? "worker") as string;
+      // Cast "a prova di TS" (evita il problema GenericStringError in build)
+      const p = prof as unknown as Profile;
+
+      const t = (p.user_type ?? "worker") as string;
       if (t === "company") {
         window.location.href = "/company-onboarding";
         return;
@@ -126,7 +133,6 @@ export default function OnboardingWorkerPage() {
         return;
       }
 
-      const p = prof as Profile;
       setProfile(p);
 
       // prefill step 1

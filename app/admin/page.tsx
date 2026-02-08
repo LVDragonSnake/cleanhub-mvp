@@ -206,14 +206,14 @@ export default function AdminPage() {
           style={{ minWidth: 220 }}
         />
 
-        <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <input type="checkbox" checked={onlyWithCv} onChange={(e) => setOnlyWithCv(e.target.checked)} />
-          Solo con CV
-        </label>
+        <label style={{ display: "flex", gap: 6, alignItems: "center", cursor: "pointer" }}>
+  <input type="checkbox" checked={onlyWithCv} onChange={(e) => setOnlyWithCv(e.target.checked)} />
+  <span>Solo con CV</span>
+</label>
 
-        <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <label style={{ display: "flex", gap: 6, alignItems: "center", cursor: "pointer" }}>
           <input type="checkbox" checked={onlyComplete} onChange={(e) => setOnlyComplete(e.target.checked)} />
-          Solo completi
+          <span>Solo completi</span>
         </label>
 
         <button onClick={refresh}>Aggiorna</button>

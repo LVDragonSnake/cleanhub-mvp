@@ -374,7 +374,12 @@ export default function OnboardingWorkerPage() {
           <input value={drivingLicense} onChange={(e) => setDrivingLicense(e.target.value)} />
 
           <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10 }}>
-            <input type="checkbox" checked={hasCar} onChange={(e) => setHasCar(e.target.checked)} style={{ margin: 0 }} />
+            <input
+              type="checkbox"
+              checked={hasCar}
+              onChange={(e) => setHasCar(e.target.checked)}
+              style={{ margin: 0 }}
+            />
             Automunito
           </label>
 
@@ -401,12 +406,20 @@ export default function OnboardingWorkerPage() {
           </div>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-            <input type="checkbox" checked={expCleaning} onChange={(e) => setExpCleaning(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={expCleaning}
+              onChange={(e) => setExpCleaning(e.target.checked)}
+            />
             Esperienza nel campo delle pulizie
           </label>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <input type="checkbox" checked={workClientContact} onChange={(e) => setWorkClientContact(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={workClientContact}
+              onChange={(e) => setWorkClientContact(e.target.checked)}
+            />
             Lavoro a contatto con persone/clienti
           </label>
 
@@ -421,7 +434,11 @@ export default function OnboardingWorkerPage() {
           </label>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <input type="checkbox" checked={workPublicPlaces} onChange={(e) => setWorkPublicPlaces(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={workPublicPlaces}
+              onChange={(e) => setWorkPublicPlaces(e.target.checked)}
+            />
             Lavoro in luoghi pubblici
           </label>
 

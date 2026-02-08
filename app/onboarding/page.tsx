@@ -273,6 +273,44 @@ export default function OnboardingWorkerPage() {
 
   if (loading) return <div>Caricamento...</div>;
 
+async function completePack(pack: string) {
+  if (!profile) return;
+
+  const progress = profile.worker_progress || { packs: {} };
+
+  if (progress.packs?.[pack]) return;
+
+  const newPoints = (profile.clean_points || 0) + 100;
+  const newLevel = Math.min(5, 1 + Math.floor(newPoints / 150));
+
+  const newProgress = {
+    ...progress,
+    packs: {
+      ...progress.packs,
+      [pack]: true,
+    },
+  };
+
+  await supabase
+    .from("profiles")
+    .update({
+      clean_points: newPoints,
+      level: newLevel,
+      clean_level: newLevel,
+      worker_progress: newProgress,
+    })
+    .eq("id", profile.id);
+
+  setProfile({
+    ...profile,
+    clean_points: newPoints,
+    level: newLevel,
+    clean_level: newLevel,
+    worker_progress: newProgress,
+  });
+}
+
+  
   return (
     <div className="card">
       <h2>Onboarding Operatore</h2>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
 type Profile = {
@@ -8,7 +8,7 @@ type Profile = {
   email: string | null;
   first_name: string | null;
   last_name: string | null;
-  user_type: string | null; // "worker" | "company"
+  user_type: string | null; // worker | company | client
   profile_status: string | null;
   onboarding_step: number | null;
   cv_url: string | null;
@@ -22,6 +22,15 @@ export default function ProfilePage() {
 
   const [cvLink, setCvLink] = useState<string | null>(null);
   const [cvMsg, setCvMsg] = useState<string | null>(null);
+
+  const isAdmin = useMemo(() => {
+    const raw = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").toLowerCase();
+    const list = raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return list.includes((me?.email || "").toLowerCase());
+  }, [me?.email]);
 
   useEffect(() => {
     (async () => {
@@ -46,15 +55,9 @@ export default function ProfilePage() {
         return;
       }
 
-      // Se è azienda -> /company
+      // redirect in base al tipo
       if ((prof?.user_type ?? "worker") === "company") {
         window.location.href = "/company";
-        return;
-      }
-
-      // Se non completo -> onboarding
-      if ((prof?.profile_status ?? "incomplete") !== "complete") {
-        window.location.href = "/onboarding";
         return;
       }
 
@@ -72,7 +75,10 @@ export default function ProfilePage() {
       return;
     }
 
-    const { data, error } = await supabase.storage.from("cvs").createSignedUrl(profile.cv_url, 60 * 5);
+    const { data, error } = await supabase.storage
+      .from("cvs")
+      .createSignedUrl(profile.cv_url, 60 * 5);
+
     if (error) {
       setCvMsg(error.message);
       return;
@@ -113,14 +119,8 @@ export default function ProfilePage() {
 
       <div style={{ marginTop: 14 }} />
 
-      {profile?.cv_url ? (
-  <button onClick={generateCvLink}>Genera link CV</button>
-) : (
-  <div className="small" style={{ marginTop: 10 }}>
-    Carica un CV per generare il link.
-  </div>
-)}
-
+      {/* bottone SOLO se esiste cv_url */}
+      {profile?.cv_url ? <button onClick={generateCvLink}>Genera link CV</button> : null}
 
       {cvLink && (
         <div className="small" style={{ marginTop: 10 }}>
@@ -130,28 +130,25 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {cvMsg && <div className="small" style={{ marginTop: 10 }}>{cvMsg}</div>}
+      {cvMsg && (
+        <div className="small" style={{ marginTop: 10 }}>
+          {cvMsg}
+        </div>
+      )}
 
       <div className="nav" style={{ marginTop: 14 }}>
-  <a href="/onboarding?edit=1">Modifica onboarding</a>
-
-  {(process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
-    .toLowerCase()
-    .split(",")
-    .map((s) => s.trim())
-    .includes((me?.email || "").toLowerCase()) && <a href="/admin">Admin</a>}
-
-  <a
-    href="#"
-    onClick={(e) => {
-      e.preventDefault();
-      logout();
-    }}
-  >
-    Logout
-  </a>
-</div>
-
+        <a href="/onboarding?edit=1">Modifica onboarding</a>
+        {isAdmin ? <a href="/admin">Admin</a> : null}
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            logout();
+          }}
+        >
+          Logout
+        </a>
+      </div>
     </div>
   );
 }

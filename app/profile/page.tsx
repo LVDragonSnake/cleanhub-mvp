@@ -75,7 +75,6 @@ export default function ProfilePage() {
       <div className="small">
         Nome: {profile.first_name} {profile.last_name}
       </div>
-      <div className="small">Ruolo: {profile.desired_role}</div>
       <div className="small">CV: {profile.cv_url ? "Caricato ✅" : "Non caricato"}</div>
 
       {profile.cv_url && (

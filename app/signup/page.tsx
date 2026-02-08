@@ -3,68 +3,40 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
+type AccountType = "worker" | "company" | "client";
+
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const [accountType, setAccountType] = useState<"worker" | "company" | "client">("worker");
+  const [accountType, setAccountType] = useState<AccountType>("worker");
 
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
     setOk(null);
-    setLoading(true);
 
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return setErr(error.message);
 
-      if (error) {
-        setErr(error.message);
-        setLoading(false);
-        return;
-      }
-
-      const user = data.user || data.session?.user;
-      if (!user) {
-        setOk("Account creato! Ora fai login.");
-        setLoading(false);
-        return;
-      }
-
-      // Salva il tipo account su profiles (upsert per evitare casino se la riga non esiste ancora)
-      const { error: profErr } = await supabase
+    const user = data.user ?? data.session?.user;
+    if (user) {
+      // aggiorna user_type nel profilo (presuppone che la riga profilo esista già)
+      const { error: upErr } = await supabase
         .from("profiles")
-        .upsert(
-          {
-            id: user.id,
-            email: user.email ?? email,
-            user_type: accountType,
-          },
-          { onConflict: "id" }
-        );
+        .update({ user_type: accountType })
+        .eq("id", user.id);
 
-      if (profErr) {
-        setErr(profErr.message);
-        setLoading(false);
-        return;
-      }
+      if (upErr) return setErr(upErr.message);
 
-      // Redirect
       if (accountType === "company") window.location.href = "/company";
-      else window.location.href = "/profile"; // "client" per ora va su /profile
-
-    } catch (e: any) {
-      setErr(e?.message || "Errore signup");
-    } finally {
-      setLoading(false);
+      else window.location.href = "/profile"; // client per ora va su /profile (poi faremo /client)
+      return;
     }
+
+    setOk("Account creato! Ora fai login.");
   }
 
   return (
@@ -73,12 +45,7 @@ export default function SignupPage() {
 
       <form onSubmit={onSubmit}>
         <label>Email</label>
-        <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          type="email"
-          required
-        />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
 
         <label>Password</label>
         <input
@@ -88,47 +55,53 @@ export default function SignupPage() {
           required
         />
 
-        <div className="small" style={{ marginTop: 12 }}>
-          <div style={{ marginBottom: 6 }}>
+        <fieldset
+          style={{
+            marginTop: 14,
+            padding: 12,
+            border: "1px solid #eee",
+            borderRadius: 10,
+          }}
+        >
+          <legend className="small" style={{ padding: "0 6px" }}>
             <b>Tipo account</b>
+          </legend>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <label style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <input
+                type="radio"
+                name="accountType"
+                checked={accountType === "worker"}
+                onChange={() => setAccountType("worker")}
+              />
+              <span>Operatore del pulito (cerca lavoro)</span>
+            </label>
+
+            <label style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <input
+                type="radio"
+                name="accountType"
+                checked={accountType === "company"}
+                onChange={() => setAccountType("company")}
+              />
+              <span>Impresa di pulizie</span>
+            </label>
+
+            <label style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <input
+                type="radio"
+                name="accountType"
+                checked={accountType === "client"}
+                onChange={() => setAccountType("client")}
+              />
+              <span>Cliente finale</span>
+            </label>
           </div>
+        </fieldset>
 
-          <label style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-            <input
-              type="radio"
-              name="accountType"
-              checked={accountType === "worker"}
-              onChange={() => setAccountType("worker")}
-            />
-            Operatore del pulito (cerca lavoro)
-          </label>
-
-          <label style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-            <input
-              type="radio"
-              name="accountType"
-              checked={accountType === "company"}
-              onChange={() => setAccountType("company")}
-            />
-            Impresa di pulizie
-          </label>
-
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              type="radio"
-              name="accountType"
-              checked={accountType === "client"}
-              onChange={() => setAccountType("client")}
-            />
-            Cliente finale
-          </label>
-        </div>
-
-        <div style={{ marginTop: 12 }}>
-          <button type="submit" disabled={loading}>
-            {loading ? "Creazione..." : "Crea account"}
-          </button>
-        </div>
+        <div style={{ marginTop: 14 }} />
+        <button type="submit">Crea account</button>
 
         {err && <div className="error">{err}</div>}
         {ok && <div className="ok">{ok}</div>}

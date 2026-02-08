@@ -67,9 +67,7 @@ export default function AdminPage() {
 
     const { data: profs, error: e } = await supabase
       .from("profiles")
-      .select(
-        "id,email,first_name,last_name,profile_status,onboarding_step,cv_url,user_type,created_at"
-      )
+      .select("id,email,first_name,last_name,profile_status,onboarding_step,cv_url,user_type,created_at")
       .order("created_at", { ascending: false })
       .limit(500);
 
@@ -95,10 +93,7 @@ export default function AdminPage() {
     setError(null);
     if (!row.cv_url) return;
 
-    const { data, error } = await supabase.storage
-      .from("cvs")
-      .createSignedUrl(row.cv_url, 60 * 5);
-
+    const { data, error } = await supabase.storage.from("cvs").createSignedUrl(row.cv_url, 60 * 5);
     if (error) return setError(error.message);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   }
@@ -178,6 +173,22 @@ export default function AdminPage() {
 
   if (loading) return <div>Caricamento...</div>;
 
+  const checkLabelStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    whiteSpace: "nowrap",
+    cursor: "pointer",
+    lineHeight: 1,
+  };
+
+  const checkInputStyle: React.CSSProperties = {
+    width: 16,
+    height: 16,
+    margin: 0,
+    flexShrink: 0,
+  };
+
   return (
     <div className="card">
       <h2>Admin</h2>
@@ -193,7 +204,7 @@ export default function AdminPage() {
 
       <div style={{ marginTop: 14 }} />
 
-      {/* CONTROLLI: layout pulito, checkbox allineati */}
+      {/* CONTROLLI */}
       <div
         className="small"
         style={{
@@ -210,40 +221,24 @@ export default function AdminPage() {
           style={{ minWidth: 240 }}
         />
 
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            whiteSpace: "nowrap",
-            cursor: "pointer",
-          }}
-        >
+        <label style={checkLabelStyle}>
           <input
             type="checkbox"
             checked={onlyWithCv}
             onChange={(e) => setOnlyWithCv(e.target.checked)}
-            style={{ margin: 0 }}
+            style={checkInputStyle}
           />
-          Solo con CV
+          <span>Solo con CV</span>
         </label>
 
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            whiteSpace: "nowrap",
-            cursor: "pointer",
-          }}
-        >
+        <label style={checkLabelStyle}>
           <input
             type="checkbox"
             checked={onlyComplete}
             onChange={(e) => setOnlyComplete(e.target.checked)}
-            style={{ margin: 0 }}
+            style={checkInputStyle}
           />
-          Solo completi
+          <span>Solo completi</span>
         </label>
 
         <button onClick={refresh}>Aggiorna</button>
@@ -274,9 +269,7 @@ export default function AdminPage() {
                   {`${r.first_name ?? ""} ${r.last_name ?? ""}`.trim() || "—"}
                 </td>
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>{r.email ?? "—"}</td>
-                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
-                  {r.user_type ?? "worker"}
-                </td>
+                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>{r.user_type ?? "worker"}</td>
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
                   {r.profile_status ?? "—"} (step {r.onboarding_step ?? "-"})
                 </td>

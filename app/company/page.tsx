@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient";
 
 type Profile = {
   id: string;
   email: string | null;
   first_name: string | null;
   last_name: string | null;
-  user_type: string | null; // "worker" | "company" | null
+  user_type: string | null;
   profile_status: string | null;
   onboarding_step: number | null;
   created_at?: string | null;
@@ -45,11 +45,9 @@ export default function CompanyPage() {
         return;
       }
 
-      // Protezione: se non è company, fuori
-      if (prof?.user_type !== "company") {
-        if (prof?.user_type === "worker") window.location.href = "/profile";
-        else if (prof?.user_type === "admin") window.location.href = "/admin";
-        else window.location.href = "/";
+      // Se non è company, fuori
+      if ((prof?.user_type ?? "worker") !== "company") {
+        window.location.href = "/profile";
         return;
       }
 
@@ -69,24 +67,18 @@ export default function CompanyPage() {
     <div className="card">
       <h2>Area Azienda</h2>
 
-      <div className="small" style={{ marginTop: 8 }}>
-        Loggato come: <b>{meEmail}</b>
-      </div>
-
       {error && (
         <div className="small" style={{ marginTop: 10 }}>
           {error}
         </div>
       )}
 
-      <div className="small" style={{ marginTop: 12 }}>
-        <div>
-          Tipo: <b>{profile?.user_type ?? "—"}</b>
-        </div>
-        <div>
-          Stato profilo: <b>{profile?.profile_status ?? "—"}</b> (step{" "}
-          {profile?.onboarding_step ?? "—"})
-        </div>
+      <div className="small" style={{ marginTop: 10 }}>
+        Loggato come: <b>{meEmail}</b>
+      </div>
+
+      <div className="small" style={{ marginTop: 10 }}>
+        Stato profilo: <b>{profile?.profile_status ?? "—"}</b>
       </div>
 
       <div className="small" style={{ marginTop: 12 }}>

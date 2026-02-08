@@ -11,13 +11,12 @@ type ProfileRow = {
   profile_status: string | null;
   onboarding_step: number | null;
   cv_url: string | null;
-  user_type: string;
+  user_type: string | null;
   created_at?: string | null;
 };
 
 function csvEscape(value: any) {
   const s = String(value ?? "");
-  // Escape quotes by doubling them, wrap in quotes if needed
   if (s.includes('"') || s.includes(",") || s.includes("\n")) {
     return `"${s.replace(/"/g, '""')}"`;
   }
@@ -86,7 +85,9 @@ export default function AdminPage() {
       if (onlyComplete && r.profile_status !== "complete") return false;
 
       if (!qq) return true;
-      const fullName = `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim().toLowerCase();
+      const fullName = `${r.first_name ?? ""} ${r.last_name ?? ""}`
+        .trim()
+        .toLowerCase();
       const em = (r.email ?? "").toLowerCase();
       return fullName.includes(qq) || em.includes(qq);
     });
@@ -98,10 +99,52 @@ export default function AdminPage() {
 
     const { data, error } = await supabase.storage
       .from("cvs")
-      .createSignedUrl(row.cv_url, 60 * 5); // 5 minuti
+      .createSignedUrl(row.cv_url, 60 * 5);
 
     if (error) return setError(error.message);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  }
+
+  // ✅ Azione “Rendi azienda” (chiama una API server-side sicura)
+  async function setUserType(row: ProfileRow, newType: "worker" | "company") {
+    try {
+      setError(null);
+
+      const ok = window.confirm(
+        `Confermi che vuoi impostare questo profilo come "${newType}"?\n\n${row.email ?? row.id}`
+      );
+      if (!ok) return;
+
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) {
+        setError("Sessione non valida. Fai logout/login e riprova.");
+        return;
+      }
+
+      const res = await fetch("/api/admin/set-user-type", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId: row.id, userType: newType }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setError(json?.error || "Errore durante aggiornamento user_type");
+        return;
+      }
+
+      // aggiorna UI senza ricaricare tutto
+      setRows((prev) =>
+        prev.map((r) => (r.id === row.id ? { ...r, user_type: newType } : r))
+      );
+    } catch (e: any) {
+      setError(e?.message || "Errore sconosciuto");
+    }
   }
 
   function exportCsv() {
@@ -224,6 +267,9 @@ export default function AdminPage() {
               <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
                 CV
               </th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
+                Azioni
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -236,7 +282,7 @@ export default function AdminPage() {
                   {r.email ?? "—"}
                 </td>
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
-                  {r.user_type}
+                  {r.user_type ?? "—"}
                 </td>
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
                   {r.profile_status ?? "—"} (step {r.onboarding_step ?? "-"})
@@ -255,6 +301,12 @@ export default function AdminPage() {
                   ) : (
                     "—"
                   )}
+                </td>
+                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button onClick={() => setUserType(r, "company")}>Rendi azienda</button>
+                    <button onClick={() => setUserType(r, "worker")}>Rendi worker</button>
+                  </div>
                 </td>
               </tr>
             ))}

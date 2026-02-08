@@ -1,41 +1,72 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [err, setErr] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setErr(null);
+  const adminEmails = useMemo(() => {
+    const raw = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").trim();
+    return raw
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+  }, []);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return setErr(error.message);
+  useEffect(() => {
+    // Se già loggato, instrada
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) await routeAfterAuth(data.user.id, data.user.email ?? "");
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adminEmails]);
 
-    window.location.href = "/onboarding";
+  async function routeAfterAuth(userId: string, userEmail: string) {
+    const em = (userEmail || "").toLowerCase();
+    if (adminEmails.includes(em)) {
+      window.location.href = "/admin";
+      return;
+    }
+
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("user_type,profile_status,onboarding_step")
+      .eq("id", userId)
+      .single();
+
+    const userType = prof?.user_type ?? null;
+
+    if (userType === "company") {
+      window.location.href = "/company";
+      return;
+    }
+
+    // worker (default)
+    // se non completo, onboarding; altrimenti profile
+    if (prof?.profile_status !== "complete") {
+      window.location.href = "/onboarding";
+      return;
+    }
+    window.location.href = "/profile";
   }
 
-  return (
-    <div className="card">
-      <h2>Login</h2>
+  async function doLogin() {
+    setMsg(null);
+    setLoading(true);
 
-      <form onSubmit={onSubmit}>
-        <label>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
 
-        <label>Password</label>
-        <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
+    setLoading(false);
 
-        <button type="submit">Entra</button>
+    if (error) return setMsg(error.message);
+    if (!data.user) return setMsg("Login non riuscito.");
 
-        {err && <div className="error">{err}</div>}
-        <div className="small">
-          Non hai un account? <a href="/signup">Crea account</a>
-        </div>
-      </form>
-    </div>
-  );
-}
+    await rou

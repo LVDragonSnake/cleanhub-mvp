@@ -8,6 +8,7 @@ type AccountType = "worker" | "company" | "client";
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [accountType, setAccountType] = useState<AccountType>("worker");
 
   const [err, setErr] = useState<string | null>(null);
@@ -20,48 +21,44 @@ export default function SignupPage() {
     setOk(null);
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    // 1) crea utente
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
     if (error) {
       setLoading(false);
       return setErr(error.message);
     }
 
-    // Supabase può richiedere conferma email: in quel caso user può essere null
-    const user = data.user ?? data.session?.user;
+    // 2) prova a prendere l'utente (dipende se supabase ti crea subito sessione o richiede conferma email)
+    const user = data.user ?? data.session?.user ?? null;
 
-    if (user) {
-      // Upsert profilo (così non esplode se la riga esiste già)
-      const { error: upErr } = await supabase.from("profiles").upsert(
-        {
-          id: user.id,
-          email: user.email ?? email,
-          user_type: accountType, // worker | company | client
-          profile_status: "incomplete",
-          onboarding_step: 1,
-        },
-        { onConflict: "id" }
-      );
-
-      if (upErr) {
-        setLoading(false);
-        return setErr(upErr.message);
-      }
-
-      // Redirect in base al tipo
-      if (accountType === "company") {
-        window.location.href = "/company";
-      } else if (accountType === "client") {
-        // per ora lo trattiamo come worker, poi faremo /client
-        window.location.href = "/profile";
-      } else {
-        window.location.href = "/profile";
-      }
-      return;
+    // Se NON ho user subito (email confirmation ON), salvo la scelta in locale.
+    // Poi la app la applicherà al primo login (lo faremo in /profile o /onboarding).
+    if (!user) {
+      localStorage.setItem("pending_user_type", accountType);
+      setLoading(false);
+      return setOk("Account creato! Controlla l’email (se richiesta) e poi fai login.");
     }
 
-    // Caso “email confirmation required”
+    // 3) aggiorna profilo (user_type)
+    const { error: updErr } = await supabase
+      .from("profiles")
+      .update({ user_type: accountType })
+      .eq("id", user.id);
+
+    if (updErr) {
+      setLoading(false);
+      return setErr(updErr.message);
+    }
+
+    // 4) redirect
     setLoading(false);
-    setOk("Account creato! Controlla la mail per confermare, poi fai login.");
+    if (accountType === "company") window.location.href = "/company-onboarding";
+    else if (accountType === "client") window.location.href = "/client-onboarding";
+    else window.location.href = "/onboarding";
   }
 
   return (
@@ -75,44 +72,46 @@ export default function SignupPage() {
         <label>Password</label>
         <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
 
-        <div style={{ marginTop: 12 }}>
-          <div className="small" style={{ marginBottom: 6 }}>
+        <div style={{ marginTop: 14, padding: 12, border: "1px solid #eee", borderRadius: 12 }}>
+          <div className="small" style={{ marginBottom: 8 }}>
             <b>Tipo account</b>
           </div>
 
-          <label style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-            <input
-              type="radio"
-              name="accountType"
-              checked={accountType === "worker"}
-              onChange={() => setAccountType("worker")}
-            />
-            Operatore del pulito (cerca lavoro)
-          </label>
+          <div className="radioGroup">
+            <label className="radioRow">
+              <input
+                type="radio"
+                name="accountType"
+                checked={accountType === "worker"}
+                onChange={() => setAccountType("worker")}
+              />
+              <span>Operatore del pulito (cerca lavoro)</span>
+            </label>
 
-          <label style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-            <input
-              type="radio"
-              name="accountType"
-              checked={accountType === "company"}
-              onChange={() => setAccountType("company")}
-            />
-            Impresa di pulizie
-          </label>
+            <label className="radioRow">
+              <input
+                type="radio"
+                name="accountType"
+                checked={accountType === "company"}
+                onChange={() => setAccountType("company")}
+              />
+              <span>Impresa di pulizie</span>
+            </label>
 
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              type="radio"
-              name="accountType"
-              checked={accountType === "client"}
-              onChange={() => setAccountType("client")}
-            />
-            Cliente finale
-          </label>
+            <label className="radioRow">
+              <input
+                type="radio"
+                name="accountType"
+                checked={accountType === "client"}
+                onChange={() => setAccountType("client")}
+              />
+              <span>Cliente finale</span>
+            </label>
+          </div>
         </div>
 
         <button type="submit" disabled={loading} style={{ marginTop: 12 }}>
-          {loading ? "Creazione..." : "Crea account"}
+          {loading ? "Creo account..." : "Crea account"}
         </button>
 
         {err && <div className="error">{err}</div>}

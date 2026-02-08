@@ -13,39 +13,49 @@ export default function LoginPage() {
     setMsg(null);
     setLoading(true);
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
 
-      if (error) {
-        setMsg(error.message);
-        return;
-      }
-      if (!data.user) {
-        setMsg("Login non riuscito.");
-        return;
-      }
-
-      // dopo login manda sempre a /profile (da lì fai redirect a /company se serve)
-      window.location.href = "/profile";
-    } catch (e: any) {
-      setMsg(e?.message || "Errore login");
-    } finally {
+    if (error || !data.user) {
+      setMsg(error?.message || "Login non riuscito");
       setLoading(false);
+      return;
     }
+
+    // 🔽 QUI decidiamo dove mandarlo
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_type, onboarding_step")
+      .eq("id", data.user.id)
+      .single();
+
+    if (profile?.user_type === "company") {
+      window.location.href = "/company";
+      return;
+    }
+
+    if (profile?.user_type === "client") {
+      window.location.href = "/client";
+      return;
+    }
+
+    // worker
+    if (!profile?.onboarding_step || profile.onboarding_step < 3) {
+      window.location.href = "/profile"; // dashboard operatore
+    } else {
+      window.location.href = "/profile"; // profilo completo
+    }
+
+    setLoading(false);
   }
 
   return (
     <div className="card">
       <h2>Login</h2>
 
-      {msg && (
-        <div className="small" style={{ marginTop: 10 }}>
-          {msg}
-        </div>
-      )}
+      {msg && <div className="small">{msg}</div>}
 
       <label>Email</label>
       <input value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -57,12 +67,11 @@ export default function LoginPage() {
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      <div style={{ marginTop: 14 }} />
       <button onClick={onLogin} disabled={loading}>
         {loading ? "Accesso..." : "Accedi"}
       </button>
 
-      <div className="nav" style={{ marginTop: 14 }}>
+      <div className="nav">
         <a href="/signup">Crea account</a>
       </div>
     </div>

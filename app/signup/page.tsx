@@ -26,14 +26,18 @@ export default function SignupPage() {
       return setErr(error.message);
     }
 
-    const user = data.user || data.session?.user;
+    // Supabase può richiedere conferma email: in quel caso user può essere null
+    const user = data.user ?? data.session?.user;
+
     if (user) {
-      // aggiorna/crea profilo
+      // Upsert profilo (così non esplode se la riga esiste già)
       const { error: upErr } = await supabase.from("profiles").upsert(
         {
           id: user.id,
-          email: (user.email || email).toLowerCase(),
-          user_type: accountType,
+          email: user.email ?? email,
+          user_type: accountType, // worker | company | client
+          profile_status: "incomplete",
+          onboarding_step: 1,
         },
         { onConflict: "id" }
       );
@@ -43,14 +47,21 @@ export default function SignupPage() {
         return setErr(upErr.message);
       }
 
-      // redirect
-      if (accountType === "company") window.location.href = "/company";
-      else window.location.href = "/profile"; // per ora "client" va su /profile
+      // Redirect in base al tipo
+      if (accountType === "company") {
+        window.location.href = "/company";
+      } else if (accountType === "client") {
+        // per ora lo trattiamo come worker, poi faremo /client
+        window.location.href = "/profile";
+      } else {
+        window.location.href = "/profile";
+      }
       return;
     }
 
+    // Caso “email confirmation required”
     setLoading(false);
-    setOk("Account creato! Ora fai login.");
+    setOk("Account creato! Controlla la mail per confermare, poi fai login.");
   }
 
   return (
@@ -59,100 +70,50 @@ export default function SignupPage() {
 
       <form onSubmit={onSubmit}>
         <label>Email</label>
-        <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          type="email"
-          required
-          autoComplete="email"
-        />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
 
         <label>Password</label>
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type="password"
-          required
-          autoComplete="new-password"
-        />
+        <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
 
-        {/* BOX radio (allineato, testo dentro al box) */}
-        <div
-          style={{
-            marginTop: 14,
-            padding: 12,
-            border: "1px solid #eee",
-            borderRadius: 12,
-          }}
-        >
-          <div className="small" style={{ marginBottom: 10 }}>
+        <div style={{ marginTop: 12 }}>
+          <div className="small" style={{ marginBottom: 6 }}>
             <b>Tipo account</b>
           </div>
 
-          <label
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 10,
-              cursor: "pointer",
-              marginBottom: 10,
-            }}
-          >
+          <label style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
             <input
               type="radio"
               name="accountType"
               checked={accountType === "worker"}
               onChange={() => setAccountType("worker")}
-              style={{ marginTop: 2 }}
             />
-            <span style={{ lineHeight: 1.25 }}>
-              Operatore del pulito <span className="small">(cerca lavoro)</span>
-            </span>
+            Operatore del pulito (cerca lavoro)
           </label>
 
-          <label
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 10,
-              cursor: "pointer",
-              marginBottom: 10,
-            }}
-          >
+          <label style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
             <input
               type="radio"
               name="accountType"
               checked={accountType === "company"}
               onChange={() => setAccountType("company")}
-              style={{ marginTop: 2 }}
             />
-            <span style={{ lineHeight: 1.25 }}>Impresa di pulizie</span>
+            Impresa di pulizie
           </label>
 
-          <label
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 10,
-              cursor: "pointer",
-            }}
-          >
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input
               type="radio"
               name="accountType"
               checked={accountType === "client"}
               onChange={() => setAccountType("client")}
-              style={{ marginTop: 2 }}
             />
-            <span style={{ lineHeight: 1.25 }}>Cliente finale</span>
+            Cliente finale
           </label>
         </div>
 
-        <div style={{ marginTop: 14 }}>
-          <button type="submit" disabled={loading}>
-            {loading ? "Creazione..." : "Crea account"}
-          </button>
-        </div>
+        <button type="submit" disabled={loading} style={{ marginTop: 12 }}>
+          {loading ? "Creazione..." : "Crea account"}
+        </button>
 
         {err && <div className="error">{err}</div>}
         {ok && <div className="ok">{ok}</div>}

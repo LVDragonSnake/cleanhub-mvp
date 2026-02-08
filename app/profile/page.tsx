@@ -126,18 +126,25 @@ export default function ProfilePage() {
       {cvMsg && <div className="small" style={{ marginTop: 10 }}>{cvMsg}</div>}
 
       <div className="nav" style={{ marginTop: 14 }}>
-        <a href="/onboarding?edit=1">Modifica onboarding</a>
-        <a href="/admin">Admin</a>
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            logout();
-          }}
-        >
-          Logout
-        </a>
-      </div>
+  <a href="/onboarding?edit=1">Modifica onboarding</a>
+
+  {(process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
+    .toLowerCase()
+    .split(",")
+    .map((s) => s.trim())
+    .includes((me?.email || "").toLowerCase()) && <a href="/admin">Admin</a>}
+
+  <a
+    href="#"
+    onClick={(e) => {
+      e.preventDefault();
+      logout();
+    }}
+  >
+    Logout
+  </a>
+</div>
+
     </div>
   );
 }

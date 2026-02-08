@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 
 type Profile = {
@@ -8,13 +9,15 @@ type Profile = {
   email: string | null;
   first_name: string | null;
   last_name: string | null;
-  // desired_role: rimosso dall'UI (può restare nel DB, ma qui non ci serve)
   onboarding_step: number | null;
   profile_status: string | null;
   cv_url: string | null;
 };
 
 export default function OnboardingPage() {
+  const searchParams = useSearchParams();
+  const editMode = searchParams.get("edit") === "1";
+
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -43,8 +46,8 @@ export default function OnboardingPage() {
         .single();
 
       if (prof) {
-        // ✅ Se il profilo è già completo, l’onboarding non deve comparire
-        if (prof.profile_status === "complete") {
+        // ✅ Se profilo completo e NON siamo in edit mode: niente onboarding
+        if (prof.profile_status === "complete" && !editMode) {
           window.location.href = "/profile";
           return;
         }
@@ -56,20 +59,26 @@ export default function OnboardingPage() {
 
       setLoading(false);
     })();
-  }, []);
+  }, [editMode]);
 
-  async function saveStep1() {
+  async function saveBaseData(nextStep?: number) {
     if (!userId) return;
     setMessage(null);
 
+    const payload: any = {
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+    };
+
+    // Se siamo nel flusso onboarding, possiamo avanzare step
+    if (!editMode && nextStep) {
+      payload.onboarding_step = nextStep;
+      payload.profile_status = "incomplete";
+    }
+
     const { error, data } = await supabase
       .from("profiles")
-      .update({
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        onboarding_step: 2,
-        profile_status: "incomplete",
-      })
+      .update(payload)
       .eq("id", userId)
       .select("*")
       .single();
@@ -77,25 +86,32 @@ export default function OnboardingPage() {
     if (error) return setMessage(error.message);
 
     setProfile(data as Profile);
-    setMessage("Step 1 salvato ✅");
+    setMessage(editMode ? "Dati aggiornati ✅" : "Step 1 salvato ✅");
   }
 
-  async function uploadCvAndFinish() {
+  async function finishWithoutCv() {
     if (!userId) return;
     setMessage(null);
 
-    // Se non carica CV, può comunque completare in Fase 1
-    if (!cvFile) {
-      const { error, data } = await supabase
-        .from("profiles")
-        .update({ onboarding_step: 3, profile_status: "complete" })
-        .eq("id", userId)
-        .select("*")
-        .single();
+    const { error, data } = await supabase
+      .from("profiles")
+      .update({ onboarding_step: 3, profile_status: "complete" })
+      .eq("id", userId)
+      .select("*")
+      .single();
 
-      if (error) return setMessage(error.message);
-      setProfile(data as Profile);
-      window.location.href = "/profile";
+    if (error) return setMessage(error.message);
+
+    setProfile(data as Profile);
+    window.location.href = "/profile";
+  }
+
+  async function uploadCvAndFinishOrUpdate() {
+    if (!userId) return;
+    setMessage(null);
+
+    if (!cvFile) {
+      setMessage("Seleziona un PDF prima di caricare.");
       return;
     }
 
@@ -111,6 +127,24 @@ export default function OnboardingPage() {
 
     if (up.error) return setMessage(up.error.message);
 
+    // In edit mode: aggiorniamo solo cv_url (profilo resta complete)
+    if (editMode) {
+      const { error, data } = await supabase
+        .from("profiles")
+        .update({ cv_url: filePath })
+        .eq("id", userId)
+        .select("*")
+        .single();
+
+      if (error) return setMessage(error.message);
+
+      setProfile(data as Profile);
+      setCvFile(null);
+      setMessage("CV aggiornato ✅");
+      return;
+    }
+
+    // Flusso onboarding normale: completa profilo
     const { error, data } = await supabase
       .from("profiles")
       .update({
@@ -135,6 +169,51 @@ export default function OnboardingPage() {
 
   if (loading) return <div>Caricamento...</div>;
 
+  // ✅ EDIT MODE (profilo completo): editor semplice
+  if (editMode) {
+    return (
+      <div className="card">
+        <h2>Modifica profilo</h2>
+        <div className="small">Aggiorna i dati e/o sostituisci il CV.</div>
+
+        <label>Nome</label>
+        <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+
+        <label>Cognome</label>
+        <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
+
+        <button onClick={() => saveBaseData()}>Salva dati</button>
+
+        <div style={{ marginTop: 14 }} />
+
+        <label>CV (PDF) — sostituisci</label>
+        <input
+          type="file"
+          accept="application/pdf"
+          onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
+        />
+
+        <button onClick={uploadCvAndFinishOrUpdate}>Carica nuovo CV</button>
+
+        {message && <div className="small">{message}</div>}
+
+        <div className="nav" style={{ marginTop: 14 }}>
+          <a href="/profile">Torna al profilo</a>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              logout();
+            }}
+          >
+            Logout
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ ONBOARDING MODE (profilo non completo): flusso guidato
   return (
     <div className="card">
       <h2>Onboarding</h2>
@@ -148,7 +227,7 @@ export default function OnboardingPage() {
           <label>Cognome</label>
           <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
 
-          <button onClick={saveStep1}>Salva e continua</button>
+          <button onClick={() => saveBaseData(2)}>Salva e continua</button>
         </>
       )}
 
@@ -161,9 +240,11 @@ export default function OnboardingPage() {
             onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
           />
 
-          <button onClick={uploadCvAndFinish}>
-            {cvFile ? "Carica CV e completa" : "Salta e completa"}
+          <button onClick={uploadCvAndFinishOrUpdate}>
+            {cvFile ? "Carica CV e completa" : "Carica CV e completa"}
           </button>
+
+          <button onClick={finishWithoutCv}>Salta e completa</button>
         </>
       )}
 

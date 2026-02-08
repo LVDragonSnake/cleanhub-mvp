@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 
 type Profile = {
@@ -15,10 +14,9 @@ type Profile = {
 };
 
 export default function OnboardingPage() {
-  const searchParams = useSearchParams();
-  const editMode = searchParams.get("edit") === "1";
-
   const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
 
@@ -32,6 +30,11 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     (async () => {
+      // ✅ edit=1 letto in modo “a prova di Next”
+      const params = new URLSearchParams(window.location.search);
+      const isEdit = params.get("edit") === "1";
+      setEditMode(isEdit);
+
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
         window.location.href = "/login";
@@ -46,8 +49,8 @@ export default function OnboardingPage() {
         .single();
 
       if (prof) {
-        // ✅ Se profilo completo e NON siamo in edit mode: niente onboarding
-        if (prof.profile_status === "complete" && !editMode) {
+        // ✅ Se profilo completo e NON in edit mode: fuori da onboarding
+        if (prof.profile_status === "complete" && !isEdit) {
           window.location.href = "/profile";
           return;
         }
@@ -59,7 +62,7 @@ export default function OnboardingPage() {
 
       setLoading(false);
     })();
-  }, [editMode]);
+  }, []);
 
   async function saveBaseData(nextStep?: number) {
     if (!userId) return;
@@ -70,7 +73,7 @@ export default function OnboardingPage() {
       last_name: lastName.trim(),
     };
 
-    // Se siamo nel flusso onboarding, possiamo avanzare step
+    // se onboarding normale, avanza step
     if (!editMode && nextStep) {
       payload.onboarding_step = nextStep;
       payload.profile_status = "incomplete";
@@ -106,7 +109,7 @@ export default function OnboardingPage() {
     window.location.href = "/profile";
   }
 
-  async function uploadCvAndFinishOrUpdate() {
+  async function uploadCv() {
     if (!userId) return;
     setMessage(null);
 
@@ -127,7 +130,7 @@ export default function OnboardingPage() {
 
     if (up.error) return setMessage(up.error.message);
 
-    // In edit mode: aggiorniamo solo cv_url (profilo resta complete)
+    // edit mode: aggiorna solo cv_url
     if (editMode) {
       const { error, data } = await supabase
         .from("profiles")
@@ -144,7 +147,7 @@ export default function OnboardingPage() {
       return;
     }
 
-    // Flusso onboarding normale: completa profilo
+    // onboarding normale: completa
     const { error, data } = await supabase
       .from("profiles")
       .update({
@@ -169,7 +172,7 @@ export default function OnboardingPage() {
 
   if (loading) return <div>Caricamento...</div>;
 
-  // ✅ EDIT MODE (profilo completo): editor semplice
+  // ✅ EDIT MODE
   if (editMode) {
     return (
       <div className="card">
@@ -193,7 +196,7 @@ export default function OnboardingPage() {
           onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
         />
 
-        <button onClick={uploadCvAndFinishOrUpdate}>Carica nuovo CV</button>
+        <button onClick={uploadCv}>Carica nuovo CV</button>
 
         {message && <div className="small">{message}</div>}
 
@@ -213,7 +216,7 @@ export default function OnboardingPage() {
     );
   }
 
-  // ✅ ONBOARDING MODE (profilo non completo): flusso guidato
+  // ✅ ONBOARDING MODE
   return (
     <div className="card">
       <h2>Onboarding</h2>
@@ -240,10 +243,7 @@ export default function OnboardingPage() {
             onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
           />
 
-          <button onClick={uploadCvAndFinishOrUpdate}>
-            {cvFile ? "Carica CV e completa" : "Carica CV e completa"}
-          </button>
-
+          <button onClick={uploadCv}>Carica CV e completa</button>
           <button onClick={finishWithoutCv}>Salta e completa</button>
         </>
       )}

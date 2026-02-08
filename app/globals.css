@@ -71,3 +71,33 @@ a { color: #111827; }
 .topnav a:hover {
   text-decoration: underline;
 }
+
+/* --- UI helpers (checkbox/radio alignment) --- */
+.inlineCheck {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
+}
+
+.inlineCheck input {
+  margin: 0;
+  transform: translateY(1px);
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.radioRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.radioRow input {
+  margin-top: 3px;
+}

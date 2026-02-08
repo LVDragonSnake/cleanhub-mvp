@@ -93,10 +93,7 @@ export default function AdminPage() {
     setError(null);
     if (!row.cv_url) return;
 
-    const { data, error } = await supabase.storage
-      .from("cvs")
-      .createSignedUrl(row.cv_url, 60 * 5);
-
+    const { data, error } = await supabase.storage.from("cvs").createSignedUrl(row.cv_url, 60 * 5);
     if (error) return setError(error.message);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   }
@@ -105,23 +102,26 @@ export default function AdminPage() {
     setError(null);
 
     try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) {
+        setError("Sessione non valida: rifai login");
+        return;
+      }
+
       const res = await fetch("/api/admin/set-user-type", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ targetUserId, userType }),
       });
 
-      // se l’API risponde con HTML (404 ecc.), questo può fallire: gestiamo pulito
-      const text = await res.text();
-      let json: any = null;
-      try {
-        json = JSON.parse(text);
-      } catch {
-        // non JSON
-      }
+      const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(json?.error || text || `HTTP ${res.status}`);
+        setError(json?.error || `HTTP ${res.status}`);
         return;
       }
 
@@ -207,20 +207,12 @@ export default function AdminPage() {
         />
 
         <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <input
-            type="checkbox"
-            checked={onlyWithCv}
-            onChange={(e) => setOnlyWithCv(e.target.checked)}
-          />
+          <input type="checkbox" checked={onlyWithCv} onChange={(e) => setOnlyWithCv(e.target.checked)} />
           Solo con CV
         </label>
 
         <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <input
-            type="checkbox"
-            checked={onlyComplete}
-            onChange={(e) => setOnlyComplete(e.target.checked)}
-          />
+          <input type="checkbox" checked={onlyComplete} onChange={(e) => setOnlyComplete(e.target.checked)} />
           Solo completi
         </label>
 

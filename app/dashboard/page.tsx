@@ -1,0 +1,102 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabaseClient";
+
+type Profile = {
+  id: string;
+  first_name: string | null;
+  clean_points: number | null;
+  clean_level: number | null;
+  worker_progress: {
+    packs?: {
+      general?: boolean;
+      experience?: boolean;
+      skills?: boolean;
+    };
+  } | null;
+};
+
+export default function DashboardWorker() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("id,first_name,clean_points,clean_level,worker_progress")
+        .eq("id", auth.user.id)
+        .single();
+
+      setProfile(data);
+      setLoading(false);
+    })();
+  }, []);
+
+  if (loading) return <div>Caricamento...</div>;
+  if (!profile) return <div>Errore profilo</div>;
+
+  const packs = profile.worker_progress?.packs || {};
+
+  return (
+    <div className="card">
+      <h2>Ciao {profile.first_name || "Operatore"}</h2>
+
+      <p>Livello: <b>{profile.clean_level ?? 1}</b></p>
+      <p>Clean Points: <b>{profile.clean_points ?? 0}</b></p>
+
+      <hr />
+
+      <h3>Avanzamento profilo</h3>
+
+      <Pack
+        title="Dati personali"
+        done={packs.general}
+        onClick={() => window.location.href = "/onboarding"}
+      />
+
+      <Pack
+        title="Esperienza lavorativa"
+        done={packs.experience}
+        onClick={() => window.location.href = "/onboarding"}
+      />
+
+      <Pack
+        title="Competenze e preferenze"
+        done={packs.skills}
+        onClick={() => window.location.href = "/onboarding"}
+      />
+    </div>
+  );
+}
+
+function Pack({
+  title,
+  done,
+  onClick,
+}: {
+  title: string;
+  done?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <b>{title}</b>{" "}
+      {done ? "✅ Completato" : "❌ Da completare"}
+      {!done && (
+        <div>
+          <button onClick={onClick} style={{ marginTop: 4 }}>
+            Completa
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

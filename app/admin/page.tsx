@@ -34,10 +34,10 @@ export default function AdminPage() {
   const [onlyComplete, setOnlyComplete] = useState(false);
 
   const adminEmails = useMemo(() => {
-    const raw = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").trim();
+    const raw = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").trim().toLowerCase();
     return raw
       .split(",")
-      .map((s) => s.trim().toLowerCase())
+      .map((s) => s.trim())
       .filter(Boolean);
   }, []);
 
@@ -67,7 +67,9 @@ export default function AdminPage() {
 
     const { data: profs, error: e } = await supabase
       .from("profiles")
-      .select("id,email,first_name,last_name,profile_status,onboarding_step,cv_url,user_type,created_at")
+      .select(
+        "id,email,first_name,last_name,profile_status,onboarding_step,cv_url,user_type,created_at"
+      )
       .order("created_at", { ascending: false })
       .limit(500);
 
@@ -98,27 +100,17 @@ export default function AdminPage() {
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   }
 
-  async function setUserType(targetUserId: string, userType: "worker" | "company") {
+  async function setUserType(targetUserId: string, userType: "worker" | "company" | "client") {
     setError(null);
 
     try {
-      const { data: sess } = await supabase.auth.getSession();
-      const token = sess.session?.access_token;
-      if (!token) {
-        setError("Sessione non valida: rifai login");
-        return;
-      }
-
       const res = await fetch("/api/admin/set-user-type", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ targetUserId, userType }),
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json = await res.json();
 
       if (!res.ok) {
         setError(json?.error || `HTTP ${res.status}`);
@@ -198,22 +190,54 @@ export default function AdminPage() {
 
       <div style={{ marginTop: 14 }} />
 
-      <div className="small" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <div
+        className="small"
+        style={{
+          display: "flex",
+          gap: 12,
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
+      >
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Cerca nome o email..."
-          style={{ minWidth: 220 }}
+          style={{ minWidth: 260 }}
         />
 
-        <label style={{ display: "flex", gap: 6, alignItems: "center", whiteSpace: "nowrap" }}>
-  <input type="checkbox" checked={onlyWithCv} onChange={(e) => setOnlyWithCv(e.target.checked)} />
-  <span>Solo con CV</span>
-</label>
+        <label
+          style={{
+            display: "inline-flex",
+            gap: 8,
+            alignItems: "center",
+            whiteSpace: "nowrap",
+            lineHeight: "18px",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={onlyComplete}
+            onChange={(e) => setOnlyComplete(e.target.checked)}
+          />
+          Solo completi
+        </label>
 
-        <label style={{ display: "flex", gap: 6, alignItems: "center", whiteSpace: "nowrap" }}>
-          <input type="checkbox" checked={onlyComplete} onChange={(e) => setOnlyComplete(e.target.checked)} />
-          <span>Solo completi</span>
+        <label
+          style={{
+            display: "inline-flex",
+            gap: 8,
+            alignItems: "center",
+            whiteSpace: "nowrap",
+            lineHeight: "18px",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={onlyWithCv}
+            onChange={(e) => setOnlyWithCv(e.target.checked)}
+          />
+          Solo con CV
         </label>
 
         <button onClick={refresh}>Aggiorna</button>
@@ -244,7 +268,7 @@ export default function AdminPage() {
                   {`${r.first_name ?? ""} ${r.last_name ?? ""}`.trim() || "—"}
                 </td>
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>{r.email ?? "—"}</td>
-                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>{r.user_type ?? "worker"}</td>
+                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>{r.user_type ?? "—"}</td>
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
                   {r.profile_status ?? "—"} (step {r.onboarding_step ?? "-"})
                 </td>
@@ -267,6 +291,7 @@ export default function AdminPage() {
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button onClick={() => setUserType(r.id, "company")}>Rendi azienda</button>
                     <button onClick={() => setUserType(r.id, "worker")}>Rendi worker</button>
+                    <button onClick={() => setUserType(r.id, "client")}>Rendi cliente</button>
                   </div>
                 </td>
               </tr>

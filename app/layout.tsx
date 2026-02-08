@@ -1,8 +1,9 @@
 import "./globals.css";
+import Header from "../components/Header";
 
 export const metadata = {
   title: "CLEANHUB MVP",
-  description: "CLEANHUB - MVP Fase 1"
+  description: "CLEANHUB - MVP Fase 1",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -10,9 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="it">
       <body>
         <div className="container">
-          <header className="header">
-            <div className="brand">CLEANHUB</div>
-          </header>
+          <Header />
           <main className="main">{children}</main>
           <footer className="footer">MVP • Fase 1</footer>
         </div>

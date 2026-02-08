@@ -21,21 +21,31 @@ export default function SignupPage() {
     setLoading(true);
 
     const { data, error } = await supabase.auth.signUp({ email, password });
-
     if (error) {
       setLoading(false);
       return setErr(error.message);
     }
 
     const user = data.user || data.session?.user;
-
-    // Se email confirmation è disabilitata, user di solito c'è subito.
-    // Se non c'è, pazienza: lo aggiorneremo al primo login (poi lo sistemiamo meglio).
     if (user) {
-      await supabase.from("profiles").update({ user_type: accountType }).eq("id", user.id);
+      // aggiorna/crea profilo
+      const { error: upErr } = await supabase.from("profiles").upsert(
+        {
+          id: user.id,
+          email: (user.email || email).toLowerCase(),
+          user_type: accountType,
+        },
+        { onConflict: "id" }
+      );
 
+      if (upErr) {
+        setLoading(false);
+        return setErr(upErr.message);
+      }
+
+      // redirect
       if (accountType === "company") window.location.href = "/company";
-      else window.location.href = "/profile"; // per ora client -> profile (poi faremo /client)
+      else window.location.href = "/profile"; // per ora "client" va su /profile
       return;
     }
 
@@ -49,7 +59,13 @@ export default function SignupPage() {
 
       <form onSubmit={onSubmit}>
         <label>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          type="email"
+          required
+          autoComplete="email"
+        />
 
         <label>Password</label>
         <input
@@ -57,80 +73,86 @@ export default function SignupPage() {
           onChange={(e) => setPassword(e.target.value)}
           type="password"
           required
+          autoComplete="new-password"
         />
 
-        {/* ✅ box radio allineato */}
-        <fieldset
+        {/* BOX radio (allineato, testo dentro al box) */}
+        <div
           style={{
             marginTop: 14,
-            border: "1px solid #eee",
-            borderRadius: 10,
             padding: 12,
+            border: "1px solid #eee",
+            borderRadius: 12,
           }}
         >
-          <legend className="small" style={{ padding: "0 8px" }}>
+          <div className="small" style={{ marginBottom: 10 }}>
             <b>Tipo account</b>
-          </legend>
-
-          <div style={{ display: "grid", gap: 10 }}>
-            <label
-              style={{
-                display: "flex",
-                gap: 10,
-                alignItems: "center",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="radio"
-                name="accountType"
-                checked={accountType === "worker"}
-                onChange={() => setAccountType("worker")}
-              />
-              <span>Operatore del pulito (cerca lavoro)</span>
-            </label>
-
-            <label
-              style={{
-                display: "flex",
-                gap: 10,
-                alignItems: "center",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="radio"
-                name="accountType"
-                checked={accountType === "company"}
-                onChange={() => setAccountType("company")}
-              />
-              <span>Impresa di pulizie</span>
-            </label>
-
-            <label
-              style={{
-                display: "flex",
-                gap: 10,
-                alignItems: "center",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="radio"
-                name="accountType"
-                checked={accountType === "client"}
-                onChange={() => setAccountType("client")}
-              />
-              <span>Cliente finale</span>
-            </label>
           </div>
-        </fieldset>
 
-        <div style={{ marginTop: 14 }} />
+          <label
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              cursor: "pointer",
+              marginBottom: 10,
+            }}
+          >
+            <input
+              type="radio"
+              name="accountType"
+              checked={accountType === "worker"}
+              onChange={() => setAccountType("worker")}
+              style={{ marginTop: 2 }}
+            />
+            <span style={{ lineHeight: 1.25 }}>
+              Operatore del pulito <span className="small">(cerca lavoro)</span>
+            </span>
+          </label>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Creazione..." : "Crea account"}
-        </button>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              cursor: "pointer",
+              marginBottom: 10,
+            }}
+          >
+            <input
+              type="radio"
+              name="accountType"
+              checked={accountType === "company"}
+              onChange={() => setAccountType("company")}
+              style={{ marginTop: 2 }}
+            />
+            <span style={{ lineHeight: 1.25 }}>Impresa di pulizie</span>
+          </label>
+
+          <label
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              cursor: "pointer",
+            }}
+          >
+            <input
+              type="radio"
+              name="accountType"
+              checked={accountType === "client"}
+              onChange={() => setAccountType("client")}
+              style={{ marginTop: 2 }}
+            />
+            <span style={{ lineHeight: 1.25 }}>Cliente finale</span>
+          </label>
+        </div>
+
+        <div style={{ marginTop: 14 }}>
+          <button type="submit" disabled={loading}>
+            {loading ? "Creazione..." : "Crea account"}
+          </button>
+        </div>
 
         {err && <div className="error">{err}</div>}
         {ok && <div className="ok">{ok}</div>}

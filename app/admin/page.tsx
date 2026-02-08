@@ -34,10 +34,10 @@ export default function AdminPage() {
   const [onlyComplete, setOnlyComplete] = useState(false);
 
   const adminEmails = useMemo(() => {
-    const raw = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").trim().toLowerCase();
+    const raw = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").trim();
     return raw
       .split(",")
-      .map((s) => s.trim())
+      .map((s) => s.trim().toLowerCase())
       .filter(Boolean);
   }, []);
 
@@ -85,7 +85,9 @@ export default function AdminPage() {
       if (onlyComplete && r.profile_status !== "complete") return false;
 
       if (!qq) return true;
-      const fullName = `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim().toLowerCase();
+      const fullName = `${r.first_name ?? ""} ${r.last_name ?? ""}`
+        .trim()
+        .toLowerCase();
       const em = (r.email ?? "").toLowerCase();
       return fullName.includes(qq) || em.includes(qq);
     });
@@ -95,12 +97,15 @@ export default function AdminPage() {
     setError(null);
     if (!row.cv_url) return;
 
-    const { data, error } = await supabase.storage.from("cvs").createSignedUrl(row.cv_url, 60 * 5);
+    const { data, error } = await supabase.storage
+      .from("cvs")
+      .createSignedUrl(row.cv_url, 60 * 5);
+
     if (error) return setError(error.message);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   }
 
-  async function setUserType(targetUserId: string, userType: "worker" | "company" | "client") {
+  async function setUserType(targetUserId: string, userType: "worker" | "company") {
     setError(null);
 
     try {
@@ -206,21 +211,23 @@ export default function AdminPage() {
           style={{ minWidth: 260 }}
         />
 
+        {/* ✅ checkbox allineate */}
         <label
           style={{
             display: "inline-flex",
             gap: 8,
             alignItems: "center",
             whiteSpace: "nowrap",
-            lineHeight: "18px",
+            userSelect: "none",
           }}
         >
           <input
             type="checkbox"
-            checked={onlyComplete}
-            onChange={(e) => setOnlyComplete(e.target.checked)}
+            checked={onlyWithCv}
+            onChange={(e) => setOnlyWithCv(e.target.checked)}
+            style={{ margin: 0 }}
           />
-          Solo completi
+          Solo con CV
         </label>
 
         <label
@@ -229,15 +236,16 @@ export default function AdminPage() {
             gap: 8,
             alignItems: "center",
             whiteSpace: "nowrap",
-            lineHeight: "18px",
+            userSelect: "none",
           }}
         >
           <input
             type="checkbox"
-            checked={onlyWithCv}
-            onChange={(e) => setOnlyWithCv(e.target.checked)}
+            checked={onlyComplete}
+            onChange={(e) => setOnlyComplete(e.target.checked)}
+            style={{ margin: 0 }}
           />
-          Solo con CV
+          Solo completi
         </label>
 
         <button onClick={refresh}>Aggiorna</button>
@@ -252,12 +260,24 @@ export default function AdminPage() {
         <table className="small" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Nome</th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Email</th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Tipo</th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Status</th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>CV</th>
-              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>Azioni</th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
+                Nome
+              </th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
+                Email
+              </th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
+                Tipo
+              </th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
+                Status
+              </th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
+                CV
+              </th>
+              <th style={{ textAlign: "left", padding: 6, borderBottom: "1px solid #eee" }}>
+                Azioni
+              </th>
             </tr>
           </thead>
 
@@ -267,8 +287,12 @@ export default function AdminPage() {
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
                   {`${r.first_name ?? ""} ${r.last_name ?? ""}`.trim() || "—"}
                 </td>
-                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>{r.email ?? "—"}</td>
-                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>{r.user_type ?? "—"}</td>
+                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
+                  {r.email ?? "—"}
+                </td>
+                <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
+                  {r.user_type ?? "worker"}
+                </td>
                 <td style={{ padding: 6, borderBottom: "1px solid #f2f2f2" }}>
                   {r.profile_status ?? "—"} (step {r.onboarding_step ?? "-"})
                 </td>
@@ -291,7 +315,6 @@ export default function AdminPage() {
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button onClick={() => setUserType(r.id, "company")}>Rendi azienda</button>
                     <button onClick={() => setUserType(r.id, "worker")}>Rendi worker</button>
-                    <button onClick={() => setUserType(r.id, "client")}>Rendi cliente</button>
                   </div>
                 </td>
               </tr>

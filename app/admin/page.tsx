@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../../lib/supabaseClient";
 
 type ProfileRow = {
   id: string;
@@ -93,7 +93,10 @@ export default function AdminPage() {
     setError(null);
     if (!row.cv_url) return;
 
-    const { data, error } = await supabase.storage.from("cvs").createSignedUrl(row.cv_url, 60 * 5);
+    const { data, error } = await supabase.storage
+      .from("cvs")
+      .createSignedUrl(row.cv_url, 60 * 5);
+
     if (error) return setError(error.message);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   }
@@ -108,14 +111,20 @@ export default function AdminPage() {
         body: JSON.stringify({ targetUserId, userType }),
       });
 
-      const json = await res.json();
+      // se l’API risponde con HTML (404 ecc.), questo può fallire: gestiamo pulito
+      const text = await res.text();
+      let json: any = null;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        // non JSON
+      }
 
       if (!res.ok) {
-        setError(json?.error || `HTTP ${res.status}`);
+        setError(json?.error || text || `HTTP ${res.status}`);
         return;
       }
 
-      // refresh list
       await refresh();
     } catch (e: any) {
       setError(e?.message || "Errore chiamando API");
@@ -198,12 +207,20 @@ export default function AdminPage() {
         />
 
         <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <input type="checkbox" checked={onlyWithCv} onChange={(e) => setOnlyWithCv(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={onlyWithCv}
+            onChange={(e) => setOnlyWithCv(e.target.checked)}
+          />
           Solo con CV
         </label>
 
         <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <input type="checkbox" checked={onlyComplete} onChange={(e) => setOnlyComplete(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={onlyComplete}
+            onChange={(e) => setOnlyComplete(e.target.checked)}
+          />
           Solo completi
         </label>
 

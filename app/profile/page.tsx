@@ -93,7 +93,7 @@ export default function ProfilePage() {
       {msg && <div className="small">{msg}</div>}
 
       <div className="nav" style={{ marginTop: 14 }}>
-        <a href="/onboarding">Modifica onboarding</a>
+        <a href="/onboarding?edit=1">Modifica onboarding</a>
         <a
           href="#"
           onClick={(e) => {

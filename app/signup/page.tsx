@@ -21,45 +21,50 @@ export default function SignupPage() {
     setOk(null);
     setLoading(true);
 
-    // 1) crea utente
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) {
       setLoading(false);
       return setErr(error.message);
     }
 
-    // 2) prova a prendere l'utente (dipende se supabase ti crea subito sessione o richiede conferma email)
     const user = data.user ?? data.session?.user ?? null;
 
-    // Se NON ho user subito (email confirmation ON), salvo la scelta in locale.
-    // Poi la app la applicherà al primo login (lo faremo in /profile o /onboarding).
+    // Email confirmation ON: non ho user subito => salvo scelta in locale
     if (!user) {
       localStorage.setItem("pending_user_type", accountType);
       setLoading(false);
       return setOk("Account creato! Controlla l’email (se richiesta) e poi fai login.");
     }
 
-    // 3) aggiorna profilo (user_type)
-    const { error: updErr } = await supabase
-      .from("profiles")
-      .update({ user_type: accountType })
-      .eq("id", user.id);
+    const { error: updErr } = await supabase.from("profiles").update({ user_type: accountType }).eq("id", user.id);
 
     if (updErr) {
       setLoading(false);
       return setErr(updErr.message);
     }
 
-    // 4) redirect
     setLoading(false);
     if (accountType === "company") window.location.href = "/company-onboarding";
     else if (accountType === "client") window.location.href = "/client-onboarding";
     else window.location.href = "/onboarding";
   }
+
+  const radioRowStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    cursor: "pointer",
+    lineHeight: 1.2,
+  };
+
+  // IMPORTANT: se hai input globali width:100%, questo evita che le radio “esplodano”
+  const radioStyle: React.CSSProperties = {
+    width: 16,
+    height: 16,
+    margin: 0,
+    flexShrink: 0,
+  };
 
   return (
     <div className="card">
@@ -73,13 +78,14 @@ export default function SignupPage() {
         <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
 
         <div style={{ marginTop: 14, padding: 12, border: "1px solid #eee", borderRadius: 12 }}>
-          <div className="small" style={{ marginBottom: 8 }}>
+          <div className="small" style={{ marginBottom: 10 }}>
             <b>Tipo account</b>
           </div>
 
-          <div className="radioGroup">
-            <label className="radioRow">
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <label style={radioRowStyle}>
               <input
+                style={radioStyle}
                 type="radio"
                 name="accountType"
                 checked={accountType === "worker"}
@@ -88,8 +94,9 @@ export default function SignupPage() {
               <span>Operatore del pulito (cerca lavoro)</span>
             </label>
 
-            <label className="radioRow">
+            <label style={radioRowStyle}>
               <input
+                style={radioStyle}
                 type="radio"
                 name="accountType"
                 checked={accountType === "company"}
@@ -98,8 +105,9 @@ export default function SignupPage() {
               <span>Impresa di pulizie</span>
             </label>
 
-            <label className="radioRow">
+            <label style={radioRowStyle}>
               <input
+                style={radioStyle}
                 type="radio"
                 name="accountType"
                 checked={accountType === "client"}

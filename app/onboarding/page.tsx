@@ -8,7 +8,7 @@ type Profile = {
   email: string | null;
   first_name: string | null;
   last_name: string | null;
-  desired_role: string | null;
+  // desired_role: rimosso dall'UI (può restare nel DB, ma qui non ci serve)
   onboarding_step: number | null;
   profile_status: string | null;
   cv_url: string | null;
@@ -21,7 +21,6 @@ export default function OnboardingPage() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [desiredRole, setDesiredRole] = useState("");
 
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -44,20 +43,18 @@ export default function OnboardingPage() {
         .single();
 
       if (prof) {
-  // ✅ Se il profilo è già completo, l’onboarding non deve comparire
-  if (prof.profile_status === "complete") {
-    window.location.href = "/profile";
-    return;
-  }
+        // ✅ Se il profilo è già completo, l’onboarding non deve comparire
+        if (prof.profile_status === "complete") {
+          window.location.href = "/profile";
+          return;
+        }
 
-  setProfile(prof as Profile);
-  setFirstName(prof.first_name ?? "");
-  setLastName(prof.last_name ?? "");
-  setDesiredRole(prof.desired_role ?? "");
-}
+        setProfile(prof as Profile);
+        setFirstName(prof.first_name ?? "");
+        setLastName(prof.last_name ?? "");
+      }
 
-setLoading(false);
-
+      setLoading(false);
     })();
   }, []);
 
@@ -70,9 +67,8 @@ setLoading(false);
       .update({
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        desired_role: desiredRole.trim(),
         onboarding_step: 2,
-        profile_status: "incomplete"
+        profile_status: "incomplete",
       })
       .eq("id", userId)
       .select("*")
@@ -88,6 +84,7 @@ setLoading(false);
     if (!userId) return;
     setMessage(null);
 
+    // Se non carica CV, può comunque completare in Fase 1
     if (!cvFile) {
       const { error, data } = await supabase
         .from("profiles")
@@ -109,7 +106,7 @@ setLoading(false);
 
     const up = await supabase.storage.from("cvs").upload(filePath, cvFile, {
       upsert: false,
-      contentType: "application/pdf"
+      contentType: "application/pdf",
     });
 
     if (up.error) return setMessage(up.error.message);
@@ -119,7 +116,7 @@ setLoading(false);
       .update({
         cv_url: filePath,
         onboarding_step: 3,
-        profile_status: "complete"
+        profile_status: "complete",
       })
       .eq("id", userId)
       .select("*")
@@ -151,13 +148,6 @@ setLoading(false);
           <label>Cognome</label>
           <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
 
-          <label>Ruolo desiderato</label>
-          <input
-            value={desiredRole}
-            onChange={(e) => setDesiredRole(e.target.value)}
-            placeholder="Es. Addetto alle pulizie, Housekeeping..."
-          />
-
           <button onClick={saveStep1}>Salva e continua</button>
         </>
       )}
@@ -165,7 +155,11 @@ setLoading(false);
       {step >= 2 && (
         <>
           <label>CV (PDF) — opzionale in Fase 1</label>
-          <input type="file" accept="application/pdf" onChange={(e) => setCvFile(e.target.files?.[0] ?? null)} />
+          <input
+            type="file"
+            accept="application/pdf"
+            onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
+          />
 
           <button onClick={uploadCvAndFinish}>
             {cvFile ? "Carica CV e completa" : "Salta e completa"}

@@ -8,6 +8,7 @@ import { LevelBar } from "./LevelBar";
 type ProfileLite = {
   first_name: string | null;
   clean_points: number | null;
+  user_type: string | null; // worker | company | client
 };
 
 const LS_LAST_LEVEL = "cleanhub_last_level";
@@ -26,60 +27,110 @@ export default function WorkerHeader() {
         return;
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
-        .select("first_name,clean_points")
+        .select("first_name,clean_points,user_type")
         .eq("id", auth.user.id)
         .single();
+
+      if (error) {
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
 
       setProfile((data as any) ?? null);
       setLoading(false);
     })();
   }, []);
 
-  const xp = profile?.clean_points ?? 0;
+  // ✅ Header SOLO per operatori
+  if (loading) return null;
+  if (!profile) return null;
+  if ((profile.user_type ?? "worker") !== "worker") return null;
+
+  const xp = profile.clean_points ?? 0;
   const p = useMemo(() => progressFromXp(xp), [xp]);
 
-  // ✅ Detect level-up anche dopo redirect (persistendo ultimo livello)
+  // ✅ Detect level-up (persistendo ultimo livello)
   useEffect(() => {
-    if (loading) return;
     if (!profile) return;
 
     const currentLevel = p.level;
 
     let prevLevel: number | null = null;
-    const raw = typeof window !== "undefined" ? window.localStorage.getItem(LS_LAST_LEVEL) : null;
+    const raw = window.localStorage.getItem(LS_LAST_LEVEL);
     if (raw) {
       const n = Number(raw);
       prevLevel = Number.isFinite(n) ? n : null;
     }
 
-    // se non esiste prevLevel, lo inizializziamo
     if (prevLevel == null) {
       window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
       return;
     }
 
-    // se è salito: popup + confetti
     if (currentLevel > prevLevel) {
       setLevelUp({ from: prevLevel, to: currentLevel });
       window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
 
-      const t = setTimeout(() => setLevelUp(null), 1800);
-      return () => clearTimeout(t);
+      const t = window.setTimeout(() => setLevelUp(null), 1800);
+      return () => window.clearTimeout(t);
     }
 
-    // se non è salito (o è sceso per test), aggiorniamo comunque
     window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
-  }, [loading, profile, p.level]);
+  }, [profile, p.level]);
 
-  if (loading) return null;
-  if (!profile) return null;
+  async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  }
 
   return (
-    <div style={{ padding: "10px 16px" }}>
-      <LevelBar level={p.level} nextLevel={p.nextLevel} progress={p.progress} />
+    <div
+      style={{
+        padding: "10px 16px",
+        borderBottom: "1px solid #eee",
+        background: "white",
+      }}
+    >
+      {/* ✅ Barra più corta e centrata */}
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <LevelBar level={p.level} nextLevel={p.nextLevel} progress={p.progress} />
+      </div>
 
+      {/* ✅ Nav compatta (Jobs incluso) */}
+      <div
+        style={{
+          maxWidth: 720,
+          margin: "8px auto 0",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
+        <div style={{ fontSize: 13, opacity: 0.85 }}>
+          Ciao <b>{profile.first_name || "Operatore"}</b>
+        </div>
+
+        <div style={{ display: "flex", gap: 12, fontSize: 13 }}>
+          <a href="/dashboard">Dashboard</a>
+          <a href="/jobs">Jobs</a>
+          <a href="/profile">Profilo</a>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              logout();
+            }}
+          >
+            Logout
+          </a>
+        </div>
+      </div>
+
+      {/* ✅ Popup level-up + confetti */}
       {levelUp && (
         <div
           style={{

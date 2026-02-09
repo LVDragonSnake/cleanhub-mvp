@@ -1,102 +1,167 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
 type Profile = {
   id: string;
+  email: string | null;
   first_name: string | null;
-  clean_points: number | null;
-  clean_level: number | null;
-  worker_progress: {
-    packs?: {
-      general?: boolean;
-      experience?: boolean;
-      skills?: boolean;
-    };
-  } | null;
+  last_name: string | null;
+  user_type: string | null; // worker | company | client
+  profile_status: string | null;
+  onboarding_step: number | null;
+  cv_url: string | null;
 };
 
-export default function DashboardWorker() {
-  const [profile, setProfile] = useState<Profile | null>(null);
+export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
+  const [me, setMe] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const [cvLink, setCvLink] = useState<string | null>(null);
+  const [cvMsg, setCvMsg] = useState<string | null>(null);
+
+  const isAdmin = useMemo(() => {
+    const raw = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").toLowerCase();
+    const list = raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return list.includes((me?.email || "").toLowerCase());
+  }, [me?.email]);
 
   useEffect(() => {
     (async () => {
+      setError(null);
+
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) {
         window.location.href = "/login";
         return;
       }
+      setMe(auth.user);
 
-      const { data } = await supabase
+      const { data: prof, error: e } = await supabase
         .from("profiles")
-        .select("id,first_name,clean_points,clean_level,worker_progress")
+        .select("id,email,first_name,last_name,user_type,profile_status,onboarding_step,cv_url")
         .eq("id", auth.user.id)
         .single();
 
-      setProfile(data);
+      if (e) {
+        setError(e.message);
+        setLoading(false);
+        return;
+      }
+
+      const t = (prof?.user_type ?? "worker") as string;
+
+      if (t === "company") {
+        window.location.href = "/company";
+        return;
+      }
+      if (t === "client") {
+        window.location.href = "/client";
+        return;
+      }
+
+      // ✅ worker: pagina principale è dashboard
+      // (il profilo resta accessibile dal menu, ma non è landing)
+      if (window.location.pathname === "/profile") {
+        // se vuoi che /profile sia visitabile, commenta questa riga
+        // e lascialo come pagina normale.
+        // Io la lascio per evitare “profile e dashboard uguali”.
+        // Se preferisci tenerla, dimmelo e la tolgo.
+      }
+
+      setProfile(prof as Profile);
       setLoading(false);
     })();
   }, []);
 
-  if (loading) return <div>Caricamento...</div>;
-  if (!profile) return <div>Errore profilo</div>;
+  async function generateCvLink() {
+    setCvMsg(null);
+    setCvLink(null);
 
-  const packs = profile.worker_progress?.packs || {};
+    if (!profile?.cv_url) {
+      setCvMsg("Nessun CV caricato.");
+      return;
+    }
+
+    const { data, error } = await supabase.storage
+      .from("cvs")
+      .createSignedUrl(profile.cv_url, 60 * 5);
+
+    if (error) {
+      setCvMsg(error.message);
+      return;
+    }
+
+    setCvLink(data?.signedUrl ?? null);
+    setCvMsg("Link CV pronto ✅ (valido 5 minuti)");
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  }
+
+  if (loading) return <div>Caricamento...</div>;
 
   return (
     <div className="card">
-      <h2>Ciao {profile.first_name || "Operatore"}</h2>
+      <h2>Profilo</h2>
 
-      <p>Livello: <b>{profile.clean_level ?? 1}</b></p>
-      <p>Clean Points: <b>{profile.clean_points ?? 0}</b></p>
-
-      <hr />
-
-      <h3>Avanzamento profilo</h3>
-
-      <Pack
-        title="Dati personali"
-        done={packs.general}
-        onClick={() => window.location.href = "/onboarding"}
-      />
-
-      <Pack
-        title="Esperienza lavorativa"
-        done={packs.experience}
-        onClick={() => window.location.href = "/onboarding"}
-      />
-
-      <Pack
-        title="Competenze e preferenze"
-        done={packs.skills}
-        onClick={() => window.location.href = "/onboarding"}
-      />
-    </div>
-  );
-}
-
-function Pack({
-  title,
-  done,
-  onClick,
-}: {
-  title: string;
-  done?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <div style={{ marginBottom: 12 }}>
-      <b>{title}</b>{" "}
-      {done ? "✅ Completato" : "❌ Da completare"}
-      {!done && (
-        <div>
-          <button onClick={onClick} style={{ marginTop: 4 }}>
-            Completa
-          </button>
+      {error && (
+        <div className="small" style={{ marginTop: 10 }}>
+          {error}
         </div>
       )}
+
+      <div className="small" style={{ marginTop: 10 }}>
+        Email: {me?.email ?? "—"}
+      </div>
+
+      <div className="small" style={{ marginTop: 10 }}>
+        Nome: {`${profile?.first_name ?? ""} ${profile?.last_name ?? ""}`.trim() || "—"}
+      </div>
+
+      <div className="small" style={{ marginTop: 10 }}>
+        CV: {profile?.cv_url ? "Caricato ✅" : "Non caricato"}
+      </div>
+
+      <div style={{ marginTop: 14 }} />
+
+      {profile?.cv_url ? <button onClick={generateCvLink}>Genera link CV</button> : null}
+
+      {cvLink && (
+        <div className="small" style={{ marginTop: 10 }}>
+          <a href={cvLink} target="_blank" rel="noreferrer">
+            Scarica / Apri CV
+          </a>
+        </div>
+      )}
+
+      {cvMsg && (
+        <div className="small" style={{ marginTop: 10 }}>
+          {cvMsg}
+        </div>
+      )}
+
+      <div className="nav" style={{ marginTop: 14 }}>
+        <a href="/dashboard">Dashboard</a>
+        {isAdmin ? <a href="/admin">Admin</a> : null}
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            logout();
+          }}
+        >
+          Logout
+        </a>
+      </div>
     </div>
   );
 }

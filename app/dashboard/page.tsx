@@ -9,11 +9,7 @@ type Profile = {
   clean_points: number | null;
   clean_level: number | null;
   worker_progress: {
-    packs?: {
-      general?: boolean;
-      experience?: boolean;
-      skills?: boolean;
-    };
+    packs?: Record<string, boolean>;
   } | null;
 };
 
@@ -29,11 +25,17 @@ export default function DashboardWorker() {
         return;
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("id,first_name,clean_points,clean_level,worker_progress")
         .eq("id", auth.user.id)
         .single();
+
+      if (error) {
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
 
       setProfile(data as any);
       setLoading(false);
@@ -49,8 +51,12 @@ export default function DashboardWorker() {
     <div className="card">
       <h2>Ciao {profile.first_name || "Operatore"}</h2>
 
-      <p>Livello: <b>{profile.clean_level ?? 1}</b></p>
-      <p>Clean Points: <b>{profile.clean_points ?? 0}</b></p>
+      <p>
+        Livello: <b>{profile.clean_level ?? 1}</b>
+      </p>
+      <p>
+        Clean Points: <b>{profile.clean_points ?? 0}</b>
+      </p>
 
       <hr />
 
@@ -58,21 +64,25 @@ export default function DashboardWorker() {
 
       <Pack
         title="Dati personali"
-        done={packs.general}
+        done={!!packs.general}
         onClick={() => (window.location.href = "/onboarding?pack=general")}
       />
 
       <Pack
         title="Esperienza lavorativa"
-        done={packs.experience}
+        done={!!packs.experience}
         onClick={() => (window.location.href = "/onboarding?pack=experience")}
       />
 
       <Pack
         title="Competenze e preferenze"
-        done={packs.skills}
+        done={!!packs.skills}
         onClick={() => (window.location.href = "/onboarding?pack=skills")}
       />
+
+      <div className="nav" style={{ marginTop: 14 }}>
+        <a href="/profile">Profilo</a>
+      </div>
     </div>
   );
 }
@@ -83,19 +93,17 @@ function Pack({
   onClick,
 }: {
   title: string;
-  done?: boolean;
+  done: boolean;
   onClick: () => void;
 }) {
   return (
     <div style={{ marginBottom: 12 }}>
       <b>{title}</b> {done ? "✅ Completato" : "❌ Da completare"}
-      {!done && (
-        <div>
-          <button onClick={onClick} style={{ marginTop: 4 }}>
-            Completa
-          </button>
-        </div>
-      )}
+      <div>
+        <button onClick={onClick} style={{ marginTop: 4 }}>
+          {done ? "Modifica" : "Completa"}
+        </button>
+      </div>
     </div>
   );
 }

@@ -4,8 +4,6 @@ import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 
-type PackKey = "general" | "experience" | "skills";
-
 type WorkerProgress = {
   packs?: {
     general?: boolean;
@@ -62,9 +60,7 @@ function isAdminEmail(email?: string | null) {
   return !!email && list.includes((email || "").toLowerCase());
 }
 
-/**
- * ✅ Next 15: useSearchParams deve stare in un componente dentro Suspense
- */
+// ✅ Wrapper richiesto da Next 15 per useSearchParams
 export default function OnboardingPage() {
   return (
     <Suspense fallback={<div>Caricamento...</div>}>
@@ -73,58 +69,9 @@ export default function OnboardingPage() {
   );
 }
 
-/* =========================
-   UI helpers (fix layout)
-========================= */
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ marginTop: 14, marginBottom: 6 }} className="small">
-      <b>{children}</b>
-    </div>
-  );
-}
-
-function CheckRow({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  label: string;
-}) {
-  return (
-    <label
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        gap: 10,
-        marginTop: 10,
-        width: "100%",
-        cursor: "pointer",
-        textAlign: "left",
-      }}
-    >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        style={{ margin: 0 }}
-      />
-      <span style={{ lineHeight: 1.2 }}>{label}</span>
-    </label>
-  );
-}
-
-/* =========================
-   Page
-========================= */
-
 function OnboardingInner() {
   const searchParams = useSearchParams();
-  const pack = (searchParams.get("pack") || "general") as PackKey;
+  const pack = (searchParams.get("pack") || "general") as "general" | "experience" | "skills";
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -169,6 +116,30 @@ function OnboardingInner() {
   const packs = useMemo(() => profile?.worker_progress?.packs || {}, [profile?.worker_progress]);
   const points = profile?.clean_points ?? 0;
   const level = profile?.clean_level ?? 1;
+
+  // ====== STILI (fix formattazione) ======
+  const cardStyle: React.CSSProperties = {
+    maxWidth: 640,
+    margin: "40px auto",
+  };
+
+  // IMPORTANTISSIMO: molti CSS globali mettono `label { justify-content: space-between; }`
+  // Queste righe lo annullano e tengono testo attaccato al checkbox.
+  const checkboxRow: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    gap: 10,
+    width: "100%",
+    marginTop: 10,
+  };
+
+  const checkboxInput: React.CSSProperties = {
+    margin: 0,
+    width: 18,
+    height: 18,
+    flex: "0 0 auto",
+  };
 
   useEffect(() => {
     (async () => {
@@ -244,7 +215,7 @@ function OnboardingInner() {
     })();
   }, []);
 
-  async function completePack(packKey: PackKey) {
+  async function completePack(packKey: "general" | "experience" | "skills") {
     if (!profile) return;
 
     const current = profile.worker_progress || { packs: {} };
@@ -284,7 +255,7 @@ function OnboardingInner() {
     });
   }
 
-  function validatePack(packKey: PackKey) {
+  function validatePack(packKey: "general" | "experience" | "skills") {
     if (packKey === "general") {
       if (!firstName.trim()) return "Inserisci il nome.";
       if (!lastName.trim()) return "Inserisci il cognome.";
@@ -310,7 +281,6 @@ function OnboardingInner() {
 
     setSaving(true);
 
-    // worker_data: sempre aggiornato (esperienza + skills stanno qui)
     const worker_data = {
       ...(profile.worker_data ?? {}),
       languages: [
@@ -324,15 +294,10 @@ function OnboardingInner() {
       work_client_contact: workClientContact,
     };
 
-    // ✅ IMPORTANTISSIMO:
-    // se sto salvando "experience" o "skills", NON devo toccare i campi "general"
-    // altrimenti rischio di sovrascrivere dati con vuoti/null.
-    const payload: any = {
-      worker_data,
-    };
-
-    if (pack === "general") {
-      Object.assign(payload, {
+    const { error: e } = await supabase
+      .from("profiles")
+      .update({
+        // general
         first_name: firstName.trim(),
         last_name: lastName.trim(),
 
@@ -351,10 +316,10 @@ function OnboardingInner() {
         worker_permit_type: permitType.trim() || null,
         worker_driving_license: drivingLicense.trim() || null,
         worker_has_car: hasCar,
-      });
-    }
 
-    const { error: e } = await supabase.from("profiles").update(payload).eq("id", profile.id);
+        worker_data,
+      })
+      .eq("id", profile.id);
 
     if (e) {
       setSaving(false);
@@ -362,29 +327,24 @@ function OnboardingInner() {
       return;
     }
 
-    // aggiorna stato locale (solo ciò che abbiamo realmente salvato)
     const updated: Profile = {
       ...profile,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      worker_phone: phone.trim(),
+      worker_birth_date: birthDate || null,
+      worker_birth_city: birthCity.trim() || null,
+      worker_birth_country: birthCountry.trim() || null,
+      worker_gender: gender || null,
+      worker_res_address: resAddress.trim() || null,
+      worker_res_city: resCity.trim() || null,
+      worker_res_province: resProvince.trim() || null,
+      worker_res_cap: resCap.trim() || null,
+      worker_citizenship: citizenship.trim() || null,
+      worker_permit_type: permitType.trim() || null,
+      worker_driving_license: drivingLicense.trim() || null,
+      worker_has_car: hasCar,
       worker_data,
-      ...(pack === "general"
-        ? {
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            worker_phone: phone.trim(),
-            worker_birth_date: birthDate || null,
-            worker_birth_city: birthCity.trim() || null,
-            worker_birth_country: birthCountry.trim() || null,
-            worker_gender: gender || null,
-            worker_res_address: resAddress.trim() || null,
-            worker_res_city: resCity.trim() || null,
-            worker_res_province: resProvince.trim() || null,
-            worker_res_cap: resCap.trim() || null,
-            worker_citizenship: citizenship.trim() || null,
-            worker_permit_type: permitType.trim() || null,
-            worker_driving_license: drivingLicense.trim() || null,
-            worker_has_car: hasCar,
-          }
-        : {}),
     };
     setProfile(updated);
 
@@ -402,7 +362,7 @@ function OnboardingInner() {
   if (loading) return <div>Caricamento...</div>;
 
   return (
-    <div className="card" style={{ maxWidth: 720, margin: "0 auto" }}>
+    <div className="card" style={cardStyle}>
       <h2>Onboarding Operatore</h2>
 
       <div className="small">
@@ -415,13 +375,7 @@ function OnboardingInner() {
 
       <div className="small" style={{ marginTop: 6 }}>
         Pack:{" "}
-        <b>
-          {pack === "general"
-            ? "Dati personali"
-            : pack === "experience"
-            ? "Esperienza"
-            : "Competenze"}
-        </b>{" "}
+        <b>{pack === "general" ? "Dati personali" : pack === "experience" ? "Esperienza" : "Competenze"}</b>{" "}
         {packs?.[pack] ? "✅" : "❌"}
       </div>
 
@@ -434,7 +388,9 @@ function OnboardingInner() {
       {/* ====== PACK GENERAL ====== */}
       {pack === "general" && (
         <>
-          <SectionTitle>Dati personali</SectionTitle>
+          <div style={{ marginTop: 14 }} className="small">
+            <b>Dati personali</b>
+          </div>
 
           <label>Nome *</label>
           <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
@@ -461,7 +417,9 @@ function OnboardingInner() {
             <option value="F">Femmina</option>
           </select>
 
-          <SectionTitle>Residenza</SectionTitle>
+          <div style={{ marginTop: 14 }} className="small">
+            <b>Residenza</b>
+          </div>
 
           <label>Indirizzo</label>
           <input value={resAddress} onChange={(e) => setResAddress(e.target.value)} />
@@ -475,7 +433,9 @@ function OnboardingInner() {
           <label>CAP (residenza) *</label>
           <input value={resCap} onChange={(e) => setResCap(e.target.value)} />
 
-          <SectionTitle>Documenti</SectionTitle>
+          <div style={{ marginTop: 14 }} className="small">
+            <b>Documenti</b>
+          </div>
 
           <label>Cittadinanza</label>
           <input value={citizenship} onChange={(e) => setCitizenship(e.target.value)} />
@@ -486,43 +446,84 @@ function OnboardingInner() {
           <label>Patente</label>
           <input value={drivingLicense} onChange={(e) => setDrivingLicense(e.target.value)} />
 
-          <CheckRow checked={hasCar} onChange={setHasCar} label="Automunito" />
+          {/* FIX: checkbox + testo attaccati */}
+          <label style={checkboxRow}>
+            <input
+              type="checkbox"
+              checked={hasCar}
+              onChange={(e) => setHasCar(e.target.checked)}
+              style={checkboxInput}
+            />
+            <span>Automunito</span>
+          </label>
         </>
       )}
 
       {/* ====== PACK EXPERIENCE ====== */}
       {pack === "experience" && (
         <>
-          <SectionTitle>Esperienza</SectionTitle>
+          <div style={{ marginTop: 14 }} className="small">
+            <b>Esperienza</b>
+          </div>
 
-          <CheckRow
-            checked={expCleaning}
-            onChange={setExpCleaning}
-            label="Esperienza nel campo delle pulizie"
-          />
+          <label style={checkboxRow}>
+            <input
+              type="checkbox"
+              checked={expCleaning}
+              onChange={(e) => setExpCleaning(e.target.checked)}
+              style={checkboxInput}
+            />
+            <span>Esperienza nel campo delle pulizie</span>
+          </label>
 
-          <CheckRow
-            checked={workClientContact}
-            onChange={setWorkClientContact}
-            label="Lavoro a contatto con persone/clienti"
-          />
+          <label style={checkboxRow}>
+            <input
+              type="checkbox"
+              checked={workClientContact}
+              onChange={(e) => setWorkClientContact(e.target.checked)}
+              style={checkboxInput}
+            />
+            <span>Lavoro a contatto con persone/clienti</span>
+          </label>
 
-          <CheckRow checked={workNight} onChange={setWorkNight} label="Lavoro notturno" />
+          <label style={checkboxRow}>
+            <input
+              type="checkbox"
+              checked={workNight}
+              onChange={(e) => setWorkNight(e.target.checked)}
+              style={checkboxInput}
+            />
+            <span>Lavoro notturno</span>
+          </label>
 
-          <CheckRow checked={workTeam} onChange={setWorkTeam} label="Lavoro in team" />
+          <label style={checkboxRow}>
+            <input
+              type="checkbox"
+              checked={workTeam}
+              onChange={(e) => setWorkTeam(e.target.checked)}
+              style={checkboxInput}
+            />
+            <span>Lavoro in team</span>
+          </label>
 
-          <CheckRow
-            checked={workPublicPlaces}
-            onChange={setWorkPublicPlaces}
-            label="Lavoro in luoghi pubblici"
-          />
+          <label style={checkboxRow}>
+            <input
+              type="checkbox"
+              checked={workPublicPlaces}
+              onChange={(e) => setWorkPublicPlaces(e.target.checked)}
+              style={checkboxInput}
+            />
+            <span>Lavoro in luoghi pubblici</span>
+          </label>
         </>
       )}
 
       {/* ====== PACK SKILLS ====== */}
       {pack === "skills" && (
         <>
-          <SectionTitle>Competenze</SectionTitle>
+          <div style={{ marginTop: 14 }} className="small">
+            <b>Competenze</b>
+          </div>
 
           <label>Lingua 1</label>
           <input value={lang1} onChange={(e) => setLang1(e.target.value)} />
@@ -532,29 +533,13 @@ function OnboardingInner() {
         </>
       )}
 
-      <div style={{ marginTop: 16 }}>
-        <button
-          onClick={saveCurrentPack}
-          disabled={saving}
-          style={{
-            padding: "10px 14px",
-            borderRadius: 12,
-            fontWeight: 700,
-          }}
-        >
+      <div style={{ marginTop: 14 }}>
+        <button onClick={saveCurrentPack} disabled={saving}>
           {saving ? "Salvo..." : "Salva e completa pack"}
         </button>
       </div>
 
-      <div
-        className="nav"
-        style={{
-          marginTop: 16,
-          display: "flex",
-          gap: 14,
-          flexWrap: "wrap",
-        }}
-      >
+      <div className="nav" style={{ marginTop: 14 }}>
         <a href="/dashboard">Dashboard</a>
         <a href="/profile">Profilo</a>
         {isAdminEmail(me?.email) ? <a href="/admin">Admin</a> : null}

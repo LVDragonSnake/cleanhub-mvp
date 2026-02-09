@@ -3,18 +3,20 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
+type WorkerProgress = {
+  packs?: {
+    general?: boolean;
+    experience?: boolean;
+    skills?: boolean;
+  };
+};
+
 type Profile = {
   id: string;
   first_name: string | null;
   clean_points: number | null;
   clean_level: number | null;
-  worker_progress: {
-    packs?: {
-      general?: boolean;
-      experience?: boolean;
-      skills?: boolean;
-    };
-  } | null;
+  worker_progress: WorkerProgress | null;
 };
 
 export default function DashboardWorker() {
@@ -36,6 +38,7 @@ export default function DashboardWorker() {
         .single();
 
       if (error) {
+        setProfile(null);
         setLoading(false);
         return;
       }
@@ -51,7 +54,7 @@ export default function DashboardWorker() {
   const packs = profile.worker_progress?.packs || {};
 
   return (
-    <div className="card" style={{ maxWidth: 640, margin: "40px auto" }}>
+    <div className="card">
       <h2>Ciao {profile.first_name || "Operatore"}</h2>
 
       <p>
@@ -82,10 +85,6 @@ export default function DashboardWorker() {
         done={!!packs.skills}
         onClick={() => (window.location.href = "/onboarding?pack=skills")}
       />
-
-      <div className="nav" style={{ marginTop: 14 }}>
-        <a href="/profile">Profilo</a>
-      </div>
     </div>
   );
 }
@@ -100,16 +99,14 @@ function Pack({
   onClick: () => void;
 }) {
   return (
-    <div style={{ marginBottom: 14 }}>
+    <div style={{ marginBottom: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <b>{title}</b>
         <span>{done ? "✅ Completato" : "❌ Da completare"}</span>
       </div>
 
-      <div>
-        <button onClick={onClick} style={{ marginTop: 6 }}>
-          {done ? "Modifica" : "Completa"}
-        </button>
+      <div style={{ marginTop: 6 }}>
+        <button onClick={onClick}>{done ? "Modifica" : "Completa"}</button>
       </div>
     </div>
   );

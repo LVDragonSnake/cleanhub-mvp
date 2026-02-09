@@ -494,8 +494,8 @@ function OnboardingInner() {
       </div>
 
       <div className="small" style={{ marginTop: 6 }}>
-        Pack: <b>{PACK_LABEL[pack] || pack}</b> {packs?.[pack] ? "✅" : "❌"}
-      </div>
+  Sezione: <b>{PACK_LABEL[pack] || pack}</b> {packs?.[pack] ? "✅" : "❌"}
+</div>
 
       {error && (
         <div className="small" style={{ marginTop: 10 }}>

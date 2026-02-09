@@ -9,7 +9,11 @@ type Profile = {
   clean_points: number | null;
   clean_level: number | null;
   worker_progress: {
-    packs?: Record<string, boolean>;
+    packs?: {
+      general?: boolean;
+      experience?: boolean;
+      skills?: boolean;
+    };
   } | null;
 };
 
@@ -32,7 +36,6 @@ export default function DashboardWorker() {
         .single();
 
       if (error) {
-        setProfile(null);
         setLoading(false);
         return;
       }
@@ -48,7 +51,7 @@ export default function DashboardWorker() {
   const packs = profile.worker_progress?.packs || {};
 
   return (
-    <div className="card">
+    <div className="card" style={{ maxWidth: 640, margin: "40px auto" }}>
       <h2>Ciao {profile.first_name || "Operatore"}</h2>
 
       <p>
@@ -97,10 +100,14 @@ function Pack({
   onClick: () => void;
 }) {
   return (
-    <div style={{ marginBottom: 12 }}>
-      <b>{title}</b> {done ? "✅ Completato" : "❌ Da completare"}
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <b>{title}</b>
+        <span>{done ? "✅ Completato" : "❌ Da completare"}</span>
+      </div>
+
       <div>
-        <button onClick={onClick} style={{ marginTop: 4 }}>
+        <button onClick={onClick} style={{ marginTop: 6 }}>
           {done ? "Modifica" : "Completa"}
         </button>
       </div>

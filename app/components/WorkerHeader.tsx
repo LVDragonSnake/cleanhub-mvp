@@ -10,7 +10,7 @@ type ProfileLite = {
   clean_points: number | null;
 };
 
-export function WorkerHeader() {
+export default function WorkerHeader() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileLite | null>(null);
 
@@ -40,7 +40,6 @@ export function WorkerHeader() {
   const xp = profile?.clean_points ?? 0;
   const p = useMemo(() => progressFromXp(xp), [xp]);
 
-  // Detect level up + popup
   useEffect(() => {
     if (loading) return;
 
@@ -68,7 +67,6 @@ export function WorkerHeader() {
     <div style={{ padding: "10px 16px" }}>
       <LevelBar level={p.level} nextLevel={p.nextLevel} progress={p.progress} />
 
-      {/* popup level up */}
       {levelUp && (
         <div
           style={{
@@ -93,7 +91,6 @@ export function WorkerHeader() {
               overflow: "hidden",
             }}
           >
-            {/* confetti fake: pallini che cadono */}
             <Confetti />
 
             <div style={{ fontSize: 14, opacity: 0.8 }}>Complimenti!</div>

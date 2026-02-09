@@ -1,49 +1,83 @@
+// app/components/WorkerHeader.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import { levelFromXp, progressFromXp } from "../lib/gamification";
+import { progressFromXp } from "../lib/gamification";
 
 type ProfileLite = {
-  id: string;
+  first_name: string | null;
+  user_type: string | null;
   clean_points: number | null;
-  clean_level: number | null;
 };
 
 export default function WorkerHeader() {
-  const [p, setP] = useState<ProfileLite | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<ProfileLite | null>(null);
 
   useEffect(() => {
     (async () => {
       const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return;
+      if (!auth.user) {
+        setLoading(false);
+        return;
+      }
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
-        .select("id,clean_points,clean_level")
+        .select("first_name,user_type,clean_points")
         .eq("id", auth.user.id)
         .single();
 
-      if (error) return;
-      setP(data as any);
+      setProfile((data as ProfileLite) ?? null);
+      setLoading(false);
     })();
   }, []);
 
-  if (!p) return null;
+  // niente header se non loggato
+  if (loading) return null;
+  if (!profile) return null;
 
-  const xp = p.clean_points ?? 0;
-  const lvl = p.clean_level ?? levelFromXp(xp);
-  const pct = progressFromXp(xp);
+  // lo mostriamo SOLO per worker (se vuoi anche per altri, togli questa riga)
+  if ((profile.user_type ?? "worker") !== "worker") return null;
+
+  const xp = profile.clean_points ?? 0;
+  const p = progressFromXp(xp);
 
   return (
-    <div style={{ padding: "12px 16px", borderBottom: "1px solid #eee" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Livello {lvl}</div>
+    <div
+      style={{
+        width: "100%",
+        padding: "10px 12px",
+        borderBottom: "1px solid rgba(0,0,0,0.08)",
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      {/* WRAPPER corto */}
+      <div style={{ width: "100%", maxWidth: 520 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
+          Livello {p.level}
+        </div>
 
-        <div style={{ flex: 1 }}>
-          <div style={{ height: 10, background: "#eaeef6", borderRadius: 999, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${pct}%`, background: "#2F6BFF" }} />
-          </div>
+        {/* barra */}
+        <div
+          style={{
+            width: "100%",
+            height: 10,
+            borderRadius: 999,
+            background: "rgba(0,0,0,0.08)",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              width: `${Math.round(p.progress01 * 100)}%`,
+              height: "100%",
+              background: "#1d4ed8", // BLU
+              borderRadius: 999,
+            }}
+          />
         </div>
       </div>
     </div>

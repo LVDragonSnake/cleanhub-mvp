@@ -50,9 +50,7 @@ export default function DashboardWorker() {
 
   const packs = useMemo(() => profile?.worker_progress?.packs || {}, [profile?.worker_progress]);
 
-  const allDone = useMemo(() => {
-    return PACKS.every((p) => !!packs[p.key]);
-  }, [packs]);
+  const allDone = useMemo(() => PACKS.every((p) => !!packs[p.key]), [packs]);
 
   if (loading) return <div>Caricamento...</div>;
   if (!profile) return <div>Errore profilo</div>;
@@ -65,6 +63,11 @@ export default function DashboardWorker() {
         Livello: <b>{profile.clean_level ?? 1}</b>
         {allDone ? <span style={{ marginLeft: 10 }}>🏆 Profilo completo</span> : null}
       </p>
+
+      <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+        <button onClick={() => (window.location.href = "/curriculum")}>Vedi curriculum</button>
+        <button onClick={() => (window.location.href = "/profile")}>Vai al profilo</button>
+      </div>
 
       <hr />
 

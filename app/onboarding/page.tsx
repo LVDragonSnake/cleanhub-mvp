@@ -1,29 +1,30 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 
-type Packs = {
-  general?: boolean;
-  experience?: boolean;
-  skills?: boolean;
-};
-
 type WorkerProgress = {
-  packs?: Packs;
+  packs?: Record<string, boolean>;
 };
 
 type Profile = {
   id: string;
   email: string | null;
-
-  first_name: string | null;
-  last_name: string | null;
   user_type: string | null;
 
-  // top-level worker fields
+  // gamification
+  clean_points: number | null;
+  clean_level: number | null;
+  worker_progress: WorkerProgress | null;
+
+  // base
+  first_name: string | null;
+  last_name: string | null;
+
+  // worker fields (top level)
   worker_phone: string | null;
-  worker_birth_date: string | null;
+  worker_birth_date: string | null; // yyyy-mm-dd
   worker_birth_city: string | null;
   worker_birth_country: string | null;
   worker_gender: string | null;
@@ -40,50 +41,50 @@ type Profile = {
 
   // jsonb
   worker_data: any;
-
-  // gamification
-  clean_points: number | null;
-  clean_level: number | null;
-  worker_progress: WorkerProgress | null;
 };
 
-const PROFILE_SELECT = `id,email,first_name,last_name,user_type,
+const PROFILE_SELECT = `id,email,user_type,
+clean_points,clean_level,worker_progress,
+first_name,last_name,
 worker_phone,worker_birth_date,worker_birth_city,worker_birth_country,worker_gender,
 worker_res_address,worker_res_city,worker_res_province,worker_res_cap,
 worker_citizenship,worker_permit_type,worker_driving_license,worker_has_car,
-worker_data,clean_points,clean_level,worker_progress` as const;
+worker_data` as const;
 
-function computeLevel(points: number) {
-  // 0-149 => lvl 1, 150-299 => lvl 2, ...
-  const lvl = 1 + Math.floor(points / 150);
-  return Math.min(5, Math.max(1, lvl));
+const PACK_POINTS = 100;
+const MAX_LEVEL = 5;
+
+/** livelli semplici: 0-149 => lv1, 150-299 => lv2, ... */
+function levelFromPoints(points: number) {
+  return Math.min(MAX_LEVEL, 1 + Math.floor(points / 150));
 }
 
-function getPackFromUrl(): "general" | "experience" | "skills" | null {
-  if (typeof window === "undefined") return null;
-  const p = new URLSearchParams(window.location.search).get("pack");
-  if (p === "general" || p === "experience" || p === "skills") return p;
-  return null;
+function packTitle(pack: string) {
+  if (pack === "general") return "Dati personali";
+  if (pack === "experience") return "Esperienza lavorativa";
+  if (pack === "skills") return "Competenze e preferenze";
+  return "Onboarding";
 }
 
 export default function OnboardingPage() {
+  const search = useSearchParams();
+  const pack = (search.get("pack") || "general").toLowerCase(); // general | experience | skills
+  const edit = search.get("edit") === "1";
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [meEmail, setMeEmail] = useState("");
+
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  const [pack, setPack] = useState<"general" | "experience" | "skills" | null>(null);
-
-  // ---------------------------
-  // STATE PACK: GENERAL
-  // ---------------------------
+  // --------- STATE: GENERAL ---------
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
   const [phone, setPhone] = useState("");
-  const [birthDate, setBirthDate] = useState(""); // yyyy-mm-dd
+  const [birthDate, setBirthDate] = useState("");
   const [birthCity, setBirthCity] = useState("");
   const [birthCountry, setBirthCountry] = useState("Italia");
   const [gender, setGender] = useState<"" | "M" | "F">("");
@@ -98,20 +99,24 @@ export default function OnboardingPage() {
   const [drivingLicense, setDrivingLicense] = useState("");
   const [hasCar, setHasCar] = useState(false);
 
-  // ---------------------------
-  // STATE PACK: EXPERIENCE
-  // ---------------------------
+  // --------- STATE: EXPERIENCE (jsonb) ---------
   const [expCleaning, setExpCleaning] = useState(false);
   const [workNight, setWorkNight] = useState(false);
   const [workTeam, setWorkTeam] = useState(false);
   const [workPublicPlaces, setWorkPublicPlaces] = useState(false);
   const [workClientContact, setWorkClientContact] = useState(false);
 
-  // ---------------------------
-  // STATE PACK: SKILLS
-  // ---------------------------
+  // --------- STATE: SKILLS (jsonb) ---------
   const [lang1, setLang1] = useState("Italiano");
   const [lang2, setLang2] = useState("");
+
+  const points = profile?.clean_points ?? 0;
+  const level = profile?.clean_level ?? 1;
+
+  const packDone = useMemo(() => {
+    const packs = profile?.worker_progress?.packs || {};
+    return !!packs?.[pack];
+  }, [profile?.worker_progress, pack]);
 
   useEffect(() => {
     (async () => {
@@ -122,7 +127,6 @@ export default function OnboardingPage() {
         window.location.href = "/login";
         return;
       }
-
       setMeEmail((auth.user.email || "").toLowerCase());
 
       const { data: prof, error: e } = await supabase
@@ -131,15 +135,14 @@ export default function OnboardingPage() {
         .eq("id", auth.user.id)
         .single();
 
-      if (e) {
-        setError(e.message);
+      if (e || !prof) {
+        setError(e?.message || "Errore profilo");
         setLoading(false);
         return;
       }
 
       const p = prof as unknown as Profile;
 
-      // se non è worker, fuori
       const t = (p.user_type ?? "worker") as string;
       if (t === "company") {
         window.location.href = "/company";
@@ -152,18 +155,15 @@ export default function OnboardingPage() {
 
       setProfile(p);
 
-      // pack da URL
-      const fromUrl = getPackFromUrl();
-      setPack(fromUrl);
-
-      // prefill GENERAL
+      // PREFILL (sempre, così edit funziona)
       setFirstName(p.first_name ?? "");
       setLastName(p.last_name ?? "");
+
       setPhone(p.worker_phone ?? "");
       setBirthDate(p.worker_birth_date ?? "");
       setBirthCity(p.worker_birth_city ?? "");
       setBirthCountry(p.worker_birth_country ?? "Italia");
-      setGender((p.worker_gender === "M" || p.worker_gender === "F" ? p.worker_gender : "") as any);
+      setGender(((p.worker_gender ?? "") as any) === "M" ? "M" : ((p.worker_gender ?? "") as any) === "F" ? "F" : "");
 
       setResAddress(p.worker_res_address ?? "");
       setResCity(p.worker_res_city ?? "");
@@ -175,17 +175,13 @@ export default function OnboardingPage() {
       setDrivingLicense(p.worker_driving_license ?? "");
       setHasCar(Boolean(p.worker_has_car ?? false));
 
-      // prefill worker_data
       const wd = (p.worker_data ?? {}) as any;
-
-      // prefill EXPERIENCE
       setExpCleaning(!!wd.exp_cleaning);
       setWorkNight(!!wd.work_night);
       setWorkTeam(!!wd.work_team);
       setWorkPublicPlaces(!!wd.work_public_places);
       setWorkClientContact(!!wd.work_client_contact);
 
-      // prefill SKILLS
       const langs = Array.isArray(wd.languages) ? wd.languages : [];
       if (langs[0]?.name) setLang1(langs[0].name);
       if (langs[1]?.name) setLang2(langs[1].name);
@@ -194,32 +190,22 @@ export default function OnboardingPage() {
     })();
   }, []);
 
-  const points = profile?.clean_points ?? 0;
-  const level = profile?.clean_level ?? 1;
-  const packs = profile?.worker_progress?.packs ?? {};
-
-  const title = useMemo(() => {
-    if (pack === "general") return "Dati personali";
-    if (pack === "experience") return "Esperienza lavorativa";
-    if (pack === "skills") return "Competenze e preferenze";
-    return "Completa il profilo";
-  }, [pack]);
-
-  async function awardPack(packName: "general" | "experience" | "skills") {
+  async function awardPackIfFirstTime(packName: string) {
     if (!profile) return;
 
-    const current = profile.worker_progress ?? { packs: {} };
-    const currentPacks = current.packs ?? {};
+    const progress = (profile.worker_progress ?? { packs: {} }) as WorkerProgress;
+    const already = !!progress.packs?.[packName];
+    if (already) return; // NO punti doppioni
 
-    if (currentPacks[packName]) return; // già fatto
-
-    const add = 100; // punti per pacchetto
-    const newPoints = (profile.clean_points ?? 0) + add;
-    const newLevel = computeLevel(newPoints);
+    const newPoints = (profile.clean_points ?? 0) + PACK_POINTS;
+    const newLevel = levelFromPoints(newPoints);
 
     const newProgress: WorkerProgress = {
-      ...current,
-      packs: { ...currentPacks, [packName]: true },
+      ...progress,
+      packs: {
+        ...(progress.packs ?? {}),
+        [packName]: true,
+      },
     };
 
     const { error: e } = await supabase
@@ -231,7 +217,9 @@ export default function OnboardingPage() {
       })
       .eq("id", profile.id);
 
-    if (e) throw new Error(e.message);
+    if (e) {
+      throw new Error(e.message);
+    }
 
     setProfile({
       ...profile,
@@ -242,90 +230,88 @@ export default function OnboardingPage() {
   }
 
   async function savePack() {
-    if (!profile || !pack) return;
+    if (!profile) return;
     setError(null);
     setSaving(true);
 
     try {
+      // 1) VALIDAZIONE MINIMA PER PACCHETTO
       if (pack === "general") {
-        // requisiti MINIMI per "general": nome + cognome
         if (!firstName.trim()) throw new Error("Inserisci il nome.");
         if (!lastName.trim()) throw new Error("Inserisci il cognome.");
-
-        const { error: e } = await supabase
-          .from("profiles")
-          .update({
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-
-            worker_phone: phone.trim() || null,
-            worker_birth_date: birthDate || null,
-            worker_birth_city: birthCity.trim() || null,
-            worker_birth_country: birthCountry.trim() || null,
-            worker_gender: gender || null,
-
-            worker_res_address: resAddress.trim() || null,
-            worker_res_city: resCity.trim() || null,
-            worker_res_province: resProvince.trim() || null,
-            worker_res_cap: resCap.trim() || null,
-
-            worker_citizenship: citizenship.trim() || null,
-            worker_permit_type: permitType.trim() || null,
-            worker_driving_license: drivingLicense.trim() || null,
-            worker_has_car: hasCar,
-          })
-          .eq("id", profile.id);
-
-        if (e) throw new Error(e.message);
-        await awardPack("general");
+        // per accesso piattaforma bastano nome+cognome+email: quindi NON blocchiamo su tutti i campi.
+        // però se l'utente li compila, li salviamo.
       }
 
-      if (pack === "experience") {
-        const worker_data = {
-          ...(profile.worker_data ?? {}),
-          exp_cleaning: expCleaning,
-          work_night: workNight,
-          work_team: workTeam,
-          work_public_places: workPublicPlaces,
-          work_client_contact: workClientContact,
-        };
+      // 2) BUILD PAYLOAD
+      const wdPrev = (profile.worker_data ?? {}) as any;
 
-        const { error: e } = await supabase
-          .from("profiles")
-          .update({ worker_data })
-          .eq("id", profile.id);
+      const wdNext =
+        pack === "experience"
+          ? {
+              ...wdPrev,
+              exp_cleaning: expCleaning,
+              work_night: workNight,
+              work_team: workTeam,
+              work_public_places: workPublicPlaces,
+              work_client_contact: workClientContact,
+            }
+          : pack === "skills"
+          ? {
+              ...wdPrev,
+              languages: [
+                { name: (lang1 || "Italiano").trim() },
+                ...(lang2.trim() ? [{ name: lang2.trim() }] : []),
+              ],
+            }
+          : wdPrev;
 
-        if (e) throw new Error(e.message);
+      const updatePayload: any =
+        pack === "general"
+          ? {
+              first_name: firstName.trim(),
+              last_name: lastName.trim(),
 
-        setProfile({ ...profile, worker_data });
-        await awardPack("experience");
-      }
+              worker_phone: phone.trim() || null,
+              worker_birth_date: birthDate || null,
+              worker_birth_city: birthCity.trim() || null,
+              worker_birth_country: birthCountry.trim() || null,
+              worker_gender: gender || null,
 
-      if (pack === "skills") {
-        const worker_data = {
-          ...(profile.worker_data ?? {}),
-          languages: [
-            { name: (lang1 || "Italiano").trim() },
-            ...(lang2.trim() ? [{ name: lang2.trim() }] : []),
-          ],
-        };
+              worker_res_address: resAddress.trim() || null,
+              worker_res_city: resCity.trim() || null,
+              worker_res_province: resProvince.trim() || null,
+              worker_res_cap: resCap.trim() || null,
 
-        const { error: e } = await supabase
-          .from("profiles")
-          .update({ worker_data })
-          .eq("id", profile.id);
+              worker_citizenship: citizenship.trim() || null,
+              worker_permit_type: permitType.trim() || null,
+              worker_driving_license: drivingLicense.trim() || null,
+              worker_has_car: hasCar,
+            }
+          : {
+              worker_data: wdNext,
+            };
 
-        if (e) throw new Error(e.message);
+      if (pack !== "general") updatePayload.worker_data = wdNext;
 
-        setProfile({ ...profile, worker_data });
-        await awardPack("skills");
-      }
+      const { error: e } = await supabase.from("profiles").update(updatePayload).eq("id", profile.id);
+      if (e) throw new Error(e.message);
 
-      // torna alla dashboard
+      // 3) AGGIORNA STATE LOCALE
+      const newProfile: Profile = {
+        ...profile,
+        ...updatePayload,
+        worker_data: wdNext,
+      };
+      setProfile(newProfile);
+
+      // 4) PUNTI + FLAG PACCHETTO
+      await awardPackIfFirstTime(pack);
+
+      // 5) TORNA ALLA DASH
       window.location.href = "/dashboard";
     } catch (err: any) {
       setError(err?.message || "Errore salvataggio");
-    } finally {
       setSaving(false);
     }
   }
@@ -336,63 +322,25 @@ export default function OnboardingPage() {
   }
 
   if (loading) return <div>Caricamento...</div>;
-
-  // Se non hai scelto pack, fai scegliere
-  if (!pack) {
-    return (
-      <div className="card">
-        <h2>Dashboard Operatore</h2>
-
-        <div className="small">Loggato come: <b>{meEmail}</b></div>
-        <div className="small" style={{ marginTop: 8 }}>
-          Livello: <b>{level}</b> — Clean Points: <b>{points}</b>
-        </div>
-
-        <div style={{ marginTop: 14 }} />
-
-        <h3>Completa un pacchetto</h3>
-
-        <button onClick={() => (window.location.href = "/onboarding?pack=general")} disabled={!!packs.general}>
-          {packs.general ? "Dati personali ✅" : "Dati personali"}
-        </button>
-
-        <div style={{ marginTop: 8 }} />
-
-        <button onClick={() => (window.location.href = "/onboarding?pack=experience")} disabled={!!packs.experience}>
-          {packs.experience ? "Esperienza lavorativa ✅" : "Esperienza lavorativa"}
-        </button>
-
-        <div style={{ marginTop: 8 }} />
-
-        <button onClick={() => (window.location.href = "/onboarding?pack=skills")} disabled={!!packs.skills}>
-          {packs.skills ? "Competenze e preferenze ✅" : "Competenze e preferenze"}
-        </button>
-
-        <div className="nav" style={{ marginTop: 14 }}>
-          <a href="/dashboard">Dashboard</a>
-          <a href="/profile">Profilo</a>
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              logout();
-            }}
-          >
-            Logout
-          </a>
-        </div>
-      </div>
-    );
-  }
+  if (!profile) return <div>Errore profilo</div>;
 
   return (
     <div className="card">
-      <h2>{title}</h2>
+      <h2>Onboarding Operatore — {packTitle(pack)}</h2>
 
-      <div className="small">Loggato come: <b>{meEmail}</b></div>
-      <div className="small" style={{ marginTop: 8 }}>
-        Livello: <b>{level}</b> — Clean Points: <b>{points}</b>
+      <div className="small">
+        Loggato come: <b>{meEmail}</b>
       </div>
+
+      <div className="small" style={{ marginTop: 6 }}>
+        Clean Points: <b>{points}</b> — Livello: <b>{level}</b>
+      </div>
+
+      {packDone && !edit && (
+        <div className="small" style={{ marginTop: 10 }}>
+          ✅ Questo pacchetto risulta già completato. (Se vuoi modificarlo: apri da Profilo → Modifica onboarding)
+        </div>
+      )}
 
       {error && (
         <div className="small" style={{ marginTop: 10 }}>
@@ -400,18 +348,36 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      <div style={{ marginTop: 14 }} />
-
+      {/* -------------------- GENERAL -------------------- */}
       {pack === "general" && (
         <>
+          <div style={{ marginTop: 14 }} className="small">
+            <b>Dati base</b>
+          </div>
+
           <label>Nome *</label>
           <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
 
           <label>Cognome *</label>
           <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
 
+          <label>Sesso</label>
+          <select value={gender} onChange={(e) => setGender(e.target.value as any)}>
+            <option value="">—</option>
+            <option value="F">F</option>
+            <option value="M">M</option>
+          </select>
+
+          <div style={{ marginTop: 14 }} className="small">
+            <b>Contatti</b>
+          </div>
+
           <label>Telefono</label>
           <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+
+          <div style={{ marginTop: 14 }} className="small">
+            <b>Nascita</b>
+          </div>
 
           <label>Data di nascita</label>
           <input value={birthDate} onChange={(e) => setBirthDate(e.target.value)} type="date" />
@@ -421,13 +387,6 @@ export default function OnboardingPage() {
 
           <label>Paese di nascita</label>
           <input value={birthCountry} onChange={(e) => setBirthCountry(e.target.value)} />
-
-          <label>Sesso</label>
-          <select value={gender} onChange={(e) => setGender(e.target.value as any)}>
-            <option value="">—</option>
-            <option value="M">Maschio</option>
-            <option value="F">Femmina</option>
-          </select>
 
           <div style={{ marginTop: 14 }} className="small">
             <b>Residenza</b>
@@ -470,37 +429,67 @@ export default function OnboardingPage() {
         </>
       )}
 
+      {/* -------------------- EXPERIENCE -------------------- */}
       {pack === "experience" && (
         <>
+          <div style={{ marginTop: 14 }} className="small">
+            <b>Esperienza e preferenze</b>
+          </div>
+
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-            <input type="checkbox" checked={expCleaning} onChange={(e) => setExpCleaning(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={expCleaning}
+              onChange={(e) => setExpCleaning(e.target.checked)}
+            />
             Esperienza nel campo delle pulizie
           </label>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <input type="checkbox" checked={workClientContact} onChange={(e) => setWorkClientContact(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={workClientContact}
+              onChange={(e) => setWorkClientContact(e.target.checked)}
+            />
             Lavoro a contatto con persone/clienti
           </label>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <input type="checkbox" checked={workNight} onChange={(e) => setWorkNight(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={workNight}
+              onChange={(e) => setWorkNight(e.target.checked)}
+            />
             Lavoro notturno
           </label>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <input type="checkbox" checked={workTeam} onChange={(e) => setWorkTeam(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={workTeam}
+              onChange={(e) => setWorkTeam(e.target.checked)}
+            />
             Lavoro in team
           </label>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <input type="checkbox" checked={workPublicPlaces} onChange={(e) => setWorkPublicPlaces(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={workPublicPlaces}
+              onChange={(e) => setWorkPublicPlaces(e.target.checked)}
+            />
             Lavoro in luoghi pubblici
           </label>
         </>
       )}
 
+      {/* -------------------- SKILLS -------------------- */}
       {pack === "skills" && (
         <>
+          <div style={{ marginTop: 14 }} className="small">
+            <b>Lingue</b>
+          </div>
+
           <label>Lingua 1</label>
           <input value={lang1} onChange={(e) => setLang1(e.target.value)} />
 
@@ -509,12 +498,9 @@ export default function OnboardingPage() {
         </>
       )}
 
-      <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-        <button onClick={() => (window.location.href = "/dashboard")} disabled={saving}>
-          Indietro
-        </button>
+      <div style={{ marginTop: 14 }}>
         <button onClick={savePack} disabled={saving}>
-          {saving ? "Salvo..." : "Salva e completa pack"}
+          {saving ? "Salvo..." : packDone && !edit ? "Vai in dashboard" : "Salva e completa pacchetto"}
         </button>
       </div>
 

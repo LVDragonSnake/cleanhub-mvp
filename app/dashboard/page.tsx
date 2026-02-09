@@ -6,15 +6,15 @@ import { supabase } from "../../lib/supabaseClient";
 type Profile = {
   id: string;
   first_name: string | null;
-  clean_points: number;
-  clean_level: number;
+  clean_points: number | null;
+  clean_level: number | null;
   worker_progress: {
     packs?: {
       general?: boolean;
       experience?: boolean;
       skills?: boolean;
     };
-  };
+  } | null;
 };
 
 export default function DashboardWorker() {
@@ -35,12 +35,7 @@ export default function DashboardWorker() {
         .eq("id", auth.user.id)
         .single();
 
-      if (!data) {
-        window.location.href = "/login";
-        return;
-      }
-
-      setProfile(data);
+      setProfile(data as any);
       setLoading(false);
     })();
   }, []);
@@ -54,30 +49,29 @@ export default function DashboardWorker() {
     <div className="card">
       <h2>Ciao {profile.first_name || "Operatore"}</h2>
 
-      <p>
-        Livello: <b>{profile.clean_level}</b>
-      </p>
-      <p>
-        Clean Points: <b>{profile.clean_points}</b>
-      </p>
+      <p>Livello: <b>{profile.clean_level ?? 1}</b></p>
+      <p>Clean Points: <b>{profile.clean_points ?? 0}</b></p>
 
       <hr />
 
-      <h3>Completa il profilo</h3>
+      <h3>Avanzamento profilo</h3>
 
       <Pack
         title="Dati personali"
         done={packs.general}
+        onClick={() => (window.location.href = "/onboarding?pack=general")}
       />
 
       <Pack
         title="Esperienza lavorativa"
         done={packs.experience}
+        onClick={() => (window.location.href = "/onboarding?pack=experience")}
       />
 
       <Pack
-        title="Competenze"
+        title="Competenze e preferenze"
         done={packs.skills}
+        onClick={() => (window.location.href = "/onboarding?pack=skills")}
       />
     </div>
   );
@@ -86,23 +80,18 @@ export default function DashboardWorker() {
 function Pack({
   title,
   done,
+  onClick,
 }: {
   title: string;
   done?: boolean;
+  onClick: () => void;
 }) {
   return (
     <div style={{ marginBottom: 12 }}>
-      <b>{title}</b>{" "}
-      {done ? "✅ Completato" : "❌ Da completare"}
-
+      <b>{title}</b> {done ? "✅ Completato" : "❌ Da completare"}
       {!done && (
         <div>
-          <button
-            onClick={() => {
-              window.location.href = "/onboarding";
-            }}
-            style={{ marginTop: 6 }}
-          >
+          <button onClick={onClick} style={{ marginTop: 4 }}>
             Completa
           </button>
         </div>

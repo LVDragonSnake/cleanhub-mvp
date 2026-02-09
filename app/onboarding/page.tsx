@@ -50,7 +50,6 @@ type Profile = {
   clean_level: number | null;
   worker_progress: WorkerProgress | null;
 
-  // worker fields (top-level)
   worker_phone: string | null;
   worker_birth_date: string | null;
   worker_birth_city: string | null;
@@ -96,7 +95,8 @@ export default function OnboardingPage() {
 
 function OnboardingInner() {
   const searchParams = useSearchParams();
-  const pack = ((searchParams.get("pack") || "general") as PackKey) || "general";
+  const rawPack = (searchParams.get("pack") || "general") as PackKey;
+  const pack: PackKey = PACK_ORDER.includes(rawPack) ? rawPack : "general";
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -174,13 +174,9 @@ function OnboardingInner() {
   const [moreInfo, setMoreInfo] = useState("");
 
   const packs = useMemo(() => profile?.worker_progress?.packs || {}, [profile?.worker_progress]);
-  const points = profile?.clean_points ?? 0;
   const level = profile?.clean_level ?? 1;
 
-  const allDone = useMemo(() => {
-    const p = packs || {};
-    return PACK_ORDER.every((k) => !!p[k]);
-  }, [packs]);
+  const allDone = useMemo(() => PACK_ORDER.every((k) => !!packs?.[k]), [packs]);
 
   useEffect(() => {
     (async () => {
@@ -298,25 +294,82 @@ function OnboardingInner() {
   }, []);
 
   function validateCurrentPack(pk: PackKey) {
-    if (pk === "general") {
-      if (!firstName.trim()) return "Inserisci il nome.";
-      if (!lastName.trim()) return "Inserisci il cognome.";
-      if (!phone.trim()) return "Inserisci il telefono.";
-      if (!birthDate) return "Inserisci la data di nascita.";
-      if (!gender) return "Seleziona il sesso.";
-      if (!resCity.trim()) return "Inserisci la città di residenza.";
-      if (!resProvince.trim()) return "Inserisci la provincia di residenza.";
-      if (!resCap.trim()) return "Inserisci il CAP.";
+    const anyText = (...vals: Array<string | undefined | null>) =>
+      vals.some((v) => (v || "").trim().length > 0);
+
+    const anyTrue = (...vals: Array<boolean | undefined | null>) =>
+      vals.some((v) => !!v);
+
+    switch (pk) {
+      case "general":
+        if (!firstName.trim()) return "Inserisci il nome.";
+        if (!lastName.trim()) return "Inserisci il cognome.";
+        if (!phone.trim()) return "Inserisci il telefono.";
+        if (!birthDate) return "Inserisci la data di nascita.";
+        if (!gender) return "Seleziona il sesso.";
+        if (!resCity.trim()) return "Inserisci la città di residenza.";
+        if (!resProvince.trim()) return "Inserisci la provincia di residenza.";
+        if (!resCap.trim()) return "Inserisci il CAP.";
+        return null;
+
+      case "documents":
+        if (!anyText(citizenship, permitType, drivingLicense) && !anyTrue(hasCar))
+          return "Compila almeno un campo (o seleziona Automunito).";
+        return null;
+
+      case "languages":
+        if (!lang1.trim()) return "Inserisci almeno la Lingua 1.";
+        return null;
+
+      case "experience":
+        if (
+          !anyTrue(expCleaning, workNight, workTeam, workPublicPlaces, workClientContact) &&
+          !anyTrue(envHotel, envCare, envPrivateHomes, envShopping, envOffices, envHospital, envRestaurants, envOther) &&
+          !anyText(envOtherText)
+        )
+          return "Seleziona almeno una voce di esperienza/ambiente.";
+        if (envOther && !envOtherText.trim()) return "Specifica 'Altro'.";
+        return null;
+
+      case "training":
+        if (
+          !anyText(
+            schoolYearEnd,
+            schoolCourse,
+            schoolName,
+            trainingCourses,
+            studyReadings,
+            studyDocsTv,
+            studySeminars,
+            studyFairs
+          )
+        )
+          return "Compila almeno un campo di formazione.";
+        return null;
+
+      case "availability":
+        if (
+          !anyText(moveRadiusKm, contractPrefs, availabilityNotes, hourlyRequest) &&
+          !anyText(availableTrips, currentlyEmployed)
+        )
+          return "Compila almeno un campo di disponibilità/richieste.";
+        return null;
+
+      case "extra":
+        if (!anyText(hobbies, traits, moreInfo))
+          return "Compila almeno un campo (hobbies / tratti / info).";
+        return null;
+
+      default:
+        return null;
     }
-    return null;
   }
 
   async function completePack(packKey: PackKey) {
     if (!profile) return;
 
     const current = profile.worker_progress || { packs: {} };
-    const already = !!current.packs?.[packKey];
-    if (already) return;
+    if (!!current.packs?.[packKey]) return;
 
     const newPoints = (profile.clean_points ?? 0) + 100;
     const newLevel = levelFromXp(newPoints);
@@ -367,24 +420,22 @@ function OnboardingInner() {
 
     setSaving(true);
 
-    // worker_data merge
     const baseWd = (profile.worker_data ?? {}) as any;
 
     const worker_data = {
       ...baseWd,
 
-      // LANGUAGES
       languages: [
         { name: (lang1 || "Italiano").trim() },
         ...(lang2.trim() ? [{ name: lang2.trim() }] : []),
       ],
 
-      // EXPERIENCE
       exp_cleaning: expCleaning,
       work_night: workNight,
       work_team: workTeam,
       work_public_places: workPublicPlaces,
       work_client_contact: workClientContact,
+
       env: {
         hotel: envHotel,
         care: envCare,
@@ -397,7 +448,6 @@ function OnboardingInner() {
         other_text: envOther ? envOtherText.trim() : "",
       },
 
-      // TRAINING
       training: {
         school_year_end: schoolYearEnd.trim(),
         school_course: schoolCourse.trim(),
@@ -409,7 +459,6 @@ function OnboardingInner() {
         fairs: studyFairs.trim(),
       },
 
-      // AVAILABILITY
       availability: {
         trips: availableTrips,
         radius_km: moveRadiusKm.trim(),
@@ -419,7 +468,6 @@ function OnboardingInner() {
         hourly_request: hourlyRequest.trim(),
       },
 
-      // EXTRA
       extra: {
         hobbies: hobbies.trim(),
         traits: traits.trim(),
@@ -427,34 +475,32 @@ function OnboardingInner() {
       },
     };
 
-    // update DB
+    const updatePayload = {
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+
+      worker_phone: phone.trim(),
+      worker_birth_date: birthDate || null,
+      worker_birth_city: birthCity.trim() || null,
+      worker_birth_country: birthCountry.trim() || null,
+      worker_gender: gender || null,
+
+      worker_res_address: resAddress.trim() || null,
+      worker_res_city: resCity.trim() || null,
+      worker_res_province: resProvince.trim() || null,
+      worker_res_cap: resCap.trim() || null,
+
+      worker_citizenship: citizenship.trim() || null,
+      worker_permit_type: permitType.trim() || null,
+      worker_driving_license: drivingLicense.trim() || null,
+      worker_has_car: hasCar,
+
+      worker_data,
+    };
+
     const { error: e } = await supabase
       .from("profiles")
-      .update({
-        // GENERAL
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-
-        worker_phone: phone.trim(),
-        worker_birth_date: birthDate || null,
-        worker_birth_city: birthCity.trim() || null,
-        worker_birth_country: birthCountry.trim() || null,
-        worker_gender: gender || null,
-
-        worker_res_address: resAddress.trim() || null,
-        worker_res_city: resCity.trim() || null,
-        worker_res_province: resProvince.trim() || null,
-        worker_res_cap: resCap.trim() || null,
-
-        // DOCUMENTS
-        worker_citizenship: citizenship.trim() || null,
-        worker_permit_type: permitType.trim() || null,
-        worker_driving_license: drivingLicense.trim() || null,
-        worker_has_car: hasCar,
-
-        // JSON
-        worker_data,
-      })
+      .update(updatePayload)
       .eq("id", profile.id);
 
     if (e) {
@@ -463,10 +509,12 @@ function OnboardingInner() {
       return;
     }
 
-    // aggiorna stato locale (minimo indispensabile)
-    setProfile({ ...profile, worker_data });
+    // aggiorna stato locale completo (così UI e validazioni restano coerenti)
+    setProfile({
+      ...profile,
+      ...updatePayload,
+    });
 
-    // completa pack + punti
     await completePack(pack);
 
     setSaving(false);
@@ -494,8 +542,8 @@ function OnboardingInner() {
       </div>
 
       <div className="small" style={{ marginTop: 6 }}>
-  Sezione: <b>{PACK_LABEL[pack] || pack}</b> {packs?.[pack] ? "✅" : "❌"}
-</div>
+        Sezione: <b>{PACK_LABEL[pack] || pack}</b> {packs?.[pack] ? "✅" : "❌"}
+      </div>
 
       {error && (
         <div className="small" style={{ marginTop: 10 }}>
@@ -781,7 +829,7 @@ function OnboardingInner() {
 
       <div style={{ marginTop: 14 }}>
         <button onClick={saveCurrentPack} disabled={saving}>
-          {saving ? "Salvo..." : "Salva e completa pack"}
+          {saving ? "Salvo..." : "Salva e completa sezione"}
         </button>
       </div>
 

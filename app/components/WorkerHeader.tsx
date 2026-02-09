@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import { progressFromXp } from "../lib/gamification";
+import { progressFromXp } from "../../lib/gamification";
 
 type ProfileLite = {
   first_name: string | null;

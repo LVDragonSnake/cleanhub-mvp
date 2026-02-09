@@ -26,7 +26,7 @@ type Profile = {
   worker_progress: WorkerProgress | null;
 
   worker_phone: string | null;
-  worker_birth_date: string | null;
+  worker_birth_date: string | null; // yyyy-mm-dd
   worker_birth_city: string | null;
   worker_birth_country: string | null;
   worker_gender: string | null;
@@ -69,18 +69,13 @@ export default function OnboardingPage() {
 
 function OnboardingInner() {
   const searchParams = useSearchParams();
-  const pack = (searchParams.get("pack") || "general") as
-    | "general"
-    | "experience"
-    | "skills";
+  const pack = (searchParams.get("pack") || "general") as "general" | "experience" | "skills";
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [me, setMe] = useState<any>(null);
   const [meEmail, setMeEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
-
   const [profile, setProfile] = useState<Profile | null>(null);
 
   // ====== FORM STATE ======
@@ -114,9 +109,7 @@ function OnboardingInner() {
   const [workPublicPlaces, setWorkPublicPlaces] = useState(false);
   const [workClientContact, setWorkClientContact] = useState(false);
 
-  const packs = useMemo(() => profile?.worker_progress?.packs || {}, [profile]);
-  const points = profile?.clean_points ?? 0;
-  const level = profile?.clean_level ?? 1;
+  const packs = useMemo(() => profile?.worker_progress?.packs || {}, [profile?.worker_progress]);
 
   useEffect(() => {
     (async () => {
@@ -128,7 +121,6 @@ function OnboardingInner() {
         return;
       }
 
-      setMe(auth.user);
       setMeEmail((auth.user.email || "").toLowerCase());
 
       const { data: prof, error: e } = await supabase
@@ -196,11 +188,10 @@ function OnboardingInner() {
     if (!profile) return;
 
     const current = profile.worker_progress || { packs: {} };
-    const already = !!current.packs?.[packKey];
-    if (already) return;
+    if (current.packs?.[packKey]) return;
 
     const newPoints = (profile.clean_points ?? 0) + 100;
-   const newLevel = levelFromXp(newPoints);
+    const newLevel = levelFromXp(newPoints);
 
     const newProgress: WorkerProgress = {
       ...current,
@@ -303,7 +294,25 @@ function OnboardingInner() {
       return;
     }
 
-    setProfile({ ...profile, worker_data });
+    setProfile({
+      ...profile,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      worker_phone: phone.trim(),
+      worker_birth_date: birthDate || null,
+      worker_birth_city: birthCity.trim() || null,
+      worker_birth_country: birthCountry.trim() || null,
+      worker_gender: gender || null,
+      worker_res_address: resAddress.trim() || null,
+      worker_res_city: resCity.trim() || null,
+      worker_res_province: resProvince.trim() || null,
+      worker_res_cap: resCap.trim() || null,
+      worker_citizenship: citizenship.trim() || null,
+      worker_permit_type: permitType.trim() || null,
+      worker_driving_license: drivingLicense.trim() || null,
+      worker_has_car: hasCar,
+      worker_data,
+    });
 
     await completePack(pack);
 
@@ -327,17 +336,9 @@ function OnboardingInner() {
       </div>
 
       <div className="small" style={{ marginTop: 6 }}>
-        Clean Points: <b>{points}</b> — Livello: <b>{level}</b>
-      </div>
-
-      <div className="small" style={{ marginTop: 6 }}>
         Pack:{" "}
         <b>
-          {pack === "general"
-            ? "Dati personali"
-            : pack === "experience"
-            ? "Esperienza"
-            : "Competenze"}
+          {pack === "general" ? "Dati personali" : pack === "experience" ? "Esperienza" : "Competenze"}
         </b>{" "}
         {packs?.[pack] ? "✅" : "❌"}
       </div>
@@ -422,47 +423,27 @@ function OnboardingInner() {
           </div>
 
           <div className="chkRow">
-            <input
-              type="checkbox"
-              checked={expCleaning}
-              onChange={(e) => setExpCleaning(e.target.checked)}
-            />
+            <input type="checkbox" checked={expCleaning} onChange={(e) => setExpCleaning(e.target.checked)} />
             <span>Esperienza nel campo delle pulizie</span>
           </div>
 
           <div className="chkRow">
-            <input
-              type="checkbox"
-              checked={workClientContact}
-              onChange={(e) => setWorkClientContact(e.target.checked)}
-            />
+            <input type="checkbox" checked={workClientContact} onChange={(e) => setWorkClientContact(e.target.checked)} />
             <span>Lavoro a contatto con persone/clienti</span>
           </div>
 
           <div className="chkRow">
-            <input
-              type="checkbox"
-              checked={workNight}
-              onChange={(e) => setWorkNight(e.target.checked)}
-            />
+            <input type="checkbox" checked={workNight} onChange={(e) => setWorkNight(e.target.checked)} />
             <span>Lavoro notturno</span>
           </div>
 
           <div className="chkRow">
-            <input
-              type="checkbox"
-              checked={workTeam}
-              onChange={(e) => setWorkTeam(e.target.checked)}
-            />
+            <input type="checkbox" checked={workTeam} onChange={(e) => setWorkTeam(e.target.checked)} />
             <span>Lavoro in team</span>
           </div>
 
           <div className="chkRow">
-            <input
-              type="checkbox"
-              checked={workPublicPlaces}
-              onChange={(e) => setWorkPublicPlaces(e.target.checked)}
-            />
+            <input type="checkbox" checked={workPublicPlaces} onChange={(e) => setWorkPublicPlaces(e.target.checked)} />
             <span>Lavoro in luoghi pubblici</span>
           </div>
         </>
@@ -491,7 +472,7 @@ function OnboardingInner() {
       <div className="nav" style={{ marginTop: 14 }}>
         <a href="/dashboard">Dashboard</a>
         <a href="/profile">Profilo</a>
-        {isAdminEmail(me?.email) ? <a href="/admin">Admin</a> : null}
+        {isAdminEmail(meEmail) ? <a href="/admin">Admin</a> : null}
         <a
           href="#"
           onClick={(e) => {

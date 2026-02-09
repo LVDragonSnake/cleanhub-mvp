@@ -1,60 +1,56 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React from "react";
 
 export function LevelBar({
   level,
   nextLevel,
-  progress, // 0..1
+  progress,
 }: {
   level: number;
   nextLevel: number;
-  progress: number;
+  progress: number; // 0..1
 }) {
-  // per animare la barra al mount/aggiornamento
-  const pct = useMemo(() => Math.round(Math.max(0, Math.min(1, progress)) * 100), [progress]);
-  const [animatedPct, setAnimatedPct] = useState(0);
-
-  useEffect(() => {
-    // micro-delay per far partire la transition
-    const t = setTimeout(() => setAnimatedPct(pct), 50);
-    return () => clearTimeout(t);
-  }, [pct]);
+  const pct = Math.max(0, Math.min(1, progress)) * 100;
 
   return (
-    <div style={{ display: "flex", justifyContent: "center" }}>
-      <div style={{ width: 520, maxWidth: "92vw" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: 12,
-            opacity: 0.9,
-            marginBottom: 6,
-          }}
-        >
-          <span>Livello {level}</span>
-          <span>Livello {nextLevel}</span>
-        </div>
+    <div
+      style={{
+        maxWidth: 560,
+        margin: "0 auto",
+        width: "100%",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          gap: 12,
+          marginBottom: 6,
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 700 }}>Livello {level}</div>
+        <div style={{ fontSize: 12, opacity: 0.75 }}>Prossimo: {nextLevel}</div>
+      </div>
 
+      <div
+        style={{
+          height: 10,
+          borderRadius: 999,
+          background: "#e5e7eb",
+          overflow: "hidden",
+        }}
+      >
         <div
           style={{
-            height: 10,
+            height: "100%",
+            width: `${pct}%`,
+            background: "#2563eb",
             borderRadius: 999,
-            background: "rgba(0,0,0,0.08)",
-            overflow: "hidden",
+            transition: "width 700ms ease",
           }}
-        >
-          <div
-            style={{
-              height: "100%",
-              width: `${animatedPct}%`,
-              background: "#2563eb", // BLU
-              borderRadius: 999,
-              transition: "width 600ms ease",
-            }}
-          />
-        </div>
+        />
       </div>
     </div>
   );

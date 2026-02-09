@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
+import { levelFromXp } from "../lib/gamification";
 
 type WorkerProgress = {
   packs?: {
@@ -199,7 +200,7 @@ function OnboardingInner() {
     if (already) return;
 
     const newPoints = (profile.clean_points ?? 0) + 100;
-    const newLevel = Math.min(5, 1 + Math.floor(newPoints / 150));
+   const newLevel = levelFromXp(newPoints);
 
     const newProgress: WorkerProgress = {
       ...current,

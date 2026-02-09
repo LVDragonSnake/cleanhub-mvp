@@ -1,34 +1,60 @@
 "use client";
 
+import React, { useEffect, useMemo, useState } from "react";
+
 export function LevelBar({
   level,
-  progress,
+  nextLevel,
+  progress, // 0..1
 }: {
   level: number;
-  progress: number; // 0 → 1
+  nextLevel: number;
+  progress: number;
 }) {
-  return (
-    <div style={{ maxWidth: 220 }}>
-      <div style={{ fontSize: 12, marginBottom: 4 }}>
-        Livello <b>{level}</b> → <b>{level + 1}</b>
-      </div>
+  // per animare la barra al mount/aggiornamento
+  const pct = useMemo(() => Math.round(Math.max(0, Math.min(1, progress)) * 100), [progress]);
+  const [animatedPct, setAnimatedPct] = useState(0);
 
-      <div
-        style={{
-          height: 8,
-          background: "#e5e7eb",
-          borderRadius: 999,
-          overflow: "hidden",
-        }}
-      >
+  useEffect(() => {
+    // micro-delay per far partire la transition
+    const t = setTimeout(() => setAnimatedPct(pct), 50);
+    return () => clearTimeout(t);
+  }, [pct]);
+
+  return (
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <div style={{ width: 520, maxWidth: "92vw" }}>
         <div
           style={{
-            width: `${Math.min(progress * 100, 100)}%`,
-            height: "100%",
-            background: "#2563eb",
-            transition: "width 0.6s ease",
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: 12,
+            opacity: 0.9,
+            marginBottom: 6,
           }}
-        />
+        >
+          <span>Livello {level}</span>
+          <span>Livello {nextLevel}</span>
+        </div>
+
+        <div
+          style={{
+            height: 10,
+            borderRadius: 999,
+            background: "rgba(0,0,0,0.08)",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${animatedPct}%`,
+              background: "#2563eb", // BLU
+              borderRadius: 999,
+              transition: "width 600ms ease",
+            }}
+          />
+        </div>
       </div>
     </div>
   );

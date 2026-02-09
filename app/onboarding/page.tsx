@@ -95,8 +95,7 @@ export default function OnboardingPage() {
 
 function OnboardingInner() {
   const searchParams = useSearchParams();
-  const rawPack = (searchParams.get("pack") || "general") as PackKey;
-  const pack: PackKey = PACK_ORDER.includes(rawPack) ? rawPack : "general";
+  const pack = ((searchParams.get("pack") || "general") as PackKey) || "general";
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -129,7 +128,7 @@ function OnboardingInner() {
   const [hasCar, setHasCar] = useState(false);
 
   // ====== LANGUAGES (worker_data) ======
-  const [lang1, setLang1] = useState("Italiano");
+  const [lang1, setLang1] = useState("");
   const [lang2, setLang2] = useState("");
 
   // ====== EXPERIENCE (worker_data) ======
@@ -174,9 +173,13 @@ function OnboardingInner() {
   const [moreInfo, setMoreInfo] = useState("");
 
   const packs = useMemo(() => profile?.worker_progress?.packs || {}, [profile?.worker_progress]);
+  const points = profile?.clean_points ?? 0;
   const level = profile?.clean_level ?? 1;
 
-  const allDone = useMemo(() => PACK_ORDER.every((k) => !!packs?.[k]), [packs]);
+  const allDone = useMemo(() => {
+    const p = packs || {};
+    return PACK_ORDER.every((k) => !!p[k]);
+  }, [packs]);
 
   useEffect(() => {
     (async () => {
@@ -242,8 +245,8 @@ function OnboardingInner() {
 
       // LANGUAGES
       const langs = Array.isArray(wd.languages) ? wd.languages : [];
-      if (langs[0]?.name) setLang1(langs[0].name);
-      if (langs[1]?.name) setLang2(langs[1].name);
+      setLang1(langs[0]?.name ?? "");
+      setLang2(langs[1]?.name ?? "");
 
       // EXPERIENCE
       setExpCleaning(!!wd.exp_cleaning);
@@ -293,83 +296,110 @@ function OnboardingInner() {
     })();
   }, []);
 
-  function validateCurrentPack(pk: PackKey) {
-    const anyText = (...vals: Array<string | undefined | null>) =>
-      vals.some((v) => (v || "").trim().length > 0);
+  // ====== MINIMO: evita "sezione vuota" ======
+  function isPackEmpty(pk: PackKey) {
+    if (pk === "general") return false; // qui validiamo con obbligatori sotto
 
-    const anyTrue = (...vals: Array<boolean | undefined | null>) =>
-      vals.some((v) => !!v);
-
-    switch (pk) {
-      case "general":
-        if (!firstName.trim()) return "Inserisci il nome.";
-        if (!lastName.trim()) return "Inserisci il cognome.";
-        if (!phone.trim()) return "Inserisci il telefono.";
-        if (!birthDate) return "Inserisci la data di nascita.";
-        if (!gender) return "Seleziona il sesso.";
-        if (!resCity.trim()) return "Inserisci la città di residenza.";
-        if (!resProvince.trim()) return "Inserisci la provincia di residenza.";
-        if (!resCap.trim()) return "Inserisci il CAP.";
-        return null;
-
-      case "documents":
-        if (!anyText(citizenship, permitType, drivingLicense) && !anyTrue(hasCar))
-          return "Compila almeno un campo (o seleziona Automunito).";
-        return null;
-
-      case "languages":
-        if (!lang1.trim()) return "Inserisci almeno la Lingua 1.";
-        return null;
-
-      case "experience":
-        if (
-          !anyTrue(expCleaning, workNight, workTeam, workPublicPlaces, workClientContact) &&
-          !anyTrue(envHotel, envCare, envPrivateHomes, envShopping, envOffices, envHospital, envRestaurants, envOther) &&
-          !anyText(envOtherText)
-        )
-          return "Seleziona almeno una voce di esperienza/ambiente.";
-        if (envOther && !envOtherText.trim()) return "Specifica 'Altro'.";
-        return null;
-
-      case "training":
-        if (
-          !anyText(
-            schoolYearEnd,
-            schoolCourse,
-            schoolName,
-            trainingCourses,
-            studyReadings,
-            studyDocsTv,
-            studySeminars,
-            studyFairs
-          )
-        )
-          return "Compila almeno un campo di formazione.";
-        return null;
-
-      case "availability":
-        if (
-          !anyText(moveRadiusKm, contractPrefs, availabilityNotes, hourlyRequest) &&
-          !anyText(availableTrips, currentlyEmployed)
-        )
-          return "Compila almeno un campo di disponibilità/richieste.";
-        return null;
-
-      case "extra":
-        if (!anyText(hobbies, traits, moreInfo))
-          return "Compila almeno un campo (hobbies / tratti / info).";
-        return null;
-
-      default:
-        return null;
+    if (pk === "documents") {
+      return (
+        !citizenship.trim() &&
+        !permitType.trim() &&
+        !drivingLicense.trim() &&
+        !hasCar
+      );
     }
+
+    if (pk === "languages") {
+      // minimo: almeno 1 lingua scritta
+      return !lang1.trim() && !lang2.trim();
+    }
+
+    if (pk === "experience") {
+      const anyEnv =
+        envHotel ||
+        envCare ||
+        envPrivateHomes ||
+        envShopping ||
+        envOffices ||
+        envHospital ||
+        envRestaurants ||
+        envOther;
+
+      const anyMain =
+        expCleaning ||
+        workNight ||
+        workTeam ||
+        workPublicPlaces ||
+        workClientContact;
+
+      const otherOk = envOther ? !!envOtherText.trim() : false;
+
+      return !(anyMain || anyEnv || otherOk);
+    }
+
+    if (pk === "training") {
+      return (
+        !schoolYearEnd.trim() &&
+        !schoolCourse.trim() &&
+        !schoolName.trim() &&
+        !trainingCourses.trim() &&
+        !studyReadings.trim() &&
+        !studyDocsTv.trim() &&
+        !studySeminars.trim() &&
+        !studyFairs.trim()
+      );
+    }
+
+    if (pk === "availability") {
+      return (
+        !availableTrips &&
+        !moveRadiusKm.trim() &&
+        !contractPrefs.trim() &&
+        !availabilityNotes.trim() &&
+        !currentlyEmployed &&
+        !hourlyRequest.trim()
+      );
+    }
+
+    if (pk === "extra") {
+      return !hobbies.trim() && !traits.trim() && !moreInfo.trim();
+    }
+
+    return true;
+  }
+
+  function validateCurrentPack(pk: PackKey) {
+    if (pk === "general") {
+      if (!firstName.trim()) return "Inserisci il nome.";
+      if (!lastName.trim()) return "Inserisci il cognome.";
+      if (!phone.trim()) return "Inserisci il telefono.";
+      if (!birthDate) return "Inserisci la data di nascita.";
+      if (!gender) return "Seleziona il sesso.";
+      if (!resCity.trim()) return "Inserisci la città di residenza.";
+      if (!resProvince.trim()) return "Inserisci la provincia di residenza.";
+      if (!resCap.trim()) return "Inserisci il CAP.";
+      return null;
+    }
+
+    // MINIMO per tutte le altre sezioni
+    if (isPackEmpty(pk)) {
+      return "Compila almeno un campo (minimo) prima di completare questa sezione.";
+    }
+
+    // regola specifica: se hai spuntato "Altro" devi scrivere testo
+    if (pk === "experience" && envOther && !envOtherText.trim()) {
+      return "Hai selezionato 'Altro': specifica il testo.";
+    }
+
+    return null;
   }
 
   async function completePack(packKey: PackKey) {
     if (!profile) return;
 
     const current = profile.worker_progress || { packs: {} };
-    if (!!current.packs?.[packKey]) return;
+    const already = !!current.packs?.[packKey];
+    if (already) return;
 
     const newPoints = (profile.clean_points ?? 0) + 100;
     const newLevel = levelFromXp(newPoints);
@@ -426,7 +456,7 @@ function OnboardingInner() {
       ...baseWd,
 
       languages: [
-        { name: (lang1 || "Italiano").trim() },
+        ...(lang1.trim() ? [{ name: lang1.trim() }] : []),
         ...(lang2.trim() ? [{ name: lang2.trim() }] : []),
       ],
 
@@ -435,7 +465,6 @@ function OnboardingInner() {
       work_team: workTeam,
       work_public_places: workPublicPlaces,
       work_client_contact: workClientContact,
-
       env: {
         hotel: envHotel,
         care: envCare,
@@ -475,32 +504,30 @@ function OnboardingInner() {
       },
     };
 
-    const updatePayload = {
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
-
-      worker_phone: phone.trim(),
-      worker_birth_date: birthDate || null,
-      worker_birth_city: birthCity.trim() || null,
-      worker_birth_country: birthCountry.trim() || null,
-      worker_gender: gender || null,
-
-      worker_res_address: resAddress.trim() || null,
-      worker_res_city: resCity.trim() || null,
-      worker_res_province: resProvince.trim() || null,
-      worker_res_cap: resCap.trim() || null,
-
-      worker_citizenship: citizenship.trim() || null,
-      worker_permit_type: permitType.trim() || null,
-      worker_driving_license: drivingLicense.trim() || null,
-      worker_has_car: hasCar,
-
-      worker_data,
-    };
-
     const { error: e } = await supabase
       .from("profiles")
-      .update(updatePayload)
+      .update({
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+
+        worker_phone: phone.trim(),
+        worker_birth_date: birthDate || null,
+        worker_birth_city: birthCity.trim() || null,
+        worker_birth_country: birthCountry.trim() || null,
+        worker_gender: gender || null,
+
+        worker_res_address: resAddress.trim() || null,
+        worker_res_city: resCity.trim() || null,
+        worker_res_province: resProvince.trim() || null,
+        worker_res_cap: resCap.trim() || null,
+
+        worker_citizenship: citizenship.trim() || null,
+        worker_permit_type: permitType.trim() || null,
+        worker_driving_license: drivingLicense.trim() || null,
+        worker_has_car: hasCar,
+
+        worker_data,
+      })
       .eq("id", profile.id);
 
     if (e) {
@@ -509,11 +536,7 @@ function OnboardingInner() {
       return;
     }
 
-    // aggiorna stato locale completo (così UI e validazioni restano coerenti)
-    setProfile({
-      ...profile,
-      ...updatePayload,
-    });
+    setProfile({ ...profile, worker_data });
 
     await completePack(pack);
 
@@ -692,11 +715,7 @@ function OnboardingInner() {
             <span>Case di cura</span>
           </div>
           <div className="chkRow">
-            <input
-              type="checkbox"
-              checked={envPrivateHomes}
-              onChange={(e) => setEnvPrivateHomes(e.target.checked)}
-            />
+            <input type="checkbox" checked={envPrivateHomes} onChange={(e) => setEnvPrivateHomes(e.target.checked)} />
             <span>Case private</span>
           </div>
           <div className="chkRow">
@@ -712,11 +731,7 @@ function OnboardingInner() {
             <span>Ospedali / Cliniche</span>
           </div>
           <div className="chkRow">
-            <input
-              type="checkbox"
-              checked={envRestaurants}
-              onChange={(e) => setEnvRestaurants(e.target.checked)}
-            />
+            <input type="checkbox" checked={envRestaurants} onChange={(e) => setEnvRestaurants(e.target.checked)} />
             <span>Ristoranti / bar</span>
           </div>
           <div className="chkRow">

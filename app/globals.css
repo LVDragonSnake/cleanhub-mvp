@@ -101,3 +101,28 @@ a { color: #111827; }
 .radioRow input {
   margin-top: 3px;
 }
+
+/* ==== CLEAN FIX: form onboarding ==== */
+.card label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+.card input,
+.card select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* checkbox/radio row: niente "space-between" strani */
+.chkRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.chkRow input {
+  width: auto;
+}

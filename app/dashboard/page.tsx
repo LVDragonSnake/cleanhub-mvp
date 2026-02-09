@@ -50,6 +50,10 @@ export default function DashboardWorker() {
 
   const packs = useMemo(() => profile?.worker_progress?.packs || {}, [profile?.worker_progress]);
 
+  const allDone = useMemo(() => {
+    return PACKS.every((p) => !!packs[p.key]);
+  }, [packs]);
+
   if (loading) return <div>Caricamento...</div>;
   if (!profile) return <div>Errore profilo</div>;
 
@@ -57,9 +61,9 @@ export default function DashboardWorker() {
     <div className="card">
       <h2>Ciao {profile.first_name || "Operatore"}</h2>
 
-      {/* NON mostriamo i clean points qui (barra sta nell’header) */}
       <p style={{ marginTop: 6 }}>
         Livello: <b>{profile.clean_level ?? 1}</b>
+        {allDone ? <span style={{ marginLeft: 10 }}>🏆 Profilo completo</span> : null}
       </p>
 
       <hr />

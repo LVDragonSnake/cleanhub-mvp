@@ -1,49 +1,31 @@
 // app/lib/gamification.ts
 
-/**
- * Gamification (Clean Points -> Livelli)
- * Regole semplici e stabili:
- * - Livello minimo: 1
- * - Ogni livello richiede più XP del precedente (curva leggera)
- */
+// Soglie XP per livello (livello 1 = 0 XP)
+// Cambiale quando vuoi, ma NON cambiare la logica.
+export const XP_LEVELS = [0, 150, 300, 450, 600, 900, 1200, 1500, 1900, 2300, 2800] as const;
 
-export function xpForLevel(level: number): number {
-  // livello 1 parte da 0 xp
-  if (level <= 1) return 0;
-
-  // curva: 150, 350, 600, 900, 1250, 1650, 2100, ...
-  // puoi ritoccarla quando vuoi senza rompere i dati
-  let total = 0;
-  for (let l = 2; l <= level; l++) {
-    total += 100 + l * 50; // cresce di 50 ogni livello
+export function levelFromXp(xp: number) {
+  const val = Math.max(0, Math.floor(xp || 0));
+  let lvl = 1;
+  for (let i = 0; i < XP_LEVELS.length; i++) {
+    if (val >= XP_LEVELS[i]) lvl = i + 1;
   }
-  return total;
+  return lvl;
 }
 
-export function levelFromXp(xp: number): number {
-  const safeXp = Math.max(0, xp || 0);
-  let level = 1;
+export function progressFromXp(xp: number) {
+  const val = Math.max(0, Math.floor(xp || 0));
+  const lvl = levelFromXp(val);
 
-  // trova il massimo livello raggiunto
-  while (xpForLevel(level + 1) <= safeXp) {
-    level++;
-    if (level > 1000) break; // safety
-  }
-  return level;
-}
+  const idx = Math.max(0, lvl - 1);
+  const cur = XP_LEVELS[idx] ?? 0;
+  const next = XP_LEVELS[idx + 1] ?? (cur + 500); // fallback se superi array
+  const pct = next === cur ? 1 : Math.min(1, Math.max(0, (val - cur) / (next - cur)));
 
-/**
- * Ritorna percentuale (0..100) di avanzamento verso il livello successivo
- */
-export function progressFromXp(xp: number): number {
-  const safeXp = Math.max(0, xp || 0);
-  const level = levelFromXp(safeXp);
-
-  const cur = xpForLevel(level);
-  const next = xpForLevel(level + 1);
-
-  const span = Math.max(1, next - cur);
-  const into = Math.min(span, Math.max(0, safeXp - cur));
-
-  return Math.round((into / span) * 100);
+  return {
+    level: lvl,
+    currentLevelXp: cur,
+    nextLevelXp: next,
+    progress01: pct, // 0..1
+  };
 }

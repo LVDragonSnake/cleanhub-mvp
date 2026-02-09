@@ -3,20 +3,18 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
-type WorkerProgress = {
-  packs?: {
-    general?: boolean;
-    experience?: boolean;
-    skills?: boolean;
-  };
-};
-
 type Profile = {
   id: string;
   first_name: string | null;
   clean_points: number | null;
   clean_level: number | null;
-  worker_progress: WorkerProgress | null;
+  worker_progress: {
+    packs?: {
+      general?: boolean;
+      experience?: boolean;
+      skills?: boolean;
+    };
+  } | null;
 };
 
 export default function DashboardWorker() {
@@ -38,7 +36,6 @@ export default function DashboardWorker() {
         .single();
 
       if (error) {
-        setProfile(null);
         setLoading(false);
         return;
       }
@@ -70,19 +67,19 @@ export default function DashboardWorker() {
 
       <Pack
         title="Dati personali"
-        done={!!packs.general}
+        done={packs.general}
         onClick={() => (window.location.href = "/onboarding?pack=general")}
       />
 
       <Pack
         title="Esperienza lavorativa"
-        done={!!packs.experience}
+        done={packs.experience}
         onClick={() => (window.location.href = "/onboarding?pack=experience")}
       />
 
       <Pack
-        title="Competenze e preferenze"
-        done={!!packs.skills}
+        title="Competenze e lingue"
+        done={packs.skills}
         onClick={() => (window.location.href = "/onboarding?pack=skills")}
       />
     </div>
@@ -95,16 +92,12 @@ function Pack({
   onClick,
 }: {
   title: string;
-  done: boolean;
+  done?: boolean;
   onClick: () => void;
 }) {
   return (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <b>{title}</b>
-        <span>{done ? "✅ Completato" : "❌ Da completare"}</span>
-      </div>
-
+    <div style={{ marginBottom: 14 }}>
+      <b>{title}</b> {done ? "✅ Completato" : "❌ Da completare"}
       <div style={{ marginTop: 6 }}>
         <button onClick={onClick}>{done ? "Modifica" : "Completa"}</button>
       </div>

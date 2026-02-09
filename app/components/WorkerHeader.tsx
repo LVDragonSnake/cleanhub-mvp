@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { progressFromXp } from "../lib/gamification";
 import { LevelBar } from "./LevelBar";
@@ -10,12 +10,12 @@ type ProfileLite = {
   clean_points: number | null;
 };
 
+const LS_LAST_LEVEL = "cleanhub_last_level";
+
 export default function WorkerHeader() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileLite | null>(null);
-
   const [levelUp, setLevelUp] = useState<{ from: number; to: number } | null>(null);
-  const prevLevelRef = useRef<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -40,25 +40,38 @@ export default function WorkerHeader() {
   const xp = profile?.clean_points ?? 0;
   const p = useMemo(() => progressFromXp(xp), [xp]);
 
+  // ✅ Detect level-up anche dopo redirect (persistendo ultimo livello)
   useEffect(() => {
     if (loading) return;
+    if (!profile) return;
 
-    const prev = prevLevelRef.current;
-    if (prev == null) {
-      prevLevelRef.current = p.level;
+    const currentLevel = p.level;
+
+    let prevLevel: number | null = null;
+    const raw = typeof window !== "undefined" ? window.localStorage.getItem(LS_LAST_LEVEL) : null;
+    if (raw) {
+      const n = Number(raw);
+      prevLevel = Number.isFinite(n) ? n : null;
+    }
+
+    // se non esiste prevLevel, lo inizializziamo
+    if (prevLevel == null) {
+      window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
       return;
     }
 
-    if (p.level > prev) {
-      setLevelUp({ from: prev, to: p.level });
-      prevLevelRef.current = p.level;
+    // se è salito: popup + confetti
+    if (currentLevel > prevLevel) {
+      setLevelUp({ from: prevLevel, to: currentLevel });
+      window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
 
       const t = setTimeout(() => setLevelUp(null), 1800);
       return () => clearTimeout(t);
     }
 
-    prevLevelRef.current = p.level;
-  }, [loading, p.level]);
+    // se non è salito (o è sceso per test), aggiorniamo comunque
+    window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
+  }, [loading, profile, p.level]);
 
   if (loading) return null;
   if (!profile) return null;
@@ -108,22 +121,22 @@ export default function WorkerHeader() {
 }
 
 function Confetti() {
-  const dots = new Array(22).fill(0);
+  const dots = new Array(28).fill(0);
 
   return (
     <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       <style>{`
         @keyframes ch_confetti_fall {
-          0%   { transform: translateY(-30px) rotate(0deg); opacity: 0; }
+          0%   { transform: translateY(-40px) rotate(0deg); opacity: 0; }
           10%  { opacity: 1; }
-          100% { transform: translateY(260px) rotate(260deg); opacity: 0; }
+          100% { transform: translateY(320px) rotate(320deg); opacity: 0; }
         }
       `}</style>
 
       {dots.map((_, i) => {
         const left = Math.round(Math.random() * 100);
         const delay = (Math.random() * 0.25).toFixed(2);
-        const size = 6 + Math.round(Math.random() * 6);
+        const size = 6 + Math.round(Math.random() * 7);
 
         return (
           <span

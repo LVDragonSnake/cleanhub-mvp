@@ -1,21 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+
+type WorkerProgress = {
+  packs?: Record<string, boolean>;
+} | null;
 
 type Profile = {
   id: string;
   first_name: string | null;
   clean_points: number | null;
   clean_level: number | null;
-  worker_progress: {
-    packs?: {
-      general?: boolean;
-      experience?: boolean;
-      skills?: boolean;
-    };
-  } | null;
+  worker_progress: WorkerProgress;
 };
+
+const PACKS: Array<{ key: string; title: string }> = [
+  { key: "general", title: "Dati personali" },
+  { key: "documents", title: "Documenti" },
+  { key: "languages", title: "Lingue" },
+  { key: "experience", title: "Esperienza lavorativa" },
+  { key: "training", title: "Formazione" },
+  { key: "availability", title: "Disponibilità e richieste" },
+  { key: "extra", title: "Altre informazioni" },
+];
 
 export default function DashboardWorker() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -29,59 +37,46 @@ export default function DashboardWorker() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("id,first_name,clean_points,clean_level,worker_progress")
         .eq("id", auth.user.id)
         .single();
 
-      if (error) {
-        setLoading(false);
-        return;
-      }
-
-      setProfile(data as any);
+      setProfile((data as Profile) ?? null);
       setLoading(false);
     })();
   }, []);
 
+  const packs = useMemo(() => profile?.worker_progress?.packs || {}, [profile?.worker_progress]);
+
   if (loading) return <div>Caricamento...</div>;
   if (!profile) return <div>Errore profilo</div>;
-
-  const packs = profile.worker_progress?.packs || {};
 
   return (
     <div className="card">
       <h2>Ciao {profile.first_name || "Operatore"}</h2>
 
-      <p>
+      {/* NON mostriamo i clean points qui (barra sta nell’header) */}
+      <p style={{ marginTop: 6 }}>
         Livello: <b>{profile.clean_level ?? 1}</b>
-      </p>
-      <p>
-        Clean Points: <b>{profile.clean_points ?? 0}</b>
       </p>
 
       <hr />
 
       <h3>Avanzamento profilo</h3>
 
-      <Pack
-        title="Dati personali"
-        done={packs.general}
-        onClick={() => (window.location.href = "/onboarding?pack=general")}
-      />
-
-      <Pack
-        title="Esperienza lavorativa"
-        done={packs.experience}
-        onClick={() => (window.location.href = "/onboarding?pack=experience")}
-      />
-
-      <Pack
-        title="Competenze e lingue"
-        done={packs.skills}
-        onClick={() => (window.location.href = "/onboarding?pack=skills")}
-      />
+      {PACKS.map((p) => {
+        const done = !!packs[p.key];
+        return (
+          <Pack
+            key={p.key}
+            title={p.title}
+            done={done}
+            onClick={() => (window.location.href = `/onboarding?pack=${encodeURIComponent(p.key)}`)}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -97,9 +92,15 @@ function Pack({
 }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      <b>{title}</b> {done ? "✅ Completato" : "❌ Da completare"}
-      <div style={{ marginTop: 6 }}>
-        <button onClick={onClick}>{done ? "Modifica" : "Completa"}</button>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <b>{title}</b>
+        {done ? <span>✅ Completato</span> : <span>❌ Da completare</span>}
+      </div>
+
+      <div>
+        <button onClick={onClick} style={{ marginTop: 6 }}>
+          {done ? "Modifica" : "Completa"}
+        </button>
       </div>
     </div>
   );

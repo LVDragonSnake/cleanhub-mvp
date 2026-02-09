@@ -1,28 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 
 type WorkerProgress = {
-  packs?: Record<string, boolean>;
+  packs?: {
+    general?: boolean;
+    experience?: boolean;
+    skills?: boolean;
+  };
 };
 
 type Profile = {
   id: string;
   email: string | null;
+  first_name: string | null;
+  last_name: string | null;
   user_type: string | null;
+  profile_status: string | null;
 
   // gamification
   clean_points: number | null;
   clean_level: number | null;
   worker_progress: WorkerProgress | null;
 
-  // base
-  first_name: string | null;
-  last_name: string | null;
-
-  // worker fields (top level)
+  // worker fields
   worker_phone: string | null;
   worker_birth_date: string | null; // yyyy-mm-dd
   worker_birth_city: string | null;
@@ -39,52 +42,56 @@ type Profile = {
   worker_driving_license: string | null;
   worker_has_car: boolean | null;
 
-  // jsonb
   worker_data: any;
 };
 
-const PROFILE_SELECT = `id,email,user_type,
+const PROFILE_SELECT = `id,email,first_name,last_name,user_type,profile_status,
 clean_points,clean_level,worker_progress,
-first_name,last_name,
 worker_phone,worker_birth_date,worker_birth_city,worker_birth_country,worker_gender,
 worker_res_address,worker_res_city,worker_res_province,worker_res_cap,
 worker_citizenship,worker_permit_type,worker_driving_license,worker_has_car,
 worker_data` as const;
 
-const PACK_POINTS = 100;
-const MAX_LEVEL = 5;
-
-/** livelli semplici: 0-149 => lv1, 150-299 => lv2, ... */
-function levelFromPoints(points: number) {
-  return Math.min(MAX_LEVEL, 1 + Math.floor(points / 150));
+function isAdminEmail(email?: string | null) {
+  const list = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return !!email && list.includes((email || "").toLowerCase());
 }
 
-function packTitle(pack: string) {
-  if (pack === "general") return "Dati personali";
-  if (pack === "experience") return "Esperienza lavorativa";
-  if (pack === "skills") return "Competenze e preferenze";
-  return "Onboarding";
-}
-
+/**
+ * ✅ WRAPPER richiesto da Next 15:
+ * la Page non usa useSearchParams, lo fa il componente interno dentro Suspense.
+ */
 export default function OnboardingPage() {
-  const search = useSearchParams();
-  const pack = (search.get("pack") || "general").toLowerCase(); // general | experience | skills
-  const edit = search.get("edit") === "1";
+  return (
+    <Suspense fallback={<div>Caricamento...</div>}>
+      <OnboardingInner />
+    </Suspense>
+  );
+}
+
+function OnboardingInner() {
+  const searchParams = useSearchParams();
+  const pack = (searchParams.get("pack") || "general") as "general" | "experience" | "skills";
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
+  const [me, setMe] = useState<any>(null);
   const [meEmail, setMeEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  // --------- STATE: GENERAL ---------
+  // ====== FORM STATE ======
+  // general
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
   const [phone, setPhone] = useState("");
-  const [birthDate, setBirthDate] = useState("");
+  const [birthDate, setBirthDate] = useState(""); // yyyy-mm-dd
   const [birthCity, setBirthCity] = useState("");
   const [birthCountry, setBirthCountry] = useState("Italia");
   const [gender, setGender] = useState<"" | "M" | "F">("");
@@ -99,24 +106,19 @@ export default function OnboardingPage() {
   const [drivingLicense, setDrivingLicense] = useState("");
   const [hasCar, setHasCar] = useState(false);
 
-  // --------- STATE: EXPERIENCE (jsonb) ---------
+  // experience/skills (worker_data)
+  const [lang1, setLang1] = useState("Italiano");
+  const [lang2, setLang2] = useState("");
+
   const [expCleaning, setExpCleaning] = useState(false);
   const [workNight, setWorkNight] = useState(false);
   const [workTeam, setWorkTeam] = useState(false);
   const [workPublicPlaces, setWorkPublicPlaces] = useState(false);
   const [workClientContact, setWorkClientContact] = useState(false);
 
-  // --------- STATE: SKILLS (jsonb) ---------
-  const [lang1, setLang1] = useState("Italiano");
-  const [lang2, setLang2] = useState("");
-
+  const packs = useMemo(() => profile?.worker_progress?.packs || {}, [profile?.worker_progress]);
   const points = profile?.clean_points ?? 0;
   const level = profile?.clean_level ?? 1;
-
-  const packDone = useMemo(() => {
-    const packs = profile?.worker_progress?.packs || {};
-    return !!packs?.[pack];
-  }, [profile?.worker_progress, pack]);
 
   useEffect(() => {
     (async () => {
@@ -127,6 +129,8 @@ export default function OnboardingPage() {
         window.location.href = "/login";
         return;
       }
+
+      setMe(auth.user);
       setMeEmail((auth.user.email || "").toLowerCase());
 
       const { data: prof, error: e } = await supabase
@@ -135,8 +139,8 @@ export default function OnboardingPage() {
         .eq("id", auth.user.id)
         .single();
 
-      if (e || !prof) {
-        setError(e?.message || "Errore profilo");
+      if (e) {
+        setError(e.message);
         setLoading(false);
         return;
       }
@@ -155,15 +159,14 @@ export default function OnboardingPage() {
 
       setProfile(p);
 
-      // PREFILL (sempre, così edit funziona)
+      // prefill general
       setFirstName(p.first_name ?? "");
       setLastName(p.last_name ?? "");
-
       setPhone(p.worker_phone ?? "");
       setBirthDate(p.worker_birth_date ?? "");
       setBirthCity(p.worker_birth_city ?? "");
       setBirthCountry(p.worker_birth_country ?? "Italia");
-      setGender(((p.worker_gender ?? "") as any) === "M" ? "M" : ((p.worker_gender ?? "") as any) === "F" ? "F" : "");
+      setGender(((p.worker_gender as any) ?? "") as "" | "M" | "F");
 
       setResAddress(p.worker_res_address ?? "");
       setResCity(p.worker_res_city ?? "");
@@ -175,36 +178,37 @@ export default function OnboardingPage() {
       setDrivingLicense(p.worker_driving_license ?? "");
       setHasCar(Boolean(p.worker_has_car ?? false));
 
+      // prefill worker_data
       const wd = (p.worker_data ?? {}) as any;
+      const langs = Array.isArray(wd.languages) ? wd.languages : [];
+      if (langs[0]?.name) setLang1(langs[0].name);
+      if (langs[1]?.name) setLang2(langs[1].name);
+
       setExpCleaning(!!wd.exp_cleaning);
       setWorkNight(!!wd.work_night);
       setWorkTeam(!!wd.work_team);
       setWorkPublicPlaces(!!wd.work_public_places);
       setWorkClientContact(!!wd.work_client_contact);
 
-      const langs = Array.isArray(wd.languages) ? wd.languages : [];
-      if (langs[0]?.name) setLang1(langs[0].name);
-      if (langs[1]?.name) setLang2(langs[1].name);
-
       setLoading(false);
     })();
   }, []);
 
-  async function awardPackIfFirstTime(packName: string) {
+  async function completePack(packKey: "general" | "experience" | "skills") {
     if (!profile) return;
 
-    const progress = (profile.worker_progress ?? { packs: {} }) as WorkerProgress;
-    const already = !!progress.packs?.[packName];
-    if (already) return; // NO punti doppioni
+    const current = profile.worker_progress || { packs: {} };
+    const already = !!current.packs?.[packKey];
+    if (already) return;
 
-    const newPoints = (profile.clean_points ?? 0) + PACK_POINTS;
-    const newLevel = levelFromPoints(newPoints);
+    const newPoints = (profile.clean_points ?? 0) + 100;
+    const newLevel = Math.min(5, 1 + Math.floor(newPoints / 150));
 
     const newProgress: WorkerProgress = {
-      ...progress,
+      ...current,
       packs: {
-        ...(progress.packs ?? {}),
-        [packName]: true,
+        ...(current.packs || {}),
+        [packKey]: true,
       },
     };
 
@@ -218,7 +222,8 @@ export default function OnboardingPage() {
       .eq("id", profile.id);
 
     if (e) {
-      throw new Error(e.message);
+      setError(e.message);
+      return;
     }
 
     setProfile({
@@ -229,91 +234,108 @@ export default function OnboardingPage() {
     });
   }
 
-  async function savePack() {
+  function validatePack(packKey: "general" | "experience" | "skills") {
+    if (packKey === "general") {
+      if (!firstName.trim()) return "Inserisci il nome.";
+      if (!lastName.trim()) return "Inserisci il cognome.";
+      if (!phone.trim()) return "Inserisci il telefono.";
+      if (!birthDate) return "Inserisci la data di nascita.";
+      if (!gender) return "Seleziona il sesso.";
+      if (!resCity.trim()) return "Inserisci la città di residenza.";
+      if (!resProvince.trim()) return "Inserisci la provincia di residenza.";
+      if (!resCap.trim()) return "Inserisci il CAP.";
+    }
+    return null;
+  }
+
+  async function saveCurrentPack() {
     if (!profile) return;
     setError(null);
+
+    const validation = validatePack(pack);
+    if (validation) {
+      setError(validation);
+      return;
+    }
+
     setSaving(true);
 
-    try {
-      // 1) VALIDAZIONE MINIMA PER PACCHETTO
-      if (pack === "general") {
-        if (!firstName.trim()) throw new Error("Inserisci il nome.");
-        if (!lastName.trim()) throw new Error("Inserisci il cognome.");
-        // per accesso piattaforma bastano nome+cognome+email: quindi NON blocchiamo su tutti i campi.
-        // però se l'utente li compila, li salviamo.
-      }
+    const worker_data = {
+      ...(profile.worker_data ?? {}),
+      languages: [
+        { name: (lang1 || "Italiano").trim() },
+        ...(lang2.trim() ? [{ name: lang2.trim() }] : []),
+      ],
+      exp_cleaning: expCleaning,
+      work_night: workNight,
+      work_team: workTeam,
+      work_public_places: workPublicPlaces,
+      work_client_contact: workClientContact,
+    };
 
-      // 2) BUILD PAYLOAD
-      const wdPrev = (profile.worker_data ?? {}) as any;
+    const { error: e } = await supabase
+      .from("profiles")
+      .update({
+        // general
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
 
-      const wdNext =
-        pack === "experience"
-          ? {
-              ...wdPrev,
-              exp_cleaning: expCleaning,
-              work_night: workNight,
-              work_team: workTeam,
-              work_public_places: workPublicPlaces,
-              work_client_contact: workClientContact,
-            }
-          : pack === "skills"
-          ? {
-              ...wdPrev,
-              languages: [
-                { name: (lang1 || "Italiano").trim() },
-                ...(lang2.trim() ? [{ name: lang2.trim() }] : []),
-              ],
-            }
-          : wdPrev;
+        worker_phone: phone.trim(),
+        worker_birth_date: birthDate || null,
+        worker_birth_city: birthCity.trim() || null,
+        worker_birth_country: birthCountry.trim() || null,
+        worker_gender: gender || null,
 
-      const updatePayload: any =
-        pack === "general"
-          ? {
-              first_name: firstName.trim(),
-              last_name: lastName.trim(),
+        worker_res_address: resAddress.trim() || null,
+        worker_res_city: resCity.trim() || null,
+        worker_res_province: resProvince.trim() || null,
+        worker_res_cap: resCap.trim() || null,
 
-              worker_phone: phone.trim() || null,
-              worker_birth_date: birthDate || null,
-              worker_birth_city: birthCity.trim() || null,
-              worker_birth_country: birthCountry.trim() || null,
-              worker_gender: gender || null,
+        worker_citizenship: citizenship.trim() || null,
+        worker_permit_type: permitType.trim() || null,
+        worker_driving_license: drivingLicense.trim() || null,
+        worker_has_car: hasCar,
 
-              worker_res_address: resAddress.trim() || null,
-              worker_res_city: resCity.trim() || null,
-              worker_res_province: resProvince.trim() || null,
-              worker_res_cap: resCap.trim() || null,
+        // packs data
+        worker_data,
+      })
+      .eq("id", profile.id);
 
-              worker_citizenship: citizenship.trim() || null,
-              worker_permit_type: permitType.trim() || null,
-              worker_driving_license: drivingLicense.trim() || null,
-              worker_has_car: hasCar,
-            }
-          : {
-              worker_data: wdNext,
-            };
-
-      if (pack !== "general") updatePayload.worker_data = wdNext;
-
-      const { error: e } = await supabase.from("profiles").update(updatePayload).eq("id", profile.id);
-      if (e) throw new Error(e.message);
-
-      // 3) AGGIORNA STATE LOCALE
-      const newProfile: Profile = {
-        ...profile,
-        ...updatePayload,
-        worker_data: wdNext,
-      };
-      setProfile(newProfile);
-
-      // 4) PUNTI + FLAG PACCHETTO
-      await awardPackIfFirstTime(pack);
-
-      // 5) TORNA ALLA DASH
-      window.location.href = "/dashboard";
-    } catch (err: any) {
-      setError(err?.message || "Errore salvataggio");
+    if (e) {
       setSaving(false);
+      setError(e.message);
+      return;
     }
+
+    // aggiorna stato locale
+    const updated: Profile = {
+      ...profile,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      worker_phone: phone.trim(),
+      worker_birth_date: birthDate || null,
+      worker_birth_city: birthCity.trim() || null,
+      worker_birth_country: birthCountry.trim() || null,
+      worker_gender: gender || null,
+      worker_res_address: resAddress.trim() || null,
+      worker_res_city: resCity.trim() || null,
+      worker_res_province: resProvince.trim() || null,
+      worker_res_cap: resCap.trim() || null,
+      worker_citizenship: citizenship.trim() || null,
+      worker_permit_type: permitType.trim() || null,
+      worker_driving_license: drivingLicense.trim() || null,
+      worker_has_car: hasCar,
+      worker_data,
+    };
+    setProfile(updated);
+
+    // segna pack completato + punti
+    await completePack(pack);
+
+    setSaving(false);
+
+    // torna a dashboard
+    window.location.href = "/dashboard";
   }
 
   async function logout() {
@@ -322,25 +344,24 @@ export default function OnboardingPage() {
   }
 
   if (loading) return <div>Caricamento...</div>;
-  if (!profile) return <div>Errore profilo</div>;
 
   return (
     <div className="card">
-      <h2>Onboarding Operatore — {packTitle(pack)}</h2>
+      <h2>Onboarding Operatore</h2>
 
-      <div className="small">
-        Loggato come: <b>{meEmail}</b>
-      </div>
+      <div className="small">Loggato come: <b>{meEmail}</b></div>
 
       <div className="small" style={{ marginTop: 6 }}>
         Clean Points: <b>{points}</b> — Livello: <b>{level}</b>
       </div>
 
-      {packDone && !edit && (
-        <div className="small" style={{ marginTop: 10 }}>
-          ✅ Questo pacchetto risulta già completato. (Se vuoi modificarlo: apri da Profilo → Modifica onboarding)
-        </div>
-      )}
+      <div className="small" style={{ marginTop: 6 }}>
+        Pack:{" "}
+        <b>
+          {pack === "general" ? "Dati personali" : pack === "experience" ? "Esperienza" : "Competenze"}
+        </b>{" "}
+        {packs?.[pack] ? "✅" : "❌"}
+      </div>
 
       {error && (
         <div className="small" style={{ marginTop: 10 }}>
@@ -348,11 +369,11 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      {/* -------------------- GENERAL -------------------- */}
+      {/* ====== PACK GENERAL ====== */}
       {pack === "general" && (
         <>
           <div style={{ marginTop: 14 }} className="small">
-            <b>Dati base</b>
+            <b>Dati personali</b>
           </div>
 
           <label>Nome *</label>
@@ -361,25 +382,10 @@ export default function OnboardingPage() {
           <label>Cognome *</label>
           <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
 
-          <label>Sesso</label>
-          <select value={gender} onChange={(e) => setGender(e.target.value as any)}>
-            <option value="">—</option>
-            <option value="F">F</option>
-            <option value="M">M</option>
-          </select>
-
-          <div style={{ marginTop: 14 }} className="small">
-            <b>Contatti</b>
-          </div>
-
-          <label>Telefono</label>
+          <label>Telefono *</label>
           <input value={phone} onChange={(e) => setPhone(e.target.value)} />
 
-          <div style={{ marginTop: 14 }} className="small">
-            <b>Nascita</b>
-          </div>
-
-          <label>Data di nascita</label>
+          <label>Data di nascita *</label>
           <input value={birthDate} onChange={(e) => setBirthDate(e.target.value)} type="date" />
 
           <label>Città di nascita</label>
@@ -388,6 +394,13 @@ export default function OnboardingPage() {
           <label>Paese di nascita</label>
           <input value={birthCountry} onChange={(e) => setBirthCountry(e.target.value)} />
 
+          <label>Sesso *</label>
+          <select value={gender} onChange={(e) => setGender(e.target.value as any)}>
+            <option value="">—</option>
+            <option value="M">Maschio</option>
+            <option value="F">Femmina</option>
+          </select>
+
           <div style={{ marginTop: 14 }} className="small">
             <b>Residenza</b>
           </div>
@@ -395,13 +408,13 @@ export default function OnboardingPage() {
           <label>Indirizzo</label>
           <input value={resAddress} onChange={(e) => setResAddress(e.target.value)} />
 
-          <label>Città</label>
+          <label>Città (residenza) *</label>
           <input value={resCity} onChange={(e) => setResCity(e.target.value)} />
 
-          <label>Provincia</label>
+          <label>Provincia (residenza) *</label>
           <input value={resProvince} onChange={(e) => setResProvince(e.target.value)} />
 
-          <label>CAP</label>
+          <label>CAP (residenza) *</label>
           <input value={resCap} onChange={(e) => setResCap(e.target.value)} />
 
           <div style={{ marginTop: 14 }} className="small">
@@ -429,11 +442,11 @@ export default function OnboardingPage() {
         </>
       )}
 
-      {/* -------------------- EXPERIENCE -------------------- */}
+      {/* ====== PACK EXPERIENCE ====== */}
       {pack === "experience" && (
         <>
           <div style={{ marginTop: 14 }} className="small">
-            <b>Esperienza e preferenze</b>
+            <b>Esperienza</b>
           </div>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
@@ -483,11 +496,11 @@ export default function OnboardingPage() {
         </>
       )}
 
-      {/* -------------------- SKILLS -------------------- */}
+      {/* ====== PACK SKILLS ====== */}
       {pack === "skills" && (
         <>
           <div style={{ marginTop: 14 }} className="small">
-            <b>Lingue</b>
+            <b>Competenze</b>
           </div>
 
           <label>Lingua 1</label>
@@ -499,14 +512,15 @@ export default function OnboardingPage() {
       )}
 
       <div style={{ marginTop: 14 }}>
-        <button onClick={savePack} disabled={saving}>
-          {saving ? "Salvo..." : packDone && !edit ? "Vai in dashboard" : "Salva e completa pacchetto"}
+        <button onClick={saveCurrentPack} disabled={saving}>
+          {saving ? "Salvo..." : "Salva e completa pack"}
         </button>
       </div>
 
       <div className="nav" style={{ marginTop: 14 }}>
         <a href="/dashboard">Dashboard</a>
         <a href="/profile">Profilo</a>
+        {isAdminEmail(me?.email) ? <a href="/admin">Admin</a> : null}
         <a
           href="#"
           onClick={(e) => {

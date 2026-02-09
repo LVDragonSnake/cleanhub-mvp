@@ -126,3 +126,58 @@ a { color: #111827; }
 .chkRow input {
   width: auto;
 }
+
+.workerHeader {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: white;
+  border-bottom: 1px solid #eee;
+  padding: 10px 16px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.workerHeader__left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.workerHeader__email {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.workerHeader__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.workerHeader__level {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.workerHeader__bar {
+  width: 180px;
+  height: 10px;
+  border-radius: 999px;
+  background: #eee;
+  overflow: hidden;
+}
+
+.workerHeader__barFill {
+  height: 100%;
+  background: #111;
+  border-radius: 999px;
+}
+
+.workerHeader__nav {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+}

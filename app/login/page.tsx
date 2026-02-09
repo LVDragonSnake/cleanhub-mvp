@@ -43,7 +43,7 @@ export default function LoginPage() {
 
     // worker
     if (!profile?.onboarding_step || profile.onboarding_step < 3) {
-      window.location.href = "/profile"; // dashboard operatore
+      window.location.href = "/dashboard"; // dashboard operatore
     } else {
       window.location.href = "/profile"; // profilo completo
     }

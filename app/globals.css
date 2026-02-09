@@ -181,3 +181,18 @@ a { color: #111827; }
   gap: 10px;
   font-size: 14px;
 }
+
+.chkRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+}
+
+.chkRow input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}

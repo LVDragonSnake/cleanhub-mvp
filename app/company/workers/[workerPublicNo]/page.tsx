@@ -4,273 +4,183 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../../lib/supabaseClient";
 
-type Detail = {
+type WorkerDetail = {
+  worker_id: string;
   worker_public_no: number;
   clean_level: number;
   profile_status: string;
-  res_province: string;
-  has_car: boolean;
-
-  citizenship: string;
-  driving_license: string;
-
-  languages: any[];
-  env: any;
-  training: any;
-  availability: any;
-  extra: any;
-};
-
-type Contact = {
-  worker_id: string;
-  email: string | null;
-  phone: string | null;
+  worker_data: any;
+  res_province: string | null;
+  res_cap: string | null;
+  unlocked: boolean;
+  contact_email: string | null;
+  contact_phone: string | null;
 };
 
 export default function CompanyWorkerDetailPage() {
   const params = useParams<{ workerPublicNo: string }>();
-  const workerPublicNo = useMemo(() => Number(params?.workerPublicNo ?? ""), [params]);
+  const workerPublicNo = useMemo(() => Number(params?.workerPublicNo ?? 0), [params]);
 
   const [loading, setLoading] = useState(true);
-  const [row, setRow] = useState<Detail | null>(null);
+  const [row, setRow] = useState<WorkerDetail | null>(null);
+  const [credits, setCredits] = useState<number>(0);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [credits, setCredits] = useState<number | null>(null);
-  const [contact, setContact] = useState<Contact | null>(null);
-  const [unlocking, setUnlocking] = useState(false);
+  async function load() {
+    setError(null);
+
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) {
+      window.location.href = "/login";
+      return;
+    }
+
+    // must be company
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", auth.user.id)
+      .single();
+
+    if ((prof?.user_type ?? "") !== "company") {
+      window.location.href = "/dashboard";
+      return;
+    }
+
+    const { data: cRow } = await supabase
+      .from("company_credits")
+      .select("credits")
+      .eq("company_id", auth.user.id)
+      .single();
+
+    setCredits(Number(cRow?.credits ?? 0));
+
+    const { data, error: e } = await supabase.rpc("company_get_worker", {
+      p_worker_public_no: workerPublicNo,
+    });
+
+    if (e) {
+      setError(e.message);
+      setRow(null);
+      setLoading(false);
+      return;
+    }
+
+    const first = Array.isArray(data) ? data[0] : null;
+    setRow((first as any) ?? null);
+    setLoading(false);
+  }
 
   useEffect(() => {
-    if (!Number.isFinite(workerPublicNo) || workerPublicNo <= 0) return;
-
-    (async () => {
-      setError(null);
-      setLoading(true);
-
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) {
-        window.location.href = "/login";
-        return;
-      }
-
-      // check tipo utente
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", auth.user.id)
-        .single();
-
-      if ((prof?.user_type ?? "") !== "company") {
-        window.location.href = "/dashboard";
-        return;
-      }
-
-      // 1) crediti
-      const { data: cData, error: cErr } = await supabase.rpc("get_company_credits");
-      if (cErr) {
-        setError(cErr.message);
-        setLoading(false);
-        return;
-      }
-      setCredits((cData as any) ?? 0);
-
-      // 2) dettaglio pubblico (safe)
-      const { data: dData, error: dErr } = await supabase.rpc("get_worker_public_detail", {
-        p_worker_public_no: workerPublicNo,
-      });
-
-      if (dErr) {
-        setError(dErr.message);
-        setLoading(false);
-        return;
-      }
-
-      const detail = ((dData as any)?.[0] as Detail) ?? null;
-      setRow(detail);
-
-      // 3) contatti solo se già sbloccati (se no torna vuoto)
-      const { data: ctData, error: ctErr } = await supabase.rpc("get_worker_contact_if_unlocked", {
-        p_worker_public_no: workerPublicNo,
-      });
-
-      if (ctErr) {
-        setError(ctErr.message);
-        setLoading(false);
-        return;
-      }
-
-      const ct = ((ctData as any)?.[0] as Contact) ?? null;
-      setContact(ct);
-
-      setLoading(false);
-    })();
+    if (!workerPublicNo) return;
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workerPublicNo]);
 
   async function unlock() {
     if (!row) return;
-
-    setUnlocking(true);
+    setSaving(true);
     setError(null);
 
-    try {
-      // Se contatti già presenti, non fare nulla
-      if (contact?.worker_id) {
-        setUnlocking(false);
-        return;
+    const { error: e } = await supabase.rpc("unlock_worker_contact", {
+      p_worker_id: row.worker_id,
+    });
+
+    if (e) {
+      // messaggio “umano”
+      if ((e.message || "").includes("NOT_ENOUGH_CREDITS")) {
+        setError("Crediti insufficienti. Ricarica per sbloccare i contatti.");
+      } else {
+        setError(e.message);
       }
-
-      // Risolvo worker_id dal DB usando worker_public_no (server-side sarebbe meglio,
-      // ma qui facciamo una query safe: prendo worker_id tramite RPC contatti (che se non sbloccato non torna)
-      // quindi qui serve una mini RPC “resolver”: invece usiamo una query diretta SOLO sull’id:
-      // Per evitare di leggere campi sensibili, seleziono solo "id" e filtro su worker_public_no.
-      const { data: idRow, error: idErr } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_type", "worker")
-        .eq("worker_public_no", workerPublicNo)
-        .single();
-
-      if (idErr) {
-        setUnlocking(false);
-        setError(idErr.message);
-        return;
-      }
-
-      const workerId = (idRow as any)?.id as string;
-      if (!workerId) {
-        setUnlocking(false);
-        setError("Operatore non trovato.");
-        return;
-      }
-
-      // Chiama la tua funzione: scala 1 credito e registra unlock
-      const { error: uErr } = await supabase.rpc("unlock_worker_contact", {
-        p_worker_id: workerId,
-      });
-
-      if (uErr) {
-        setUnlocking(false);
-        // messaggio chiaro
-        if ((uErr.message || "").includes("NOT_ENOUGH_CREDITS")) {
-          setError("Crediti insufficienti.");
-        } else {
-          setError(uErr.message);
-        }
-        return;
-      }
-
-      // Ricarico crediti + contatti
-      const { data: cData } = await supabase.rpc("get_company_credits");
-      setCredits((cData as any) ?? 0);
-
-      const { data: ctData } = await supabase.rpc("get_worker_contact_if_unlocked", {
-        p_worker_public_no: workerPublicNo,
-      });
-
-      const ct = ((ctData as any)?.[0] as Contact) ?? null;
-      setContact(ct);
-
-      setUnlocking(false);
-    } catch (e: any) {
-      setUnlocking(false);
-      setError(e?.message ?? "Errore unlock.");
+      setSaving(false);
+      return;
     }
+
+    // ricarica dati (ora unlocked true)
+    await load();
+    setSaving(false);
   }
 
-  if (!Number.isFinite(workerPublicNo) || workerPublicNo <= 0) return <div>Operatore non valido.</div>;
+  if (!workerPublicNo) return <div>Caricamento...</div>;
   if (loading) return <div>Caricamento...</div>;
   if (!row) return <div className="card">Operatore non trovato.</div>;
 
-  const isUnlocked = !!contact?.worker_id;
+  const wd = row.worker_data || {};
+  const languages = Array.isArray(wd.languages) ? wd.languages : [];
 
   return (
     <div className="card">
-      <h2>Operatore #{String(row.worker_public_no).padStart(6, "0")}</h2>
+      <button onClick={() => (window.location.href = "/company/workers")}>← Torna alla lista</button>
 
-      <div className="small" style={{ marginTop: 6 }}>
-        Crediti disponibili: <b>{credits ?? 0}</b>
-      </div>
-
-      {error && (
-        <div className="small" style={{ marginTop: 10 }}>
-          {error}
-        </div>
-      )}
+      <h2 style={{ marginTop: 10 }}>
+        Operatore #{row.worker_public_no}
+      </h2>
 
       <div className="small" style={{ marginTop: 6 }}>
         Livello: <b>{row.clean_level}</b> — Stato: <b>{row.profile_status}</b>
       </div>
 
       <div className="small" style={{ marginTop: 6 }}>
-        Provincia: <b>{row.res_province || "—"}</b> — Automunito: <b>{row.has_car ? "Sì" : "No"}</b>
+        Zona: <b>{row.res_province || "—"}</b> — CAP: <b>{row.res_cap || "—"}</b>
       </div>
 
-      <hr />
+      <hr style={{ marginTop: 14 }} />
 
       <h3>Contatti</h3>
-      {isUnlocked ? (
-        <div className="small">
-          Email: <b>{contact?.email ?? "—"}</b>
-          <br />
-          Telefono: <b>{contact?.phone ?? "—"}</b>
+
+      <div className="small" style={{ marginTop: 6 }}>
+        Crediti disponibili: <b>{credits}</b>
+      </div>
+
+      {!row.unlocked ? (
+        <div style={{ marginTop: 10 }}>
+          <div className="small" style={{ opacity: 0.8 }}>
+            I contatti sono bloccati. Per sbloccarli consumi <b>1 credito</b>.
+          </div>
+          <button onClick={unlock} disabled={saving} style={{ marginTop: 10 }}>
+            {saving ? "Sblocco..." : "Sblocca contatti (1 credito)"}
+          </button>
         </div>
       ) : (
-        <>
-          <div className="small">Contatti bloccati 🔒</div>
-          <div style={{ marginTop: 10 }}>
-            <button onClick={unlock} disabled={unlocking}>
-              {unlocking ? "Sblocco..." : "Sblocca contatti (1 credito)"}
-            </button>
+        <div style={{ marginTop: 10 }}>
+          <div className="small">
+            Email: <b>{row.contact_email || "—"}</b>
           </div>
-        </>
+          <div className="small" style={{ marginTop: 6 }}>
+            Telefono: <b>{row.contact_phone || "—"}</b>
+          </div>
+        </div>
       )}
 
-      <hr />
+      {error && (
+        <div className="small" style={{ marginTop: 12 }}>
+          {error}
+        </div>
+      )}
 
-      <h3>Documenti (safe)</h3>
-      <div className="small">
-        Cittadinanza: <b>{row.citizenship || "—"}</b>
-      </div>
-      <div className="small">
-        Patente: <b>{row.driving_license || "—"}</b>
-      </div>
+      <hr style={{ marginTop: 14 }} />
 
-      <hr />
+      <h3>Curriculum (dati principali)</h3>
 
-      <h3>Lingue</h3>
-      <div className="small">
-        {(row.languages || []).length === 0
-          ? "—"
-          : (row.languages || []).map((l: any, i: number) => (
-              <span key={i} style={{ marginRight: 8 }}>
-                <b>{l?.name ?? "—"}</b>
-              </span>
-            ))}
+      <div className="small" style={{ marginTop: 10 }}>
+        <b>Lingue:</b>{" "}
+        {languages.length
+          ? languages.map((l: any) => l?.name).filter(Boolean).join(", ")
+          : "—"}
       </div>
 
-      <hr />
+      <div className="small" style={{ marginTop: 10 }}>
+        <b>Esperienza pulizie:</b> {wd.exp_cleaning ? "✅" : "—"}
+      </div>
 
-      <h3>Esperienza / ambienti</h3>
-      <pre style={{ fontSize: 12, background: "#f7f7f7", padding: 10, borderRadius: 10, overflow: "auto" }}>
-        {JSON.stringify(row.env ?? {}, null, 2)}
-      </pre>
+      <div className="small" style={{ marginTop: 10 }}>
+        <b>Disponibilità trasferte:</b> {wd?.availability?.trips || "—"}
+      </div>
 
-      <h3>Formazione</h3>
-      <pre style={{ fontSize: 12, background: "#f7f7f7", padding: 10, borderRadius: 10, overflow: "auto" }}>
-        {JSON.stringify(row.training ?? {}, null, 2)}
-      </pre>
-
-      <h3>Disponibilità</h3>
-      <pre style={{ fontSize: 12, background: "#f7f7f7", padding: 10, borderRadius: 10, overflow: "auto" }}>
-        {JSON.stringify(row.availability ?? {}, null, 2)}
-      </pre>
-
-      <h3>Extra</h3>
-      <pre style={{ fontSize: 12, background: "#f7f7f7", padding: 10, borderRadius: 10, overflow: "auto" }}>
-        {JSON.stringify(row.extra ?? {}, null, 2)}
-      </pre>
-
-      <div style={{ marginTop: 14, display: "flex", gap: 10 }}>
-        <button onClick={() => (window.location.href = "/company/workers")}>← Indietro</button>
+      <div className="small" style={{ marginTop: 10, opacity: 0.8 }}>
+        (poi lo renderizziamo bene “a sezioni” come hai chiesto: questo è solo il primo step funzionale)
       </div>
     </div>
   );

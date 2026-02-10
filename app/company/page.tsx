@@ -28,9 +28,15 @@ export default function CompanyPage() {
       }
 
       // crediti
-      const res = await fetch("/api/company/credits");
-      const json = await res.json();
-      setCredits(Number(json.credits ?? 0));
+const { data: sessionData } = await supabase.auth.getSession();
+const token = sessionData.session?.access_token;
+
+const res = await fetch("/api/company/credits", {
+  headers: token ? { Authorization: `Bearer ${token}` } : {},
+});
+const json = await res.json();
+setCredits(Number(json.credits ?? 0));
+
 
       setLoading(false);
     })();

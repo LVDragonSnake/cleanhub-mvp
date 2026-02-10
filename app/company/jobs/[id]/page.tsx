@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { supabase } from "../../../../lib/supabaseClient";
 
 type AppRow = {
@@ -15,8 +16,9 @@ type AppRow = {
   } | null;
 };
 
-export default function CompanyJobAppsPage({ params }: { params: { id: string } }) {
-  const jobId = params.id;
+export default function CompanyJobAppsPage() {
+  const params = useParams<{ id: string }>();
+  const jobId = useMemo(() => params?.id ?? "", [params]);
 
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<AppRow[]>([]);
@@ -24,6 +26,9 @@ export default function CompanyJobAppsPage({ params }: { params: { id: string } 
   const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
+    // se l'id non è pronto, non chiamare nulla
+    if (!jobId) return;
+
     (async () => {
       setError(null);
 
@@ -80,6 +85,7 @@ export default function CompanyJobAppsPage({ params }: { params: { id: string } 
     setSavingId(null);
   }
 
+  if (!jobId) return <div>Caricamento...</div>;
   if (loading) return <div>Caricamento...</div>;
 
   return (
@@ -103,28 +109,33 @@ export default function CompanyJobAppsPage({ params }: { params: { id: string } 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {rows.map((r) => {
               const name =
-                `${r.profiles?.first_name ?? ""} ${r.profiles?.last_name ?? ""}`.trim() || "Operatore";
+                `${r.profiles?.first_name ?? ""} ${r.profiles?.last_name ?? ""}`.trim() ||
+                "Operatore";
+
               return (
-                <div key={r.id} style={{ border: "1px solid #e6e6e6", borderRadius: 12, padding: 12 }}>
+                <div
+                  key={r.id}
+                  style={{
+                    border: "1px solid #e6e6e6",
+                    borderRadius: 12,
+                    padding: 12,
+                  }}
+                >
                   <b>{name}</b>
+
                   <div className="small" style={{ marginTop: 6 }}>
                     {r.profiles?.email ?? ""}
                   </div>
+
                   <div className="small" style={{ marginTop: 6 }}>
                     Stato: <b>{r.status}</b>
                   </div>
 
                   <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
-                    <button
-                      onClick={() => setStatus(r.id, "accepted")}
-                      disabled={savingId === r.id}
-                    >
+                    <button onClick={() => setStatus(r.id, "accepted")} disabled={savingId === r.id}>
                       Accetta
                     </button>
-                    <button
-                      onClick={() => setStatus(r.id, "rejected")}
-                      disabled={savingId === r.id}
-                    >
+                    <button onClick={() => setStatus(r.id, "rejected")} disabled={savingId === r.id}>
                       Rifiuta
                     </button>
                   </div>

@@ -3,33 +3,32 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
 
-type WorkerRow = {
+type Row = {
   worker_public_no: number;
-  clean_level: number | null;
-  exp_cleaning: boolean | null;
-  work_night: boolean | null;
-  work_team: boolean | null;
-  work_public_places: boolean | null;
-  work_client_contact: boolean | null;
-  province: string | null;
+  clean_level: number;
+  profile_status: string;
+  res_province: string;
+  has_car: boolean;
+  exp_cleaning: boolean;
+  work_night: boolean;
+  work_team: boolean;
+  work_public_places: boolean;
+  work_client_contact: boolean;
 };
 
 export default function CompanyWorkersPage() {
   const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<WorkerRow[]>([]);
+  const [rows, setRows] = useState<Row[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // filtri base (poi li estendiamo)
-  const [minLevel, setMinLevel] = useState("");
-  const [province, setProvince] = useState("");
+  const [q, setQ] = useState("");
+  const [onlyComplete, setOnlyComplete] = useState(false);
+  const [minLevel, setMinLevel] = useState("0");
 
-  const filters = useMemo(
-    () => ({
-      minLevel: minLevel.trim() ? Number(minLevel) : null,
-      province: province.trim() ? province.trim() : null,
-    }),
-    [minLevel, province]
-  );
+  const minLevelNum = useMemo(() => {
+    const n = Number(minLevel);
+    return Number.isFinite(n) ? n : 0;
+  }, [minLevel]);
 
   useEffect(() => {
     (async () => {
@@ -41,7 +40,7 @@ export default function CompanyWorkersPage() {
         return;
       }
 
-      // controllo user_type=company
+      // check tipo utente
       const { data: prof } = await supabase
         .from("profiles")
         .select("user_type")
@@ -53,42 +52,34 @@ export default function CompanyWorkersPage() {
         return;
       }
 
+      await runSearch();
       setLoading(false);
-      await loadWorkers(filters.minLevel, filters.province);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadWorkers(pMinLevel: number | null, pProvince: string | null) {
-    setLoading(true);
+  async function runSearch() {
     setError(null);
 
-    const { data, error } = await supabase.rpc("list_workers_public", {
-      p_min_level: pMinLevel,
-      p_province: pProvince,
+    const { data, error } = await supabase.rpc("search_workers_public", {
+      p_query: q.trim(),
+      p_only_complete: onlyComplete,
+      p_min_level: minLevelNum,
     });
 
     if (error) {
-      setLoading(false);
       setError(error.message);
       return;
     }
 
     setRows((data as any) ?? []);
-    setLoading(false);
   }
 
-  async function onApplyFilters() {
-    await loadWorkers(filters.minLevel, filters.province);
-  }
+  if (loading) return <div>Caricamento...</div>;
 
   return (
     <div className="card">
       <h2>Operatori</h2>
-
-      <div className="small" style={{ marginTop: 8 }}>
-        Lista operatori (dati pubblici). I contatti si sbloccano con crediti.
-      </div>
 
       {error && (
         <div className="small" style={{ marginTop: 10 }}>
@@ -96,65 +87,60 @@ export default function CompanyWorkersPage() {
         </div>
       )}
 
-      <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 160 }}>
-          <label>Livello minimo</label>
-          <input value={minLevel} onChange={(e) => setMinLevel(e.target.value)} placeholder="es. 3" />
-        </div>
+      <div style={{ marginTop: 10 }}>
+        <label>Cerca (numero o provincia)</label>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Es: 120 oppure MI" />
+      </div>
 
-        <div style={{ minWidth: 200 }}>
-          <label>Provincia (sigla)</label>
-          <input value={province} onChange={(e) => setProvince(e.target.value)} placeholder="es. MI" />
-        </div>
+      <div className="chkRow" style={{ marginTop: 10 }}>
+        <input type="checkbox" checked={onlyComplete} onChange={(e) => setOnlyComplete(e.target.checked)} />
+        <span>Solo profili completi</span>
+      </div>
 
-        <div style={{ alignSelf: "end" }}>
-          <button onClick={onApplyFilters} disabled={loading}>
-            {loading ? "Carico..." : "Applica filtri"}
-          </button>
-        </div>
+      <div style={{ marginTop: 10 }}>
+        <label>Livello minimo</label>
+        <input value={minLevel} onChange={(e) => setMinLevel(e.target.value)} />
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <button onClick={runSearch}>Cerca</button>
       </div>
 
       <hr />
 
-      {loading ? (
-        <div>Caricamento...</div>
-      ) : rows.length === 0 ? (
+      {rows.length === 0 ? (
         <div className="small">Nessun operatore trovato.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {rows.map((w) => (
+          {rows.map((r) => (
             <div
-              key={w.worker_public_no}
+              key={r.worker_public_no}
               style={{ border: "1px solid #e6e6e6", borderRadius: 12, padding: 12 }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                <div>
-                  <b>Operatore #{w.worker_public_no}</b>
-                  <div className="small" style={{ marginTop: 6 }}>
-                    Livello: <b>{w.clean_level ?? "-"}</b>
-                    {w.province ? <> — Provincia: <b>{w.province}</b></> : null}
-                  </div>
+              <b>Operatore #{String(r.worker_public_no).padStart(6, "0")}</b>
 
-                  <div className="small" style={{ marginTop: 6 }}>
-                    {w.exp_cleaning ? "✅ Pulizie" : "—"}{" "}
-                    {w.work_night ? "✅ Notturno" : "—"}{" "}
-                    {w.work_team ? "✅ Team" : "—"}{" "}
-                    {w.work_public_places ? "✅ Luoghi pubblici" : "—"}{" "}
-                    {w.work_client_contact ? "✅ Clienti" : "—"}
-                  </div>
-                </div>
+              <div className="small" style={{ marginTop: 6 }}>
+                Livello: <b>{r.clean_level}</b> — Stato profilo: <b>{r.profile_status}</b>
+              </div>
 
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <button
-                    onClick={() =>
-                      (window.location.href = `/company/workers/${encodeURIComponent(
-                        String(w.worker_public_no)
-                      )}`)
-                    }
-                  >
-                    Vedi profilo
-                  </button>
-                </div>
+              <div className="small" style={{ marginTop: 6 }}>
+                Provincia: <b>{r.res_province || "—"}</b> — Automunito: <b>{r.has_car ? "Sì" : "No"}</b>
+              </div>
+
+              <div className="small" style={{ marginTop: 6 }}>
+                Pulizie: {r.exp_cleaning ? "✅" : "—"} | Notte: {r.work_night ? "✅" : "—"} | Team:{" "}
+                {r.work_team ? "✅" : "—"} | Pubblico: {r.work_public_places ? "✅" : "—"} | Clienti:{" "}
+                {r.work_client_contact ? "✅" : "—"}
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <button
+                  onClick={() =>
+                    (window.location.href = `/company/workers/${encodeURIComponent(String(r.worker_public_no))}`)
+                  }
+                >
+                  Vedi profilo
+                </button>
               </div>
             </div>
           ))}
@@ -162,10 +148,9 @@ export default function CompanyWorkersPage() {
       )}
 
       <div className="nav" style={{ marginTop: 14 }}>
-        <a href="/company">Company</a>
-        <a href="/company/jobs">Jobs</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/profile">Profilo</a>
+        <a href="/logout">Logout</a>
       </div>
     </div>
   );

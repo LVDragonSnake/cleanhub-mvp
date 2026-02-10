@@ -6,27 +6,11 @@ import { progressFromXp } from "../lib/gamification";
 import { LevelBar } from "./LevelBar";
 
 type ProfileLite = {
-  first_name: string | null;
+  user_type: string | null;
   clean_points: number | null;
 };
 
 const LS_LAST_LEVEL = "cleanhub_last_level";
-
-function safeGet(key: string): string | null {
-  try {
-    return window.localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function safeSet(key: string, value: string) {
-  try {
-    window.localStorage.setItem(key, value);
-  } catch {
-    // se localStorage è bloccato (Safari Private ecc), ignoriamo
-  }
-}
 
 export default function WorkerHeader() {
   const [loading, setLoading] = useState(true);
@@ -44,7 +28,7 @@ export default function WorkerHeader() {
 
       const { data } = await supabase
         .from("profiles")
-        .select("first_name,clean_points")
+        .select("user_type,clean_points")
         .eq("id", auth.user.id)
         .single();
 
@@ -53,48 +37,39 @@ export default function WorkerHeader() {
     })();
   }, []);
 
-  const xp = profile?.clean_points ?? 0;
+  if (loading) return null;
+  if (!profile) return null;
 
-  // ⚠️ super-safe: se progressFromXp dovesse mai lanciare, non rompiamo l’app
-  const p = useMemo(() => {
-    try {
-      return progressFromXp(xp);
-    } catch {
-      return { level: 1, nextLevel: 2, progress: 0 };
-    }
-  }, [xp]);
+  // ✅ MOSTRA SOLO AI WORKER
+  if ((profile.user_type ?? "worker") !== "worker") return null;
+
+  const xp = profile.clean_points ?? 0;
+  const p = useMemo(() => progressFromXp(xp), [xp]);
 
   useEffect(() => {
-    if (loading) return;
-    if (!profile) return;
-
     const currentLevel = p.level;
 
     let prevLevel: number | null = null;
-    const raw = typeof window !== "undefined" ? safeGet(LS_LAST_LEVEL) : null;
+    const raw = typeof window !== "undefined" ? window.localStorage.getItem(LS_LAST_LEVEL) : null;
     if (raw) {
       const n = Number(raw);
       prevLevel = Number.isFinite(n) ? n : null;
     }
 
     if (prevLevel == null) {
-      safeSet(LS_LAST_LEVEL, String(currentLevel));
+      window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
       return;
     }
 
     if (currentLevel > prevLevel) {
       setLevelUp({ from: prevLevel, to: currentLevel });
-      safeSet(LS_LAST_LEVEL, String(currentLevel));
-
+      window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
       const t = setTimeout(() => setLevelUp(null), 1800);
       return () => clearTimeout(t);
     }
 
-    safeSet(LS_LAST_LEVEL, String(currentLevel));
-  }, [loading, profile, p.level]);
-
-  if (loading) return null;
-  if (!profile) return null;
+    window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
+  }, [p.level]);
 
   return (
     <div style={{ padding: "10px 16px" }}>
@@ -125,7 +100,6 @@ export default function WorkerHeader() {
             }}
           >
             <Confetti />
-
             <div style={{ fontSize: 14, opacity: 0.8 }}>Complimenti!</div>
             <div style={{ fontSize: 22, fontWeight: 800, marginTop: 6 }}>
               Livello {levelUp.to} 🎉

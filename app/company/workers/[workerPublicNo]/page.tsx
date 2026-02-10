@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { supabase } from "../../../../lib/supabaseClient";
 
 type WorkerDetail = {
-  worker_id: string;
   worker_public_no: number;
   clean_level: number;
   profile_status: string;
@@ -22,7 +21,6 @@ export default function CompanyWorkerDetailPage() {
   const publicNo = useMemo(() => Number(params?.workerPublicNo || 0), [params]);
 
   const [loading, setLoading] = useState(true);
-  const [credits, setCredits] = useState<number>(0);
   const [row, setRow] = useState<WorkerDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
@@ -31,7 +29,6 @@ export default function CompanyWorkerDetailPage() {
     (async () => {
       if (!publicNo) return;
 
-      // auth + blocco se non company
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) {
         window.location.href = "/login";
@@ -49,21 +46,10 @@ export default function CompanyWorkerDetailPage() {
         return;
       }
 
-      await refreshCredits();
       await load();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publicNo]);
-
-  async function refreshCredits() {
-    try {
-      const res = await fetch("/api/company/credits");
-      const json = await res.json();
-      setCredits(Number(json.credits ?? 0));
-    } catch {
-      setCredits(0);
-    }
-  }
 
   async function load() {
     setLoading(true);
@@ -86,8 +72,7 @@ export default function CompanyWorkerDetailPage() {
   }
 
   async function unlock() {
-    if (!row) return;
-
+    if (!publicNo) return;
     setUnlocking(true);
     setError(null);
 
@@ -96,42 +81,29 @@ export default function CompanyWorkerDetailPage() {
     });
 
     if (error) {
-      // error.message conterrà NOT_ENOUGH_CREDITS / NOT_COMPANY / etc.
       setError(error.message);
       setUnlocking(false);
       return;
     }
 
-    await refreshCredits();
     await load();
     setUnlocking(false);
   }
 
   if (!publicNo) return <div>Caricamento...</div>;
   if (loading) return <div>Caricamento...</div>;
-  if (!row) return <div className="card">Operatore non trovato.</div>;
+  if (!row) return <div>Operatore non trovato.</div>;
 
   const wd = row.worker_data || {};
-  const langs = Array.isArray(wd.languages) ? wd.languages : [];
-  const av = wd.availability || {};
+  const languages = Array.isArray(wd.languages) ? wd.languages : [];
+  const availability = wd.availability || {};
   const env = wd.env || {};
-  const tr = wd.training || {};
+  const training = wd.training || {};
+  const extra = wd.extra || {};
 
   return (
     <div className="card">
       <h2>Operatore #{row.worker_public_no}</h2>
-
-      <div className="small" style={{ marginTop: 6 }}>
-        Livello: <b>{row.clean_level ?? 1}</b> — Stato: <b>{row.profile_status}</b>
-      </div>
-
-      <div className="small" style={{ marginTop: 6 }}>
-        Zona: <b>{row.res_province ?? "—"}</b> • <b>{row.res_cap ?? "—"}</b>
-      </div>
-
-      <div className="small" style={{ marginTop: 10 }}>
-        Crediti disponibili: <b>{credits}</b>
-      </div>
 
       {error && (
         <div className="small" style={{ marginTop: 10 }}>
@@ -139,81 +111,101 @@ export default function CompanyWorkerDetailPage() {
         </div>
       )}
 
-      <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <button onClick={() => (window.location.href = "/company/workers")}>← Torna alla lista</button>
-
-        {!row.unlocked ? (
-          <button onClick={unlock} disabled={unlocking}>
-            {unlocking ? "Sblocco..." : "Sblocca contatti (1 credito)"}
-          </button>
-        ) : (
-          <span className="small">✅ Contatti sbloccati</span>
-        )}
+      <div className="small" style={{ marginTop: 6 }}>
+        Livello: <b>{row.clean_level}</b> · Stato: <b>{row.profile_status}</b> · Zona:{" "}
+        <b>{(row.res_province || "—").toString().toUpperCase()}</b>{" "}
+        {row.res_cap ? `(${row.res_cap})` : ""}
       </div>
 
-      <hr style={{ marginTop: 14 }} />
+      <hr />
 
       <h3>Contatti</h3>
-      {!row.unlocked ? (
-        <div className="small">🔒 Contatti nascosti finché non sblocchi.</div>
-      ) : (
-        <div className="small" style={{ marginTop: 6 }}>
-          Email: <b>{row.contact_email ?? "—"}</b>
+      {row.unlocked ? (
+        <div className="small">
+          Email: <b>{row.contact_email || "—"}</b>
           <br />
-          Telefono: <b>{row.contact_phone ?? "—"}</b>
+          Telefono: <b>{row.contact_phone || "—"}</b>
         </div>
+      ) : (
+        <>
+          <div className="small">Contatti bloccati. Per vedere email/telefono devi sbloccare.</div>
+          <div style={{ marginTop: 10 }}>
+            <button onClick={unlock} disabled={unlocking}>
+              {unlocking ? "Sblocco..." : "Sblocca contatti (1 credito)"}
+            </button>
+          </div>
+        </>
       )}
 
-      <hr style={{ marginTop: 14 }} />
+      <hr />
 
-      <h3>Lingue</h3>
-      <div className="small" style={{ marginTop: 6 }}>
-        {langs.length === 0 ? "—" : langs.map((l: any) => l?.name).filter(Boolean).join(", ")}
+      <h3>CV (dati strutturati)</h3>
+
+      <div style={{ marginTop: 10 }}>
+        <b>Lingue</b>
+        <div className="small" style={{ marginTop: 6 }}>
+          {languages.length ? languages.map((l: any) => l?.name).filter(Boolean).join(", ") : "—"}
+        </div>
       </div>
 
-      <h3 style={{ marginTop: 14 }}>Esperienza</h3>
-      <div className="small" style={{ marginTop: 6 }}>
-        {wd.exp_cleaning ? "✅ Esperienza pulizie" : "— Esperienza pulizie"} <br />
-        {wd.work_client_contact ? "✅ Contatto clienti" : "— Contatto clienti"} <br />
-        {wd.work_night ? "✅ Notturno" : "— Notturno"} <br />
-        {wd.work_team ? "✅ Team" : "— Team"} <br />
-        {wd.work_public_places ? "✅ Luoghi pubblici" : "— Luoghi pubblici"} <br />
+      <div style={{ marginTop: 10 }}>
+        <b>Disponibilità</b>
+        <div className="small" style={{ marginTop: 6 }}>
+          Trasferte: <b>{availability.trips || "—"}</b> · Raggio km:{" "}
+          <b>{availability.radius_km || "—"}</b> · Richiesta oraria:{" "}
+          <b>{availability.hourly_request || "—"}</b>
+        </div>
+        {availability.notes ? (
+          <div className="small" style={{ marginTop: 6 }}>
+            Note: {availability.notes}
+          </div>
+        ) : null}
       </div>
 
-      <h3 style={{ marginTop: 14 }}>Ambienti</h3>
-      <div className="small" style={{ marginTop: 6 }}>
-        {env.hotel ? "✅ Hotel" : null} {env.care ? "✅ Case di cura" : null}{" "}
-        {env.private_homes ? "✅ Case private" : null} {env.shopping ? "✅ Centri commerciali" : null}{" "}
-        {env.offices ? "✅ Uffici" : null} {env.hospital ? "✅ Ospedali/Cliniche" : null}{" "}
-        {env.restaurants ? "✅ Ristoranti/Bar" : null} {env.other ? `✅ Altro: ${env.other_text || ""}` : null}
-        {!env.hotel &&
-        !env.care &&
-        !env.private_homes &&
-        !env.shopping &&
-        !env.offices &&
-        !env.hospital &&
-        !env.restaurants &&
-        !env.other
-          ? "—"
-          : null}
+      <div style={{ marginTop: 10 }}>
+        <b>Esperienza / Skills</b>
+        <div className="small" style={{ marginTop: 6 }}>
+          Pulizie: <b>{wd.exp_cleaning ? "Sì" : "No"}</b> · Notturno:{" "}
+          <b>{wd.work_night ? "Sì" : "No"}</b> · Team: <b>{wd.work_team ? "Sì" : "No"}</b> ·
+          Luoghi pubblici: <b>{wd.work_public_places ? "Sì" : "No"}</b> · Contatto clienti:{" "}
+          <b>{wd.work_client_contact ? "Sì" : "No"}</b>
+        </div>
       </div>
 
-      <h3 style={{ marginTop: 14 }}>Disponibilità</h3>
-      <div className="small" style={{ marginTop: 6 }}>
-        Trasferte: <b>{av.trips || "—"}</b> <br />
-        Raggio km: <b>{av.radius_km || "—"}</b> <br />
-        Contratti preferiti: <b>{av.contract_prefs || "—"}</b> <br />
-        Note: <b>{av.notes || "—"}</b> <br />
-        Attualmente impiegato: <b>{av.currently_employed || "—"}</b> <br />
-        Richiesta oraria: <b>{av.hourly_request || "—"}</b>
+      <div style={{ marginTop: 10 }}>
+        <b>Ambienti</b>
+        <div className="small" style={{ marginTop: 6 }}>
+          Hotel: <b>{env.hotel ? "Sì" : "No"}</b> · Case di cura: <b>{env.care ? "Sì" : "No"}</b> ·
+          Case private: <b>{env.private_homes ? "Sì" : "No"}</b> · Centri commerciali:{" "}
+          <b>{env.shopping ? "Sì" : "No"}</b> · Uffici: <b>{env.offices ? "Sì" : "No"}</b> ·
+          Ospedali: <b>{env.hospital ? "Sì" : "No"}</b> · Ristoranti:{" "}
+          <b>{env.restaurants ? "Sì" : "No"}</b>
+          {env.other ? <> · Altro: <b>{env.other_text || "Sì"}</b></> : null}
+        </div>
       </div>
 
-      <h3 style={{ marginTop: 14 }}>Formazione</h3>
-      <div className="small" style={{ marginTop: 6 }}>
-        Fine scuola: <b>{tr.school_year_end || "—"}</b> <br />
-        Corso: <b>{tr.school_course || "—"}</b> <br />
-        Scuola: <b>{tr.school_name || "—"}</b> <br />
-        Corsi: <b>{tr.courses || "—"}</b>
+      <div style={{ marginTop: 10 }}>
+        <b>Formazione</b>
+        <div className="small" style={{ marginTop: 6 }}>
+          Fine scuola: <b>{training.school_year_end || "—"}</b> · Corso:{" "}
+          <b>{training.school_course || "—"}</b> · Scuola: <b>{training.school_name || "—"}</b>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <b>Extra</b>
+        <div className="small" style={{ marginTop: 6 }}>
+          Hobbies: <b>{extra.hobbies || "—"}</b> · Tratti: <b>{extra.traits || "—"}</b>
+        </div>
+        {extra.more_info ? (
+          <div className="small" style={{ marginTop: 6 }}>
+            Note: {extra.more_info}
+          </div>
+        ) : null}
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <button onClick={() => (window.location.href = "/company/workers")}>← Torna alla lista</button>
       </div>
     </div>
   );

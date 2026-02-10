@@ -8,10 +8,25 @@ import { LevelBar } from "./LevelBar";
 type ProfileLite = {
   first_name: string | null;
   clean_points: number | null;
-  user_type: string | null; // worker | company | client
 };
 
 const LS_LAST_LEVEL = "cleanhub_last_level";
+
+function safeGet(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSet(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // se localStorage è bloccato (Safari Private ecc), ignoriamo
+  }
+}
 
 export default function WorkerHeader() {
   const [loading, setLoading] = useState(true);
@@ -27,110 +42,64 @@ export default function WorkerHeader() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
-        .select("first_name,clean_points,user_type")
+        .select("first_name,clean_points")
         .eq("id", auth.user.id)
         .single();
-
-      if (error) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
 
       setProfile((data as any) ?? null);
       setLoading(false);
     })();
   }, []);
 
-  // ✅ Header SOLO per operatori
-  if (loading) return null;
-  if (!profile) return null;
-  if ((profile.user_type ?? "worker") !== "worker") return null;
+  const xp = profile?.clean_points ?? 0;
 
-  const xp = profile.clean_points ?? 0;
-  const p = useMemo(() => progressFromXp(xp), [xp]);
+  // ⚠️ super-safe: se progressFromXp dovesse mai lanciare, non rompiamo l’app
+  const p = useMemo(() => {
+    try {
+      return progressFromXp(xp);
+    } catch {
+      return { level: 1, nextLevel: 2, progress: 0 };
+    }
+  }, [xp]);
 
-  // ✅ Detect level-up (persistendo ultimo livello)
   useEffect(() => {
+    if (loading) return;
     if (!profile) return;
 
     const currentLevel = p.level;
 
     let prevLevel: number | null = null;
-    const raw = window.localStorage.getItem(LS_LAST_LEVEL);
+    const raw = typeof window !== "undefined" ? safeGet(LS_LAST_LEVEL) : null;
     if (raw) {
       const n = Number(raw);
       prevLevel = Number.isFinite(n) ? n : null;
     }
 
     if (prevLevel == null) {
-      window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
+      safeSet(LS_LAST_LEVEL, String(currentLevel));
       return;
     }
 
     if (currentLevel > prevLevel) {
       setLevelUp({ from: prevLevel, to: currentLevel });
-      window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
+      safeSet(LS_LAST_LEVEL, String(currentLevel));
 
-      const t = window.setTimeout(() => setLevelUp(null), 1800);
-      return () => window.clearTimeout(t);
+      const t = setTimeout(() => setLevelUp(null), 1800);
+      return () => clearTimeout(t);
     }
 
-    window.localStorage.setItem(LS_LAST_LEVEL, String(currentLevel));
-  }, [profile, p.level]);
+    safeSet(LS_LAST_LEVEL, String(currentLevel));
+  }, [loading, profile, p.level]);
 
-  async function logout() {
-    await supabase.auth.signOut();
-    window.location.href = "/";
-  }
+  if (loading) return null;
+  if (!profile) return null;
 
   return (
-    <div
-      style={{
-        padding: "10px 16px",
-        borderBottom: "1px solid #eee",
-        background: "white",
-      }}
-    >
-      {/* ✅ Barra più corta e centrata */}
-      <div style={{ maxWidth: 720, margin: "0 auto" }}>
-        <LevelBar level={p.level} nextLevel={p.nextLevel} progress={p.progress} />
-      </div>
+    <div style={{ padding: "10px 16px" }}>
+      <LevelBar level={p.level} nextLevel={p.nextLevel} progress={p.progress} />
 
-      {/* ✅ Nav compatta (Jobs incluso) */}
-      <div
-        style={{
-          maxWidth: 720,
-          margin: "8px auto 0",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <div style={{ fontSize: 13, opacity: 0.85 }}>
-          Ciao <b>{profile.first_name || "Operatore"}</b>
-        </div>
-
-        <div style={{ display: "flex", gap: 12, fontSize: 13 }}>
-          <a href="/dashboard">Dashboard</a>
-          <a href="/jobs">Jobs</a>
-          <a href="/profile">Profilo</a>
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              logout();
-            }}
-          >
-            Logout
-          </a>
-        </div>
-      </div>
-
-      {/* ✅ Popup level-up + confetti */}
       {levelUp && (
         <div
           style={{

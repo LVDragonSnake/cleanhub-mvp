@@ -9,7 +9,6 @@ type WorkerCard = {
   profile_status: string;
   res_province: string | null;
   res_cap: string | null;
-
   exp_cleaning: boolean;
   work_night: boolean;
   work_team: boolean;
@@ -17,46 +16,25 @@ type WorkerCard = {
   work_client_contact: boolean;
 };
 
-function badge(text: string) {
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "4px 8px",
-        border: "1px solid #e6e6e6",
-        borderRadius: 999,
-        fontSize: 12,
-        marginRight: 6,
-        marginTop: 6,
-      }}
-    >
-      {text}
-    </span>
-  );
-}
-
 export default function CompanyWorkersPage() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<WorkerCard[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // filtri
   const [q, setQ] = useState("");
   const [onlyComplete, setOnlyComplete] = useState(true);
   const [minLevel, setMinLevel] = useState<number | "">("");
   const [province, setProvince] = useState("");
 
-  const minLevelInt = useMemo(() => (minLevel === "" ? null : Number(minLevel)), [minLevel]);
-
   useEffect(() => {
     (async () => {
-      // auth + blocco se non company
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) {
         window.location.href = "/login";
         return;
       }
 
+      // gate: solo company
       const { data: prof } = await supabase
         .from("profiles")
         .select("user_type")
@@ -80,7 +58,7 @@ export default function CompanyWorkersPage() {
     const { data, error } = await supabase.rpc("company_list_workers", {
       p_q: q.trim() || null,
       p_only_complete: onlyComplete,
-      p_min_level: minLevelInt,
+      p_min_level: minLevel === "" ? null : Number(minLevel),
       p_province: province.trim() || null,
     });
 
@@ -95,7 +73,13 @@ export default function CompanyWorkersPage() {
     setLoading(false);
   }
 
-  if (loading) return <div>Caricamento...</div>;
+  const chips = useMemo(() => {
+    const out: Array<[string, string]> = [];
+    if (onlyComplete) out.push(["✅", "Completo"]);
+    if (minLevel !== "") out.push(["⭐", `Livello ≥ ${minLevel}`]);
+    if (province.trim()) out.push(["📍", province.trim().toUpperCase()]);
+    return out;
+  }, [onlyComplete, minLevel, province]);
 
   return (
     <div className="card">
@@ -107,109 +91,118 @@ export default function CompanyWorkersPage() {
         </div>
       )}
 
-      <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-        <div>
-          <label>Cerca (ID pubblico / provincia / CAP)</label>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="es. 1042 o MI o 20100" />
-        </div>
-
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <input
-              type="checkbox"
-              checked={onlyComplete}
-              onChange={(e) => setOnlyComplete(e.target.checked)}
-            />
-            Solo profili completi
-          </label>
-
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <span className="small">Livello minimo</span>
-            <input
-              style={{ width: 90 }}
-              value={minLevel}
-              onChange={(e) => {
-                const v = e.target.value;
-                setMinLevel(v === "" ? "" : Number(v));
-              }}
-              type="number"
-              min={1}
-              placeholder="1"
-            />
-          </div>
-
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <span className="small">Provincia</span>
-            <input
-              style={{ width: 90 }}
-              value={province}
-              onChange={(e) => setProvince(e.target.value)}
-              placeholder="MI"
-            />
-          </div>
-
-          <button onClick={load}>Filtra</button>
-          <button onClick={() => (window.location.href = "/company")}>← Dashboard azienda</button>
-        </div>
+      <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <input
+          placeholder="Cerca (ID pubblico / provincia / CAP)"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          style={{ minWidth: 260 }}
+        />
+        <button onClick={load} disabled={loading}>
+          {loading ? "Carico..." : "Cerca"}
+        </button>
       </div>
 
-      <div style={{ marginTop: 16 }}>
-        {rows.length === 0 ? (
-          <div className="small">Nessun risultato.</div>
-        ) : (
-          <div style={{ display: "grid", gap: 12 }}>
-            {rows.map((w) => {
-              const code = `Operatore #${w.worker_public_no}`;
-              const zone = `${w.res_province ?? "—"} • ${w.res_cap ?? "—"}`;
-              const status = w.profile_status === "complete" ? "✅ completo" : "⏳ incompleto";
+      <div style={{ marginTop: 10, display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <label className="small">
+          <input
+            type="checkbox"
+            checked={onlyComplete}
+            onChange={(e) => setOnlyComplete(e.target.checked)}
+          />{" "}
+          Solo completi
+        </label>
 
-              return (
-                <div
-                  key={w.worker_public_no}
-                  style={{
-                    border: "1px solid #e6e6e6",
-                    borderRadius: 14,
-                    padding: 14,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 14,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div style={{ minWidth: 260 }}>
-                    <div style={{ fontWeight: 800, fontSize: 16 }}>{code}</div>
-                    <div className="small" style={{ marginTop: 4 }}>
-                      Livello: <b>{w.clean_level ?? 1}</b> — {status}
-                    </div>
-                    <div className="small" style={{ marginTop: 4 }}>
-                      Zona: <b>{zone}</b>
-                    </div>
+        <label className="small">
+          Livello minimo{" "}
+          <input
+            style={{ width: 70 }}
+            value={minLevel}
+            onChange={(e) => {
+              const v = e.target.value;
+              setMinLevel(v === "" ? "" : Number(v));
+            }}
+            placeholder="es. 3"
+          />
+        </label>
 
-                    <div style={{ marginTop: 8 }}>
-                      {w.exp_cleaning ? badge("Esperienza pulizie") : null}
-                      {w.work_night ? badge("Notturno") : null}
-                      {w.work_team ? badge("Team") : null}
-                      {w.work_public_places ? badge("Luoghi pubblici") : null}
-                      {w.work_client_contact ? badge("Contatto clienti") : null}
-                    </div>
-                  </div>
+        <label className="small">
+          Provincia{" "}
+          <input
+            style={{ width: 90 }}
+            value={province}
+            onChange={(e) => setProvince(e.target.value)}
+            placeholder="es. MI"
+          />
+        </label>
+      </div>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <button
-                      onClick={() =>
-                        (window.location.href = `/company/workers/${encodeURIComponent(
-                          String(w.worker_public_no)
-                        )}`)
-                      }
-                    >
-                      Vedi dettaglio
-                    </button>
-                  </div>
+      {chips.length > 0 && (
+        <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {chips.map(([i, t]) => (
+            <span
+              key={t}
+              className="small"
+              style={{
+                border: "1px solid #e6e6e6",
+                borderRadius: 999,
+                padding: "4px 10px",
+              }}
+            >
+              {i} {t}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+        {rows.map((w) => (
+          <div
+            key={w.worker_public_no}
+            style={{ border: "1px solid #e6e6e6", borderRadius: 12, padding: 12 }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+              <div>
+                <div style={{ fontWeight: 800 }}>
+                  Operatore #{w.worker_public_no}
                 </div>
-              );
-            })}
+                <div className="small" style={{ marginTop: 4 }}>
+                  Livello: <b>{w.clean_level}</b> · Stato:{" "}
+                  <b>{w.profile_status}</b> · Zona:{" "}
+                  <b>{(w.res_province || "—").toString().toUpperCase()}</b>{" "}
+                  {(w.res_cap ? `(${w.res_cap})` : "")}
+                </div>
+              </div>
+
+              <button
+                onClick={() =>
+                  (window.location.href = `/company/workers/${w.worker_public_no}`)
+                }
+              >
+                Apri
+              </button>
+            </div>
+
+            <div className="small" style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {w.exp_cleaning ? <span>🧽 Pulizie</span> : null}
+              {w.work_night ? <span>🌙 Notturno</span> : null}
+              {w.work_team ? <span>👥 Team</span> : null}
+              {w.work_public_places ? <span>🏢 Luoghi pubblici</span> : null}
+              {w.work_client_contact ? <span>🗣️ Contatto clienti</span> : null}
+              {!w.exp_cleaning &&
+              !w.work_night &&
+              !w.work_team &&
+              !w.work_public_places &&
+              !w.work_client_contact ? <span>—</span> : null}
+            </div>
           </div>
-        )}
+        ))}
+      </div>
+
+      <div className="nav" style={{ marginTop: 14 }}>
+        <a href="/company">Dashboard Azienda</a>
+        <a href="/profile">Profilo</a>
+        <a href="/logout">Logout</a>
       </div>
     </div>
   );

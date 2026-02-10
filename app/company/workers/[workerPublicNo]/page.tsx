@@ -4,25 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../../lib/supabaseClient";
 
-type WorkerPublic = {
+type Detail = {
   worker_public_no: number;
-  clean_level: number | null;
-  province: string | null;
-
-  exp_cleaning: boolean | null;
-  work_night: boolean | null;
-  work_team: boolean | null;
-  work_public_places: boolean | null;
-  work_client_contact: boolean | null;
-
-  languages: any;
-  availability: any;
+  clean_level: number;
+  profile_status: string;
+  res_province: string;
+  has_car: boolean;
+  citizenship: string;
+  driving_license: string;
+  languages: any[];
   env: any;
-
-  // contatti (solo se sbloccati)
-  contact_unlocked: boolean;
-  email: string | null;
-  phone: string | null;
+  training: any;
+  availability: any;
+  extra: any;
 };
 
 export default function CompanyWorkerDetailPage() {
@@ -30,9 +24,8 @@ export default function CompanyWorkerDetailPage() {
   const workerPublicNo = useMemo(() => Number(params?.workerPublicNo ?? ""), [params]);
 
   const [loading, setLoading] = useState(true);
-  const [row, setRow] = useState<WorkerPublic | null>(null);
+  const [row, setRow] = useState<Detail | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [unlocking, setUnlocking] = useState(false);
 
   useEffect(() => {
     if (!Number.isFinite(workerPublicNo) || workerPublicNo <= 0) return;
@@ -57,60 +50,31 @@ export default function CompanyWorkerDetailPage() {
         return;
       }
 
-      await fetchWorker();
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workerPublicNo]);
+      const { data, error } = await supabase.rpc("get_worker_public_detail", {
+        p_worker_public_no: workerPublicNo,
+      });
 
-  async function fetchWorker() {
-    setLoading(true);
-    setError(null);
-
-    const { data, error } = await supabase.rpc("get_worker_public", {
-      p_public_no: workerPublicNo,
-    });
-
-    if (error) {
-      setLoading(false);
-      setError(error.message);
-      return;
-    }
-
-    const one = Array.isArray(data) ? data[0] : data;
-    setRow((one as any) ?? null);
-    setLoading(false);
-  }
-
-  async function unlock() {
-    setUnlocking(true);
-    setError(null);
-
-    const { error } = await supabase.rpc("unlock_worker_contact_by_public_no", {
-      p_public_no: workerPublicNo,
-    });
-
-    if (error) {
-      setUnlocking(false);
-      // Supabase ti passa l’exception come message
-      if ((error.message || "").includes("NOT_ENOUGH_CREDITS")) {
-        setError("Crediti insufficienti. Acquista un pacchetto crediti.");
+      if (error) {
+        setError(error.message);
+        setLoading(false);
         return;
       }
-      setError(error.message);
-      return;
-    }
 
-    setUnlocking(false);
-    await fetchWorker();
+      setRow(((data as any)?.[0] as Detail) ?? null);
+      setLoading(false);
+    })();
+  }, [workerPublicNo]);
+
+  if (!Number.isFinite(workerPublicNo) || workerPublicNo <= 0) {
+    return <div>Operatore non valido.</div>;
   }
 
-  if (!Number.isFinite(workerPublicNo) || workerPublicNo <= 0) return <div>Caricamento...</div>;
   if (loading) return <div>Caricamento...</div>;
   if (!row) return <div className="card">Operatore non trovato.</div>;
 
   return (
     <div className="card">
-      <h2>Operatore #{row.worker_public_no}</h2>
+      <h2>Operatore #{String(row.worker_public_no).padStart(6, "0")}</h2>
 
       {error && (
         <div className="small" style={{ marginTop: 10 }}>
@@ -118,70 +82,56 @@ export default function CompanyWorkerDetailPage() {
         </div>
       )}
 
-      <div style={{ marginTop: 10 }}>
-        <button onClick={() => (window.location.href = "/company/workers")}>← Indietro</button>
-      </div>
-
-      <hr />
-
-      <div className="small">
-        Livello: <b>{row.clean_level ?? "-"}</b>
-        {row.province ? <> — Provincia: <b>{row.province}</b></> : null}
-      </div>
-
-      <div className="small" style={{ marginTop: 10 }}>
-        <b>Preferenze / esperienza</b>
+      <div className="small" style={{ marginTop: 6 }}>
+        Livello: <b>{row.clean_level}</b> — Stato: <b>{row.profile_status}</b>
       </div>
 
       <div className="small" style={{ marginTop: 6 }}>
-        {row.exp_cleaning ? "✅ Pulizie" : "—"}{" "}
-        {row.work_night ? "✅ Notturno" : "—"}{" "}
-        {row.work_team ? "✅ Team" : "—"}{" "}
-        {row.work_public_places ? "✅ Luoghi pubblici" : "—"}{" "}
-        {row.work_client_contact ? "✅ Clienti" : "—"}
+        Provincia: <b>{row.res_province || "—"}</b> — Automunito: <b>{row.has_car ? "Sì" : "No"}</b>
       </div>
-
-      <div className="small" style={{ marginTop: 14 }}>
-        <b>Lingue</b>
-      </div>
-      <pre className="small" style={{ whiteSpace: "pre-wrap" }}>
-        {JSON.stringify(row.languages ?? [], null, 2)}
-      </pre>
-
-      <div className="small" style={{ marginTop: 14 }}>
-        <b>Disponibilità</b>
-      </div>
-      <pre className="small" style={{ whiteSpace: "pre-wrap" }}>
-        {JSON.stringify(row.availability ?? {}, null, 2)}
-      </pre>
-
-      <div className="small" style={{ marginTop: 14 }}>
-        <b>Ambienti</b>
-      </div>
-      <pre className="small" style={{ whiteSpace: "pre-wrap" }}>
-        {JSON.stringify(row.env ?? {}, null, 2)}
-      </pre>
 
       <hr />
 
-      <div style={{ marginTop: 10 }}>
-        <b>Contatti</b>
+      <h3>Documenti (safe)</h3>
+      <div className="small">Cittadinanza: <b>{row.citizenship || "—"}</b></div>
+      <div className="small">Patente: <b>{row.driving_license || "—"}</b></div>
+
+      <hr />
+
+      <h3>Lingue</h3>
+      <div className="small">
+        {(row.languages || []).length === 0 ? "—" : (row.languages || []).map((l: any, i: number) => (
+          <span key={i} style={{ marginRight: 8 }}>
+            <b>{l?.name ?? "—"}</b>
+          </span>
+        ))}
       </div>
 
-      {row.contact_unlocked ? (
-        <div className="small" style={{ marginTop: 8 }}>
-          Email: <b>{row.email ?? "-"}</b>
-          <br />
-          Telefono: <b>{row.phone ?? "-"}</b>
-        </div>
-      ) : (
-        <div style={{ marginTop: 10 }}>
-          <div className="small">Contatti nascosti. Sblocca con 1 credito.</div>
-          <button onClick={unlock} disabled={unlocking} style={{ marginTop: 8 }}>
-            {unlocking ? "Sblocco..." : "Sblocca contatti (1 credito)"}
-          </button>
-        </div>
-      )}
+      <hr />
+
+      <h3>Esperienza / ambienti</h3>
+      <pre style={{ fontSize: 12, background: "#f7f7f7", padding: 10, borderRadius: 10, overflow: "auto" }}>
+        {JSON.stringify(row.env ?? {}, null, 2)}
+      </pre>
+
+      <h3>Formazione</h3>
+      <pre style={{ fontSize: 12, background: "#f7f7f7", padding: 10, borderRadius: 10, overflow: "auto" }}>
+        {JSON.stringify(row.training ?? {}, null, 2)}
+      </pre>
+
+      <h3>Disponibilità</h3>
+      <pre style={{ fontSize: 12, background: "#f7f7f7", padding: 10, borderRadius: 10, overflow: "auto" }}>
+        {JSON.stringify(row.availability ?? {}, null, 2)}
+      </pre>
+
+      <h3>Extra</h3>
+      <pre style={{ fontSize: 12, background: "#f7f7f7", padding: 10, borderRadius: 10, overflow: "auto" }}>
+        {JSON.stringify(row.extra ?? {}, null, 2)}
+      </pre>
+
+      <div style={{ marginTop: 14, display: "flex", gap: 10 }}>
+        <button onClick={() => (window.location.href = "/company/workers")}>← Indietro</button>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
+// app/layout.tsx
 import "./globals.css";
-import AppShell from "./components/AppShell";
+import AppHeader from "./components/AppHeader";
 
 export const metadata = {
   title: "Cleanhub",
@@ -10,7 +11,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="it">
       <body>
-        <AppShell>{children}</AppShell>
+        <AppHeader />
+        {children}
       </body>
     </html>
   );

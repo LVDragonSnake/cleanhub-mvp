@@ -1,5 +1,6 @@
 // app/layout.tsx
 import "./globals.css";
+import WorkerHeader from "./components/WorkerHeader";
 
 export const metadata = {
   title: "Cleanhub",
@@ -9,7 +10,10 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="it">
-      <body>{children}</body>
+      <body>
+        <WorkerHeader />
+        {children}
+      </body>
     </html>
   );
 }

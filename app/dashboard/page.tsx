@@ -9,6 +9,7 @@ type WorkerProgress = {
 
 type Profile = {
   id: string;
+  user_type: string | null;
   first_name: string | null;
   clean_points: number | null;
   clean_level: number | null;
@@ -39,18 +40,28 @@ export default function DashboardWorker() {
 
       const { data } = await supabase
         .from("profiles")
-        .select("id,first_name,clean_points,clean_level,worker_progress")
+        .select("id,user_type,first_name,clean_points,clean_level,worker_progress")
         .eq("id", auth.user.id)
         .single();
 
-      setProfile((data as Profile) ?? null);
+      const p = (data as Profile) ?? null;
+
+      // ✅ se sei company, NON devi vedere dashboard worker
+      if ((p?.user_type ?? "") === "company") {
+        window.location.href = "/company";
+        return;
+      }
+      if ((p?.user_type ?? "") === "client") {
+        window.location.href = "/client";
+        return;
+      }
+
+      setProfile(p);
       setLoading(false);
     })();
   }, []);
 
   const packs = useMemo(() => profile?.worker_progress?.packs || {}, [profile?.worker_progress]);
-
-  const allDone = useMemo(() => PACKS.every((p) => !!packs[p.key]), [packs]);
 
   if (loading) return <div>Caricamento...</div>;
   if (!profile) return <div>Errore profilo</div>;
@@ -61,13 +72,7 @@ export default function DashboardWorker() {
 
       <p style={{ marginTop: 6 }}>
         Livello: <b>{profile.clean_level ?? 1}</b>
-        {allDone ? <span style={{ marginLeft: 10 }}>🏆 Profilo completo</span> : null}
       </p>
-
-      <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-        <button onClick={() => (window.location.href = "/curriculum")}>Vedi curriculum</button>
-        <button onClick={() => (window.location.href = "/profile")}>Vai al profilo</button>
-      </div>
 
       <hr />
 

@@ -7,20 +7,26 @@ import { supabase } from "../../../../lib/supabaseClient";
 type WorkerDetail = {
   worker_public_no: number;
   clean_level: number | null;
-  profile_status: string | null;
-  res_province: string | null;
-  res_cap: string | null;
+  province: string | null;
 
-  unlocked: boolean;
-  contact_email: string | null;
-  contact_phone: string | null;
+  exp_cleaning: boolean;
+  work_night: boolean;
+  work_team: boolean;
+  work_public_places: boolean;
+  work_client_contact: boolean;
 
-  worker_data: any;
+  languages: any; // jsonb
+  availability: any; // jsonb
+  env: any; // jsonb
+
+  contact_unlocked: boolean;
+  email: string | null;
+  phone: string | null;
 };
 
 export default function CompanyWorkerDetailPage() {
   const params = useParams<{ workerPublicNo: string }>();
-  const workerPublicNo = useMemo(() => Number(params?.workerPublicNo || 0), [params]);
+  const publicNo = useMemo(() => Number(params?.workerPublicNo || ""), [params]);
 
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState<number>(0);
@@ -38,6 +44,7 @@ export default function CompanyWorkerDetailPage() {
         return;
       }
 
+      // blocco se non company
       const { data: prof } = await supabase
         .from("profiles")
         .select("user_type")
@@ -49,42 +56,45 @@ export default function CompanyWorkerDetailPage() {
         return;
       }
 
-      // crediti
-      try {
-        const res = await fetch("/api/company/credits");
-        const json = await res.json();
-        setCredits(Number(json.credits ?? 0));
-      } catch {
-        setCredits(0);
+      if (!publicNo || Number.isNaN(publicNo)) {
+        setError("ID operatore non valido.");
+        setLoading(false);
+        return;
       }
 
+      await refreshCredits();
       await loadDetail();
+
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workerPublicNo]);
+  }, [publicNo]);
+
+  async function refreshCredits() {
+    const { data } = await supabase.from("company_credits").select("credits").maybeSingle();
+    setCredits(Number(data?.credits ?? 0));
+  }
 
   async function loadDetail() {
     setError(null);
 
-    if (!workerPublicNo || !Number.isFinite(workerPublicNo)) {
+    const { data, error } = await supabase.rpc("get_worker_public", {
+      p_public_no: publicNo,
+    });
+
+    if (error) {
+      setError(error.message);
       setRow(null);
       return;
     }
 
-    // usa la tua API esistente (quella che già ti dava CV+unlocked)
-    // Se la tua API ha un path diverso, dimmelo e la adeguo,
-    // ma di solito è /api/company/worker?publicNo=...
-    const res = await fetch(`/api/company/worker?publicNo=${workerPublicNo}`);
-    const json = await res.json();
-
-    if (!res.ok) {
+    const first = Array.isArray(data) ? (data[0] as WorkerDetail | undefined) : undefined;
+    if (!first) {
       setRow(null);
-      setError(json?.error || "Operatore non trovato.");
       return;
     }
 
-    setRow(json.row as WorkerDetail);
+    setRow(first);
   }
 
   async function unlock() {
@@ -92,34 +102,20 @@ export default function CompanyWorkerDetailPage() {
     setUnlocking(true);
     setError(null);
 
-    try {
-      const res = await fetch("/api/company/unlock", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workerPublicNo: row.worker_public_no }),
-      });
+    const { error } = await supabase.rpc("unlock_worker_contact_by_public_no", {
+      p_public_no: publicNo,
+    });
 
-      const json = await res.json();
-
-      if (!res.ok) {
-        setError(json?.error || "Errore sblocco contatti");
-        setUnlocking(false);
-        return;
-      }
-
-      // refresh crediti + dettaglio
-      try {
-        const c = await fetch("/api/company/credits");
-        const cj = await c.json();
-        setCredits(Number(cj.credits ?? 0));
-      } catch {
-        // ignore
-      }
-
-      await loadDetail();
-    } finally {
+    if (error) {
+      // esempio: NOT_ENOUGH_CREDITS
+      setError(error.message);
       setUnlocking(false);
+      return;
     }
+
+    await refreshCredits();
+    await loadDetail();
+    setUnlocking(false);
   }
 
   if (loading) return <div>Caricamento...</div>;
@@ -128,27 +124,24 @@ export default function CompanyWorkerDetailPage() {
     return (
       <div className="card">
         <h2>Operatore</h2>
-        <div className="small">{error || "Operatore non trovato."}</div>
-        <div style={{ marginTop: 14 }}>
+        <div className="small">Operatore non trovato.</div>
+        <div style={{ marginTop: 12 }}>
           <button onClick={() => (window.location.href = "/company/workers")}>← Torna alla lista</button>
         </div>
       </div>
     );
   }
 
-  const wd = row.worker_data || {};
-  const langs = Array.isArray(wd.languages) ? wd.languages : [];
-  const av = wd.availability || {};
-  const env = wd.env || {};
-  const tr = wd.training || {};
-  const ex = wd.extra || {};
+  const langs = Array.isArray(row.languages) ? row.languages : [];
+  const av = row.availability || {};
+  const env = row.env || {};
 
   return (
     <div className="card">
       <h2>Operatore #{row.worker_public_no}</h2>
 
-      <div className="small" style={{ marginTop: 8, opacity: 0.9 }}>
-        Crediti: <b>{credits}</b>
+      <div className="small" style={{ marginTop: 6 }}>
+        Crediti disponibili: <b>{credits}</b>
       </div>
 
       {error && (
@@ -157,49 +150,27 @@ export default function CompanyWorkerDetailPage() {
         </div>
       )}
 
-      <div className="small" style={{ marginTop: 8, opacity: 0.8 }}>
-        Livello: {row.clean_level ?? 1} · Stato: {row.profile_status ?? "incomplete"} · Zona:{" "}
-        {(row.res_province ?? "—") + (row.res_cap ? ` (${row.res_cap})` : "")}
+      <div className="small" style={{ marginTop: 10 }}>
+        Livello: <b>{row.clean_level ?? 1}</b> · Zona: <b>{row.province ?? "—"}</b>
       </div>
 
       <hr style={{ margin: "14px 0" }} />
 
       <h3>Contatti</h3>
-
-      {!row.unlocked ? (
-        <>
-          <div className="small" style={{ opacity: 0.8 }}>
-            Contatti bloccati. Per vedere email/telefono devi sbloccare.
-          </div>
-
-          <div style={{ marginTop: 10 }}>
-            <button onClick={unlock} disabled={unlocking}>
-              {unlocking ? "Sblocco..." : "Sblocca contatti (1 credito)"}
-            </button>
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            <button
-              onClick={() => alert("Proposta preliminare: la implementiamo adesso come step successivo.")}
-            >
-              Invia proposta preliminare
-            </button>
-          </div>
-        </>
+      {row.contact_unlocked ? (
+        <div className="small" style={{ marginTop: 6 }}>
+          Email: <b>{row.email ?? "—"}</b>
+          <br />
+          Telefono: <b>{row.phone ?? "—"}</b>
+        </div>
       ) : (
         <>
           <div className="small" style={{ marginTop: 6 }}>
-            Email: <b>{row.contact_email || "—"}</b>
+            Contatti bloccati. Per vedere email/telefono devi sbloccare.
           </div>
-          <div className="small" style={{ marginTop: 6 }}>
-            Telefono: <b>{row.contact_phone || "—"}</b>
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            <button
-              onClick={() => alert("Proposta preliminare: la implementiamo adesso come step successivo.")}
-            >
-              Invia proposta preliminare
+          <div style={{ marginTop: 10 }}>
+            <button onClick={unlock} disabled={unlocking}>
+              {unlocking ? "Sblocco..." : "Sblocca contatti (1 credito)"}
             </button>
           </div>
         </>
@@ -209,53 +180,36 @@ export default function CompanyWorkerDetailPage() {
 
       <h3>CV (dati strutturati)</h3>
 
-      <div style={{ marginTop: 10 }}>
+      <div className="small" style={{ marginTop: 10 }}>
         <b>Lingue</b>
-        <div className="small" style={{ opacity: 0.85 }}>
-          {langs.length ? langs.map((l: any) => l?.name).filter(Boolean).join(", ") : "—"}
-        </div>
+        <div>{langs.length ? langs.map((l: any) => l?.name).filter(Boolean).join(", ") : "—"}</div>
       </div>
 
-      <div style={{ marginTop: 10 }}>
+      <div className="small" style={{ marginTop: 10 }}>
         <b>Disponibilità</b>
-        <div className="small" style={{ opacity: 0.85 }}>
-          Trasferte: {av.trips || "—"} · Raggio km: {av.radius_km || "—"} · Richiesta oraria:{" "}
-          {av.hourly_request || "—"}
+        <div>
+          Trasferte: {String(av?.trips ?? "—")} · Raggio km: {String(av?.radius_km ?? "—")} · Richiesta oraria:{" "}
+          {String(av?.hourly_request ?? "—")}
         </div>
       </div>
 
-      <div style={{ marginTop: 10 }}>
+      <div className="small" style={{ marginTop: 10 }}>
         <b>Esperienza / Skills</b>
-        <div className="small" style={{ opacity: 0.85 }}>
-          Pulizie: {wd.exp_cleaning ? "Sì" : "No"} · Notturno: {wd.work_night ? "Sì" : "No"} · Team:{" "}
-          {wd.work_team ? "Sì" : "No"} · Luoghi pubblici: {wd.work_public_places ? "Sì" : "No"} ·
-          Contatto clienti: {wd.work_client_contact ? "Sì" : "No"}
+        <div>
+          Pulizie: {row.exp_cleaning ? "Sì" : "No"} · Notturno: {row.work_night ? "Sì" : "No"} · Team:{" "}
+          {row.work_team ? "Sì" : "No"} · Luoghi pubblici: {row.work_public_places ? "Sì" : "No"} · Contatto clienti:{" "}
+          {row.work_client_contact ? "Sì" : "No"}
         </div>
       </div>
 
-      <div style={{ marginTop: 10 }}>
+      <div className="small" style={{ marginTop: 10 }}>
         <b>Ambienti</b>
-        <div className="small" style={{ opacity: 0.85 }}>
-          Hotel: {env.hotel ? "Sì" : "No"} · Case di cura: {env.care ? "Sì" : "No"} · Case private:{" "}
-          {env.private_homes ? "Sì" : "No"} · Centri commerciali: {env.shopping ? "Sì" : "No"} ·
-          Uffici: {env.offices ? "Sì" : "No"} · Ospedali: {env.hospital ? "Sì" : "No"} · Ristoranti:{" "}
-          {env.restaurants ? "Sì" : "No"}
-          {env.other ? ` · Altro: ${env.other_text || "—"}` : ""}
-        </div>
-      </div>
-
-      <div style={{ marginTop: 10 }}>
-        <b>Formazione</b>
-        <div className="small" style={{ opacity: 0.85 }}>
-          Fine scuola: {tr.school_year_end || "—"} · Corso: {tr.school_course || "—"} · Scuola:{" "}
-          {tr.school_name || "—"}
-        </div>
-      </div>
-
-      <div style={{ marginTop: 10 }}>
-        <b>Extra</b>
-        <div className="small" style={{ opacity: 0.85 }}>
-          Hobbies: {ex.hobbies || "—"} · Tratti: {ex.traits || "—"}
+        <div>
+          Hotel: {env?.hotel ? "Sì" : "No"} · Case di cura: {env?.care ? "Sì" : "No"} · Case private:{" "}
+          {env?.private_homes ? "Sì" : "No"} · Centri commerciali: {env?.shopping ? "Sì" : "No"} · Uffici:{" "}
+          {env?.offices ? "Sì" : "No"} · Ospedali: {env?.hospital ? "Sì" : "No"} · Ristoranti:{" "}
+          {env?.restaurants ? "Sì" : "No"} · Altro: {env?.other ? "Sì" : "No"}{" "}
+          {env?.other_text ? `(${env.other_text})` : ""}
         </div>
       </div>
 

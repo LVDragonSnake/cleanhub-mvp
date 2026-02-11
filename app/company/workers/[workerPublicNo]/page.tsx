@@ -1,50 +1,40 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
-import { supabase } from "../../../../lib/supabaseClient";
+import { useEffect, useState } from "react";
+import { supabase } from "../../../lib/supabaseClient";
 
 type WorkerDetail = {
   worker_public_no: number;
-  clean_level: number | null;
+  clean_level: number;
+  profile_status: string;
   province: string | null;
-
-  exp_cleaning: boolean;
-  work_night: boolean;
-  work_team: boolean;
-  work_public_places: boolean;
-  work_client_contact: boolean;
-
-  languages: any; // jsonb
-  availability: any; // jsonb
-  env: any; // jsonb
-
+  res_cap: string | null;
+  worker_data: any;
   contact_unlocked: boolean;
-  email: string | null;
-  phone: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
 };
 
-export default function CompanyWorkerDetailPage() {
-  const params = useParams<{ workerPublicNo: string }>();
-  const publicNo = useMemo(() => Number(params?.workerPublicNo || ""), [params]);
+export default function CompanyWorkerDetailPage({
+  params,
+}: {
+  params: { workerPublicNo: string };
+}) {
+  const publicNo = Number(params.workerPublicNo);
 
   const [loading, setLoading] = useState(true);
-  const [credits, setCredits] = useState<number>(0);
   const [row, setRow] = useState<WorkerDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
 
   useEffect(() => {
     (async () => {
-      setError(null);
-
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) {
         window.location.href = "/login";
         return;
       }
 
-      // blocco se non company
       const { data: prof } = await supabase
         .from("profiles")
         .select("user_type")
@@ -56,41 +46,35 @@ export default function CompanyWorkerDetailPage() {
         return;
       }
 
-      if (!publicNo || Number.isNaN(publicNo)) {
-        setError("ID operatore non valido.");
-        setLoading(false);
-        return;
-      }
-
-      await refreshCredits();
-      await loadDetail();
-
+      await load();
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [publicNo]);
+  }, []);
 
-  async function refreshCredits() {
-    const { data } = await supabase.from("company_credits").select("credits").maybeSingle();
-    setCredits(Number(data?.credits ?? 0));
-  }
-
-  async function loadDetail() {
+  async function load() {
     setError(null);
+
+    if (!Number.isFinite(publicNo)) {
+      setRow(null);
+      setError("ID operatore non valido.");
+      return;
+    }
 
     const { data, error } = await supabase.rpc("get_worker_public", {
       p_public_no: publicNo,
     });
 
     if (error) {
-      setError(error.message);
       setRow(null);
+      setError(error.message);
       return;
     }
 
-    const first = Array.isArray(data) ? (data[0] as WorkerDetail | undefined) : undefined;
+    const first = (data ?? [])[0] as WorkerDetail | undefined;
     if (!first) {
       setRow(null);
+      setError("Operatore non trovato.");
       return;
     }
 
@@ -102,120 +86,84 @@ export default function CompanyWorkerDetailPage() {
     setUnlocking(true);
     setError(null);
 
+    // la tua RPC di unlock (metti il nome corretto che hai già)
     const { error } = await supabase.rpc("unlock_worker_contact_by_public_no", {
-      p_public_no: publicNo,
+      p_public_no: row.worker_public_no,
     });
 
     if (error) {
-      // esempio: NOT_ENOUGH_CREDITS
-      setError(error.message);
       setUnlocking(false);
+      setError(error.message);
       return;
     }
 
-    await refreshCredits();
-    await loadDetail();
+    // ricarica dettaglio + aggiorna header crediti
+    await load();
+    window.dispatchEvent(new Event("credits:update"));
+
     setUnlocking(false);
   }
 
-  if (loading) return <div>Caricamento...</div>;
-
-  if (!row) {
-    return (
-      <div className="card">
-        <h2>Operatore</h2>
-        <div className="small">Operatore non trovato.</div>
-        <div style={{ marginTop: 12 }}>
-          <button onClick={() => (window.location.href = "/company/workers")}>← Torna alla lista</button>
-        </div>
-      </div>
-    );
-  }
-
-  const langs = Array.isArray(row.languages) ? row.languages : [];
-  const av = row.availability || {};
-  const env = row.env || {};
+  if (loading) return <div className="card">Caricamento...</div>;
 
   return (
     <div className="card">
-      <h2>Operatore #{row.worker_public_no}</h2>
+      <h2>Operatore #{publicNo}</h2>
 
-      <div className="small" style={{ marginTop: 6 }}>
-        Crediti disponibili: <b>{credits}</b>
-      </div>
-
-      {error && (
-        <div className="small" style={{ marginTop: 10 }}>
+      {error ? (
+        <div className="small" style={{ marginBottom: 10 }}>
           {error}
         </div>
-      )}
+      ) : null}
 
-      <div className="small" style={{ marginTop: 10 }}>
-        Livello: <b>{row.clean_level ?? 1}</b> · Zona: <b>{row.province ?? "—"}</b>
-      </div>
-
-      <hr style={{ margin: "14px 0" }} />
-
-      <h3>Contatti</h3>
-      {row.contact_unlocked ? (
-        <div className="small" style={{ marginTop: 6 }}>
-          Email: <b>{row.email ?? "—"}</b>
-          <br />
-          Telefono: <b>{row.phone ?? "—"}</b>
-        </div>
+      {!row ? (
+        <button onClick={() => (window.location.href = "/company/workers")}>
+          ← Torna alla lista
+        </button>
       ) : (
         <>
-          <div className="small" style={{ marginTop: 6 }}>
-            Contatti bloccati. Per vedere email/telefono devi sbloccare.
+          <div className="small" style={{ marginBottom: 10 }}>
+            Livello: <b>{row.clean_level}</b> · Stato: {row.profile_status} · Zona:{" "}
+            {row.province ?? "—"} {row.res_cap ? `(${row.res_cap})` : ""}
           </div>
-          <div style={{ marginTop: 10 }}>
-            <button onClick={unlock} disabled={unlocking}>
-              {unlocking ? "Sblocco..." : "Sblocca contatti (1 credito)"}
+
+          <hr />
+
+          <h3>Contatti</h3>
+          {row.contact_unlocked ? (
+            <div className="small">
+              Email: <b>{row.contact_email ?? "—"}</b>
+              <br />
+              Telefono: <b>{row.contact_phone ?? "—"}</b>
+            </div>
+          ) : (
+            <>
+              <div className="small">Contatti bloccati. Per vedere email/telefono devi sbloccare.</div>
+              <button onClick={unlock} disabled={unlocking} style={{ marginTop: 10 }}>
+                {unlocking ? "Sblocco..." : "Sblocca contatti (1 credito)"}
+              </button>
+            </>
+          )}
+
+          <hr />
+
+          <h3>CV (dati strutturati)</h3>
+          <pre className="small" style={{ whiteSpace: "pre-wrap" }}>
+            {JSON.stringify(row.worker_data ?? {}, null, 2)}
+          </pre>
+
+          <div style={{ marginTop: 14, display: "flex", gap: 10 }}>
+            <button onClick={() => (window.location.href = "/company/workers")}>
+              ← Torna alla lista
+            </button>
+
+            {/* qui poi ci attacchiamo la PROPOSTA */}
+            <button onClick={() => (window.location.href = `/company/proposals/new?worker=${row.worker_public_no}`)}>
+              Invia proposta
             </button>
           </div>
         </>
       )}
-
-      <hr style={{ margin: "14px 0" }} />
-
-      <h3>CV (dati strutturati)</h3>
-
-      <div className="small" style={{ marginTop: 10 }}>
-        <b>Lingue</b>
-        <div>{langs.length ? langs.map((l: any) => l?.name).filter(Boolean).join(", ") : "—"}</div>
-      </div>
-
-      <div className="small" style={{ marginTop: 10 }}>
-        <b>Disponibilità</b>
-        <div>
-          Trasferte: {String(av?.trips ?? "—")} · Raggio km: {String(av?.radius_km ?? "—")} · Richiesta oraria:{" "}
-          {String(av?.hourly_request ?? "—")}
-        </div>
-      </div>
-
-      <div className="small" style={{ marginTop: 10 }}>
-        <b>Esperienza / Skills</b>
-        <div>
-          Pulizie: {row.exp_cleaning ? "Sì" : "No"} · Notturno: {row.work_night ? "Sì" : "No"} · Team:{" "}
-          {row.work_team ? "Sì" : "No"} · Luoghi pubblici: {row.work_public_places ? "Sì" : "No"} · Contatto clienti:{" "}
-          {row.work_client_contact ? "Sì" : "No"}
-        </div>
-      </div>
-
-      <div className="small" style={{ marginTop: 10 }}>
-        <b>Ambienti</b>
-        <div>
-          Hotel: {env?.hotel ? "Sì" : "No"} · Case di cura: {env?.care ? "Sì" : "No"} · Case private:{" "}
-          {env?.private_homes ? "Sì" : "No"} · Centri commerciali: {env?.shopping ? "Sì" : "No"} · Uffici:{" "}
-          {env?.offices ? "Sì" : "No"} · Ospedali: {env?.hospital ? "Sì" : "No"} · Ristoranti:{" "}
-          {env?.restaurants ? "Sì" : "No"} · Altro: {env?.other ? "Sì" : "No"}{" "}
-          {env?.other_text ? `(${env.other_text})` : ""}
-        </div>
-      </div>
-
-      <div style={{ marginTop: 14 }}>
-        <button onClick={() => (window.location.href = "/company/workers")}>← Torna alla lista</button>
-      </div>
     </div>
   );
 }

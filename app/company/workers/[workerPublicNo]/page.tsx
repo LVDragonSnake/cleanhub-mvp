@@ -1,21 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../../lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 type WorkerDetail = {
   worker_public_no: number;
   clean_level: number;
   profile_status: string;
-  province: string | null;
-  res_cap: string | null;
   worker_data: any;
-  contact_unlocked: boolean;
+  res_province: string | null;
+  res_cap: string | null;
+  unlocked: boolean;
   contact_email: string | null;
   contact_phone: string | null;
 };
 
-export default function CompanyWorkerDetailPage({
+export default function WorkerPublicPage({
   params,
 }: {
   params: { workerPublicNo: string };
@@ -25,10 +25,11 @@ export default function CompanyWorkerDetailPage({
   const [loading, setLoading] = useState(true);
   const [row, setRow] = useState<WorkerDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [unlocking, setUnlocking] = useState(false);
 
   useEffect(() => {
     (async () => {
+      setError(null);
+
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) {
         window.location.href = "/login";
@@ -46,91 +47,75 @@ export default function CompanyWorkerDetailPage({
         return;
       }
 
-      await load();
+      const { data, error } = await supabase.rpc("company_get_worker", {
+        p_worker_public_no: publicNo,
+      });
+
+      if (error) {
+        setRow(null);
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      const first = (data && data[0]) as WorkerDetail | undefined;
+      setRow(first ?? null);
       setLoading(false);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [publicNo]);
 
-  async function load() {
+  async function unlockContact() {
     setError(null);
-
-    if (!Number.isFinite(publicNo)) {
-      setRow(null);
-      setError("ID operatore non valido.");
-      return;
-    }
-
-    const { data, error } = await supabase.rpc("get_worker_public", {
+    const { error } = await supabase.rpc("unlock_worker_contact_by_public_no", {
       p_public_no: publicNo,
     });
 
     if (error) {
-      setRow(null);
       setError(error.message);
       return;
     }
 
-    const first = (data ?? [])[0] as WorkerDetail | undefined;
-    if (!first) {
-      setRow(null);
-      setError("Operatore non trovato.");
-      return;
-    }
-
-    setRow(first);
-  }
-
-  async function unlock() {
-    if (!row) return;
-    setUnlocking(true);
-    setError(null);
-
-    // la tua RPC di unlock (metti il nome corretto che hai già)
-    const { error } = await supabase.rpc("unlock_worker_contact_by_public_no", {
-      p_public_no: row.worker_public_no,
+    // ricarica dettaglio
+    const { data } = await supabase.rpc("company_get_worker", {
+      p_worker_public_no: publicNo,
     });
-
-    if (error) {
-      setUnlocking(false);
-      setError(error.message);
-      return;
-    }
-
-    // ricarica dettaglio + aggiorna header crediti
-    await load();
-    window.dispatchEvent(new Event("credits:update"));
-
-    setUnlocking(false);
+    setRow((data && data[0]) ?? null);
   }
 
   if (loading) return <div className="card">Caricamento...</div>;
 
   return (
     <div className="card">
-      <h2>Operatore #{publicNo}</h2>
+      <h2>Operatore</h2>
 
       {error ? (
-        <div className="small" style={{ marginBottom: 10 }}>
+        <div className="small" style={{ marginTop: 8 }}>
           {error}
         </div>
       ) : null}
 
       {!row ? (
-        <button onClick={() => (window.location.href = "/company/workers")}>
-          ← Torna alla lista
-        </button>
+        <>
+          <div className="small">Operatore non trovato.</div>
+          <button
+            style={{ marginTop: 12 }}
+            onClick={() => (window.location.href = "/company/workers")}
+          >
+            ← Torna alla lista
+          </button>
+        </>
       ) : (
         <>
-          <div className="small" style={{ marginBottom: 10 }}>
-            Livello: <b>{row.clean_level}</b> · Stato: {row.profile_status} · Zona:{" "}
-            {row.province ?? "—"} {row.res_cap ? `(${row.res_cap})` : ""}
+          <div className="small" style={{ marginTop: 8 }}>
+            <b>Operatore #{row.worker_public_no}</b> · Livello {row.clean_level} ·{" "}
+            {row.profile_status} · Zona: {row.res_province ?? "—"}{" "}
+            {row.res_cap ? `(${row.res_cap})` : ""}
           </div>
 
-          <hr />
+          <hr style={{ margin: "14px 0" }} />
 
           <h3>Contatti</h3>
-          {row.contact_unlocked ? (
+          {row.unlocked ? (
             <div className="small">
               Email: <b>{row.contact_email ?? "—"}</b>
               <br />
@@ -138,30 +123,28 @@ export default function CompanyWorkerDetailPage({
             </div>
           ) : (
             <>
-              <div className="small">Contatti bloccati. Per vedere email/telefono devi sbloccare.</div>
-              <button onClick={unlock} disabled={unlocking} style={{ marginTop: 10 }}>
-                {unlocking ? "Sblocco..." : "Sblocca contatti (1 credito)"}
+              <div className="small">
+                Contatti bloccati. Per vedere email/telefono devi sbloccare.
+              </div>
+              <button style={{ marginTop: 10 }} onClick={unlockContact}>
+                Sblocca contatti (1 credito)
               </button>
             </>
           )}
 
-          <hr />
+          <hr style={{ margin: "14px 0" }} />
 
           <h3>CV (dati strutturati)</h3>
           <pre className="small" style={{ whiteSpace: "pre-wrap" }}>
             {JSON.stringify(row.worker_data ?? {}, null, 2)}
           </pre>
 
-          <div style={{ marginTop: 14, display: "flex", gap: 10 }}>
-            <button onClick={() => (window.location.href = "/company/workers")}>
-              ← Torna alla lista
-            </button>
-
-            {/* qui poi ci attacchiamo la PROPOSTA */}
-            <button onClick={() => (window.location.href = `/company/proposals/new?worker=${row.worker_public_no}`)}>
-              Invia proposta
-            </button>
-          </div>
+          <button
+            style={{ marginTop: 12 }}
+            onClick={() => (window.location.href = "/company/workers")}
+          >
+            ← Torna alla lista
+          </button>
         </>
       )}
     </div>

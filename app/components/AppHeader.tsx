@@ -1,89 +1,81 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient"; // adattalo se il path è diverso
 
 export default function AppHeader() {
   const [credits, setCredits] = useState<number | null>(null);
   const [isCompany, setIsCompany] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const { data: auth } = await supabase.auth.getUser();
-        if (!auth.user) {
-          if (!cancelled) {
-            setIsCompany(false);
-            setCredits(null);
-          }
-          return;
-        }
-
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("id", auth.user.id)
-          .single();
-
-        const company = (prof?.user_type ?? "") === "company";
-        if (!cancelled) setIsCompany(company);
-
-        if (!company) {
-          if (!cancelled) setCredits(null);
-          return;
-        }
-
-        const res = await fetch("/api/company/credits");
-        if (!res.ok) {
-          // non forziamo a 0 se fallisce: meglio non mostrare
-          if (!cancelled) setCredits(null);
-          return;
-        }
-
-        const json = await res.json();
-        if (!cancelled) setCredits(Number(json.credits ?? 0));
-      } catch {
-        if (!cancelled) {
-          setIsCompany(false);
-          setCredits(null);
-        }
+  async function refreshCredits() {
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) {
+        setIsCompany(false);
+        setCredits(null);
+        return;
       }
+
+      const { data: prof, error: eProf } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", auth.user.id)
+        .single();
+
+      if (eProf) {
+        setIsCompany(false);
+        setCredits(null);
+        return;
+      }
+
+      const company = (prof?.user_type ?? "") === "company";
+      setIsCompany(company);
+
+      if (!company) {
+        setCredits(null);
+        return;
+      }
+
+      const res = await fetch("/api/company/credits");
+      if (!res.ok) {
+        setCredits(0); // niente "—": se fallisce, mostra 0 (o potresti nascondere)
+        return;
+      }
+
+      const json = await res.json();
+      setCredits(Number(json?.credits ?? 0));
+    } catch {
+      setCredits(0);
     }
+  }
 
-    load();
+  useEffect(() => {
+    refreshCredits();
 
-    // aggiorna anche dopo login/logout
-    const { data: sub } = supabase.auth.onAuthStateChange(() => load());
-
-    return () => {
-      cancelled = true;
-      sub.subscription.unsubscribe();
-    };
+    const onUpdate = () => refreshCredits();
+    window.addEventListener("credits:update", onUpdate);
+    return () => window.removeEventListener("credits:update", onUpdate);
   }, []);
 
   return (
     <div
       style={{
-        width: "100%",
-        padding: "10px 14px",
         display: "flex",
         justifyContent: "space-between",
+        padding: "14px 18px",
+        borderBottom: "1px solid #eee",
         alignItems: "center",
       }}
     >
-      <a href="/" style={{ fontWeight: 700, textDecoration: "none", color: "inherit" }}>
-        Cleanhub
-      </a>
+      <div style={{ fontWeight: 700 }}>Cleanhub</div>
 
-      {isCompany ? (
-        <div className="small">
-          Crediti: <b>{credits === null ? "—" : credits}</b>
-        </div>
-      ) : (
-        <div />
-      )}
+      <div style={{ fontSize: 14, opacity: 0.8 }}>
+        {isCompany ? (
+          <>
+            Crediti: <b>{credits ?? 0}</b>
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

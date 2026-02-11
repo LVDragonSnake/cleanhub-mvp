@@ -5,36 +5,36 @@ import { supabase } from "../../../lib/supabaseClient";
 
 type WorkerCard = {
   worker_public_no: number;
-  clean_level: number;
-  profile_status: string;
+  clean_level: number | null;
+  profile_status: string | null;
   res_province: string | null;
   res_cap: string | null;
-  exp_cleaning: boolean;
-  work_night: boolean;
-  work_team: boolean;
-  work_public_places: boolean;
-  work_client_contact: boolean;
 };
 
 export default function CompanyWorkersPage() {
   const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<WorkerCard[]>([]);
-  const [error, setError] = useState<string | null>(null);
+
+  const [credits, setCredits] = useState<number>(0);
 
   const [q, setQ] = useState("");
   const [onlyComplete, setOnlyComplete] = useState(true);
-  const [minLevel, setMinLevel] = useState<number | "">("");
-  const [province, setProvince] = useState("");
+  const [minLevel, setMinLevel] = useState<string>("");
+  const [province, setProvince] = useState<string>("");
+
+  const [rows, setRows] = useState<WorkerCard[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
+      setError(null);
+
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) {
         window.location.href = "/login";
         return;
       }
 
-      // gate: solo company
+      // ✅ blocco se non company
       const { data: prof } = await supabase
         .from("profiles")
         .select("user_type")
@@ -46,44 +46,72 @@ export default function CompanyWorkersPage() {
         return;
       }
 
-      await load();
+      // crediti
+      try {
+        const res = await fetch("/api/company/credits");
+        const json = await res.json();
+        setCredits(Number(json.credits ?? 0));
+      } catch {
+        setCredits(0);
+      }
+
+      await loadWorkers();
+
+      setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function load() {
-    setLoading(true);
+  async function loadWorkers() {
     setError(null);
 
-    const { data, error } = await supabase.rpc("company_list_workers", {
-      p_q: q.trim() || null,
-      p_only_complete: onlyComplete,
-      p_min_level: minLevel === "" ? null : Number(minLevel),
-      p_province: province.trim() || null,
-    });
+    try {
+      const res = await fetch(
+        `/api/company/search-workers?q=${encodeURIComponent(q)}&complete=${onlyComplete ? "1" : "0"}`
+      );
+      const json = await res.json();
+      const list = (json.rows || []) as WorkerCard[];
 
-    if (error) {
-      setError(error.message);
+      // filtri extra lato client (semplici e sicuri)
+      const minL = Number(minLevel);
+      const prov = province.trim().toLowerCase();
+
+      const filtered = list.filter((r) => {
+        if (Number.isFinite(minL) && minLevel.trim() !== "") {
+          if ((r.clean_level ?? 1) < minL) return false;
+        }
+        if (prov) {
+          const rp = (r.res_province ?? "").toLowerCase();
+          if (!rp.includes(prov)) return false;
+        }
+        return true;
+      });
+
+      setRows(filtered);
+    } catch (e: any) {
+      setError(e?.message || "Errore caricamento operatori");
       setRows([]);
-      setLoading(false);
-      return;
     }
-
-    setRows((data as any) ?? []);
-    setLoading(false);
   }
 
-  const chips = useMemo(() => {
-    const out: Array<[string, string]> = [];
-    if (onlyComplete) out.push(["✅", "Completo"]);
-    if (minLevel !== "") out.push(["⭐", `Livello ≥ ${minLevel}`]);
-    if (province.trim()) out.push(["📍", province.trim().toUpperCase()]);
-    return out;
-  }, [onlyComplete, minLevel, province]);
+  const subtitle = useMemo(() => {
+    const parts: string[] = [];
+    if (onlyComplete) parts.push("solo completi");
+    if (minLevel.trim()) parts.push(`livello ≥ ${minLevel.trim()}`);
+    if (province.trim()) parts.push(`provincia ~ ${province.trim()}`);
+    if (q.trim()) parts.push(`ricerca: "${q.trim()}"`);
+    return parts.length ? parts.join(" · ") : "tutti";
+  }, [onlyComplete, minLevel, province, q]);
+
+  if (loading) return <div>Caricamento...</div>;
 
   return (
     <div className="card">
       <h2>Cerca operatori</h2>
+
+      <div className="small" style={{ marginTop: 8, opacity: 0.9 }}>
+        Crediti: <b>{credits}</b>
+      </div>
 
       {error && (
         <div className="small" style={{ marginTop: 10 }}>
@@ -91,19 +119,18 @@ export default function CompanyWorkersPage() {
         </div>
       )}
 
-      <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div style={{ marginTop: 14 }}>
         <input
           placeholder="Cerca (ID pubblico / provincia / CAP)"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          style={{ minWidth: 260 }}
         />
-        <button onClick={load} disabled={loading}>
-          {loading ? "Carico..." : "Cerca"}
+        <button onClick={loadWorkers} style={{ marginTop: 8 }}>
+          Cerca
         </button>
       </div>
 
-      <div style={{ marginTop: 10, display: "flex", gap: 12, flexWrap: "wrap" }}>
+      <div style={{ marginTop: 10, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
         <label className="small">
           <input
             type="checkbox"
@@ -113,90 +140,63 @@ export default function CompanyWorkersPage() {
           Solo completi
         </label>
 
-        <label className="small">
-          Livello minimo{" "}
+        <div className="small" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span>Livello minimo</span>
           <input
-            style={{ width: 70 }}
             value={minLevel}
-            onChange={(e) => {
-              const v = e.target.value;
-              setMinLevel(v === "" ? "" : Number(v));
-            }}
+            onChange={(e) => setMinLevel(e.target.value)}
             placeholder="es. 3"
+            style={{ width: 80 }}
           />
-        </label>
+        </div>
 
-        <label className="small">
-          Provincia{" "}
+        <div className="small" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span>Provincia</span>
           <input
-            style={{ width: 90 }}
             value={province}
             onChange={(e) => setProvince(e.target.value)}
             placeholder="es. MI"
+            style={{ width: 90 }}
           />
-        </label>
+        </div>
       </div>
 
-      {chips.length > 0 && (
-        <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {chips.map(([i, t]) => (
-            <span
-              key={t}
-              className="small"
+      <div className="small" style={{ marginTop: 10, opacity: 0.75 }}>
+        Filtri: {subtitle}
+      </div>
+
+      <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+        {rows.length === 0 ? (
+          <div className="small">Nessun operatore trovato.</div>
+        ) : (
+          rows.map((r) => (
+            <div
+              key={r.worker_public_no}
               style={{
                 border: "1px solid #e6e6e6",
-                borderRadius: 999,
-                padding: "4px 10px",
+                borderRadius: 12,
+                padding: 12,
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 10,
+                alignItems: "center",
               }}
             >
-              {i} {t}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-        {rows.map((w) => (
-          <div
-            key={w.worker_public_no}
-            style={{ border: "1px solid #e6e6e6", borderRadius: 12, padding: 12 }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
               <div>
-                <div style={{ fontWeight: 800 }}>
-                  Operatore #{w.worker_public_no}
-                </div>
-                <div className="small" style={{ marginTop: 4 }}>
-                  Livello: <b>{w.clean_level}</b> · Stato:{" "}
-                  <b>{w.profile_status}</b> · Zona:{" "}
-                  <b>{(w.res_province || "—").toString().toUpperCase()}</b>{" "}
-                  {(w.res_cap ? `(${w.res_cap})` : "")}
+                <div style={{ fontWeight: 800 }}>Operatore #{r.worker_public_no}</div>
+                <div className="small" style={{ marginTop: 4, opacity: 0.8 }}>
+                  Livello: {r.clean_level ?? 1} · Stato: {r.profile_status ?? "incomplete"} · Zona:{" "}
+                  {(r.res_province ?? "—") + (r.res_cap ? ` (${r.res_cap})` : "")}
                 </div>
               </div>
 
-              <button
-                onClick={() =>
-                  (window.location.href = `/company/workers/${w.worker_public_no}`)
-                }
-              >
+              {/* ✅ QUI era il bug: stavi andando su /worker/proposals (route sbagliata) */}
+              <button onClick={() => (window.location.href = `/company/workers/${r.worker_public_no}`)}>
                 Apri
               </button>
             </div>
-
-            <div className="small" style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {w.exp_cleaning ? <span>🧽 Pulizie</span> : null}
-              {w.work_night ? <span>🌙 Notturno</span> : null}
-              {w.work_team ? <span>👥 Team</span> : null}
-              {w.work_public_places ? <span>🏢 Luoghi pubblici</span> : null}
-              {w.work_client_contact ? <span>🗣️ Contatto clienti</span> : null}
-              {!w.exp_cleaning &&
-              !w.work_night &&
-              !w.work_team &&
-              !w.work_public_places &&
-              !w.work_client_contact ? <span>—</span> : null}
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <div className="nav" style={{ marginTop: 14 }}>

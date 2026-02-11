@@ -6,38 +6,27 @@ import { supabase } from "../../../../lib/supabaseClient";
 
 type WorkerDetail = {
   worker_public_no: number;
-  clean_level: number;
-  province: string | null;
-  contact_unlocked: boolean;
-  email: string | null;
-  phone: string | null;
-  languages: any[];
-  availability: any;
-  env: any;
+  clean_level: number | null;
+  profile_status: string | null;
+  res_province: string | null;
+  res_cap: string | null;
 
-  exp_cleaning: boolean;
-  work_night: boolean;
-  work_team: boolean;
-  work_public_places: boolean;
-  work_client_contact: boolean;
+  unlocked: boolean;
+  contact_email: string | null;
+  contact_phone: string | null;
+
+  worker_data: any;
 };
 
 export default function CompanyWorkerDetailPage() {
   const params = useParams<{ workerPublicNo: string }>();
-  const publicNo = useMemo(() => Number(params?.workerPublicNo || 0), [params]);
+  const workerPublicNo = useMemo(() => Number(params?.workerPublicNo || 0), [params]);
 
   const [loading, setLoading] = useState(true);
-  const [meOk, setMeOk] = useState(false);
+  const [credits, setCredits] = useState<number>(0);
   const [row, setRow] = useState<WorkerDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Proposta preliminare (form guidato)
-  const [jobType, setJobType] = useState("");
-  const [hours, setHours] = useState("");
-  const [contractType, setContractType] = useState("");
-  const [notes, setNotes] = useState("");
-  const [sending, setSending] = useState(false);
-  const [sentOk, setSentOk] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -60,116 +49,106 @@ export default function CompanyWorkerDetailPage() {
         return;
       }
 
-      setMeOk(true);
+      // crediti
+      try {
+        const res = await fetch("/api/company/credits");
+        const json = await res.json();
+        setCredits(Number(json.credits ?? 0));
+      } catch {
+        setCredits(0);
+      }
+
+      await loadDetail();
+      setLoading(false);
     })();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workerPublicNo]);
 
-  useEffect(() => {
-    if (!meOk) return;
-    if (!publicNo) return;
+  async function loadDetail() {
+    setError(null);
 
-    (async () => {
-      setLoading(true);
-      setError(null);
+    if (!workerPublicNo || !Number.isFinite(workerPublicNo)) {
+      setRow(null);
+      return;
+    }
 
-      // RPC già esistente nel tuo sistema: get_worker_public(p_public_no)
-      const { data, error } = await supabase.rpc("get_worker_public", {
-        p_public_no: publicNo,
+    // usa la tua API esistente (quella che già ti dava CV+unlocked)
+    // Se la tua API ha un path diverso, dimmelo e la adeguo,
+    // ma di solito è /api/company/worker?publicNo=...
+    const res = await fetch(`/api/company/worker?publicNo=${workerPublicNo}`);
+    const json = await res.json();
+
+    if (!res.ok) {
+      setRow(null);
+      setError(json?.error || "Operatore non trovato.");
+      return;
+    }
+
+    setRow(json.row as WorkerDetail);
+  }
+
+  async function unlock() {
+    if (!row) return;
+    setUnlocking(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/company/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workerPublicNo: row.worker_public_no }),
       });
 
-      if (error) {
-        setError(error.message);
-        setLoading(false);
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json?.error || "Errore sblocco contatti");
+        setUnlocking(false);
         return;
       }
 
-      const r = Array.isArray(data) ? data[0] : null;
-      setRow((r as any) ?? null);
-      setLoading(false);
-    })();
-  }, [meOk, publicNo]);
+      // refresh crediti + dettaglio
+      try {
+        const c = await fetch("/api/company/credits");
+        const cj = await c.json();
+        setCredits(Number(cj.credits ?? 0));
+      } catch {
+        // ignore
+      }
 
-  async function unlock() {
-    if (!publicNo) return;
-    setError(null);
-
-    const { error } = await supabase.rpc("unlock_worker_contact_by_public_no", {
-      p_public_no: publicNo,
-    });
-
-    if (error) {
-      setError(error.message);
-      return;
-    }
-
-    // ricarico dettaglio
-    const { data: d2, error: e2 } = await supabase.rpc("get_worker_public", {
-      p_public_no: publicNo,
-    });
-    if (!e2) {
-      const r2 = Array.isArray(d2) ? d2[0] : null;
-      setRow((r2 as any) ?? null);
+      await loadDetail();
+    } finally {
+      setUnlocking(false);
     }
   }
 
-  async function sendProposal() {
-    if (!publicNo) return;
-
-    setError(null);
-    setSentOk(false);
-
-    if (!jobType.trim()) {
-      setError("Seleziona il tipo di lavoro.");
-      return;
-    }
-    if (!hours.trim()) {
-      setError("Indica l'impegno orario (es. 20 ore/settimana).");
-      return;
-    }
-
-    setSending(true);
-
-    const payload = {
-      job_type: jobType.trim(),
-      hours: hours.trim(),
-      contract_type: contractType.trim() || null,
-      notes: notes.trim() || null,
-      created_from: "company_worker_detail_v1",
-    };
-
-    const { data, error } = await supabase.rpc("company_send_proposal", {
-      p_public_no: publicNo,
-      p_payload: payload,
-    });
-
-    if (error) {
-      setSending(false);
-      setError(error.message);
-      return;
-    }
-
-    setSending(false);
-    setSentOk(true);
-
-    // pulizia form (facoltativo)
-    setJobType("");
-    setHours("");
-    setContractType("");
-    setNotes("");
-  }
-
-  if (!publicNo) return <div>Caricamento...</div>;
   if (loading) return <div>Caricamento...</div>;
-  if (!row) return <div>Operatore non trovato.</div>;
 
-  const zone = [row.province].filter(Boolean).join(" ");
+  if (!row) {
+    return (
+      <div className="card">
+        <h2>Operatore</h2>
+        <div className="small">{error || "Operatore non trovato."}</div>
+        <div style={{ marginTop: 14 }}>
+          <button onClick={() => (window.location.href = "/company/workers")}>← Torna alla lista</button>
+        </div>
+      </div>
+    );
+  }
+
+  const wd = row.worker_data || {};
+  const langs = Array.isArray(wd.languages) ? wd.languages : [];
+  const av = wd.availability || {};
+  const env = wd.env || {};
+  const tr = wd.training || {};
+  const ex = wd.extra || {};
 
   return (
     <div className="card">
       <h2>Operatore #{row.worker_public_no}</h2>
 
-      <div className="small" style={{ marginTop: 6 }}>
-        Livello: <b>{row.clean_level ?? 1}</b> · Zona: <b>{zone || "—"}</b>
+      <div className="small" style={{ marginTop: 8, opacity: 0.9 }}>
+        Crediti: <b>{credits}</b>
       </div>
 
       {error && (
@@ -178,99 +157,111 @@ export default function CompanyWorkerDetailPage() {
         </div>
       )}
 
-      {/* CONTATTI */}
+      <div className="small" style={{ marginTop: 8, opacity: 0.8 }}>
+        Livello: {row.clean_level ?? 1} · Stato: {row.profile_status ?? "incomplete"} · Zona:{" "}
+        {(row.res_province ?? "—") + (row.res_cap ? ` (${row.res_cap})` : "")}
+      </div>
+
       <hr style={{ margin: "14px 0" }} />
+
       <h3>Contatti</h3>
 
-      {row.contact_unlocked ? (
-        <div className="small" style={{ marginTop: 6 }}>
-          Email: <b>{row.email ?? "—"}</b>
-          <br />
-          Telefono: <b>{row.phone ?? "—"}</b>
-        </div>
+      {!row.unlocked ? (
+        <>
+          <div className="small" style={{ opacity: 0.8 }}>
+            Contatti bloccati. Per vedere email/telefono devi sbloccare.
+          </div>
+
+          <div style={{ marginTop: 10 }}>
+            <button onClick={unlock} disabled={unlocking}>
+              {unlocking ? "Sblocco..." : "Sblocca contatti (1 credito)"}
+            </button>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={() => alert("Proposta preliminare: la implementiamo adesso come step successivo.")}
+            >
+              Invia proposta preliminare
+            </button>
+          </div>
+        </>
       ) : (
         <>
           <div className="small" style={{ marginTop: 6 }}>
-            Contatti bloccati. Per vedere email/telefono devi sbloccare (1 credito).
+            Email: <b>{row.contact_email || "—"}</b>
           </div>
-          <button style={{ marginTop: 10 }} onClick={unlock}>
-            Sblocca contatti (1 credito)
-          </button>
+          <div className="small" style={{ marginTop: 6 }}>
+            Telefono: <b>{row.contact_phone || "—"}</b>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={() => alert("Proposta preliminare: la implementiamo adesso come step successivo.")}
+            >
+              Invia proposta preliminare
+            </button>
+          </div>
         </>
       )}
 
-      {/* PROPOSTA PRELIMINARE */}
       <hr style={{ margin: "14px 0" }} />
-      <h3>Proposta preliminare (prima dello sblocco)</h3>
 
-      <div className="small" style={{ marginTop: 6, opacity: 0.85 }}>
-        Serve per capire la disponibilità dell’operatore senza consumare crediti.
-        Puoi comunque sbloccare i contatti quando vuoi.
-      </div>
-
-      <label style={{ marginTop: 10 }}>Tipo lavoro *</label>
-      <select value={jobType} onChange={(e) => setJobType(e.target.value)}>
-        <option value="">—</option>
-        <option value="pulizie_hotel">Pulizie Hotel</option>
-        <option value="pulizie_uffici">Pulizie Uffici</option>
-        <option value="pulizie_case_private">Pulizie Case private</option>
-        <option value="pulizie_industriali">Pulizie Industriali</option>
-        <option value="altro">Altro</option>
-      </select>
-
-      <label>Impegno orario *</label>
-      <input
-        placeholder="es. 20 ore/settimana, turni notturni, ecc."
-        value={hours}
-        onChange={(e) => setHours(e.target.value)}
-      />
-
-      <label>Tipo contratto (opzionale)</label>
-      <input
-        placeholder="es. tempo determinato, indeterminato, collaborazione..."
-        value={contractType}
-        onChange={(e) => setContractType(e.target.value)}
-      />
-
-      <label>Note (opzionale)</label>
-      <textarea
-        placeholder="Dettagli utili: luogo, orari, richieste, ecc."
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-      />
-
-      <div style={{ marginTop: 10 }}>
-        <button onClick={sendProposal} disabled={sending}>
-          {sending ? "Invio..." : "Invia proposta"}
-        </button>
-        {sentOk && (
-          <span className="small" style={{ marginLeft: 10 }}>
-            ✅ Proposta inviata
-          </span>
-        )}
-      </div>
-
-      {/* CV (dati strutturati che già mostri) */}
-      <hr style={{ margin: "14px 0" }} />
       <h3>CV (dati strutturati)</h3>
 
-      <div className="small" style={{ marginTop: 6 }}>
+      <div style={{ marginTop: 10 }}>
         <b>Lingue</b>
-        <div>{(row.languages || []).map((l: any) => l?.name).filter(Boolean).join(", ") || "—"}</div>
-
-        <div style={{ marginTop: 10 }}>
-          <b>Esperienza / Skills</b>
-          <div>
-            Pulizie: {row.exp_cleaning ? "Sì" : "No"} · Notturno: {row.work_night ? "Sì" : "No"} · Team:{" "}
-            {row.work_team ? "Sì" : "No"} · Luoghi pubblici: {row.work_public_places ? "Sì" : "No"} ·
-            Contatto clienti: {row.work_client_contact ? "Sì" : "No"}
-          </div>
+        <div className="small" style={{ opacity: 0.85 }}>
+          {langs.length ? langs.map((l: any) => l?.name).filter(Boolean).join(", ") : "—"}
         </div>
       </div>
 
-      <button style={{ marginTop: 14 }} onClick={() => (window.location.href = "/company/workers")}>
-        ← Torna alla lista
-      </button>
+      <div style={{ marginTop: 10 }}>
+        <b>Disponibilità</b>
+        <div className="small" style={{ opacity: 0.85 }}>
+          Trasferte: {av.trips || "—"} · Raggio km: {av.radius_km || "—"} · Richiesta oraria:{" "}
+          {av.hourly_request || "—"}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <b>Esperienza / Skills</b>
+        <div className="small" style={{ opacity: 0.85 }}>
+          Pulizie: {wd.exp_cleaning ? "Sì" : "No"} · Notturno: {wd.work_night ? "Sì" : "No"} · Team:{" "}
+          {wd.work_team ? "Sì" : "No"} · Luoghi pubblici: {wd.work_public_places ? "Sì" : "No"} ·
+          Contatto clienti: {wd.work_client_contact ? "Sì" : "No"}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <b>Ambienti</b>
+        <div className="small" style={{ opacity: 0.85 }}>
+          Hotel: {env.hotel ? "Sì" : "No"} · Case di cura: {env.care ? "Sì" : "No"} · Case private:{" "}
+          {env.private_homes ? "Sì" : "No"} · Centri commerciali: {env.shopping ? "Sì" : "No"} ·
+          Uffici: {env.offices ? "Sì" : "No"} · Ospedali: {env.hospital ? "Sì" : "No"} · Ristoranti:{" "}
+          {env.restaurants ? "Sì" : "No"}
+          {env.other ? ` · Altro: ${env.other_text || "—"}` : ""}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <b>Formazione</b>
+        <div className="small" style={{ opacity: 0.85 }}>
+          Fine scuola: {tr.school_year_end || "—"} · Corso: {tr.school_course || "—"} · Scuola:{" "}
+          {tr.school_name || "—"}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <b>Extra</b>
+        <div className="small" style={{ opacity: 0.85 }}>
+          Hobbies: {ex.hobbies || "—"} · Tratti: {ex.traits || "—"}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <button onClick={() => (window.location.href = "/company/workers")}>← Torna alla lista</button>
+      </div>
     </div>
   );
 }

@@ -1,10 +1,11 @@
 // app/company/workers/[workerPublicNo]/page.tsx
 import WorkerDetailsClient from "./WorkerDetailsClient";
 
-export default function Page({
+export default async function Page({
   params,
 }: {
-  params: { workerPublicNo: string };
+  params: Promise<{ workerPublicNo: string }>;
 }) {
-  return <WorkerDetailsClient workerPublicNo={params.workerPublicNo} />;
+  const { workerPublicNo } = await params;
+  return <WorkerDetailsClient workerPublicNo={workerPublicNo} />;
 }

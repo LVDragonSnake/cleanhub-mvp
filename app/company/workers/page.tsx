@@ -5,8 +5,8 @@ import { supabase } from "../../lib/supabaseClient";
 
 type WorkerRow = {
   worker_public_no: number;
-  clean_level: number;
-  profile_status: string;
+  clean_level: number | null;
+  profile_status: string | null;
   res_province: string | null;
   res_cap: string | null;
 };
@@ -27,11 +27,17 @@ export default function CompanyWorkersPage() {
         return;
       }
 
-      const { data: prof } = await supabase
+      const { data: prof, error: profErr } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("id", auth.user.id)
         .single();
+
+      if (profErr) {
+        setError(profErr.message);
+        setLoading(false);
+        return;
+      }
 
       if ((prof?.user_type ?? "") !== "company") {
         window.location.href = "/dashboard";
@@ -47,15 +53,13 @@ export default function CompanyWorkersPage() {
   async function load() {
     setError(null);
 
-    const qTrim = q.trim();
-    const p_q = qTrim === "" ? null : qTrim;
+    const p_q = q.trim() === "" ? null : q.trim();
 
-    const mlTrim = minLevel.trim();
-    const mlNum = mlTrim === "" ? null : Number(mlTrim);
-    const p_min_level = mlNum === null || Number.isNaN(mlNum) ? null : mlNum;
+    const p_min_level =
+      minLevel.trim() === "" ? null : Number(minLevel.trim());
 
-    const provTrim = province.trim().toUpperCase();
-    const p_province = provTrim === "" ? null : provTrim;
+    const p_province =
+      province.trim() === "" ? null : province.trim().toUpperCase();
 
     const { data, error } = await supabase.rpc("company_list_workers", {
       p_q,
@@ -130,8 +134,9 @@ export default function CompanyWorkersPage() {
                   Operatore #{r.worker_public_no}
                 </div>
                 <div className="small">
-                  Livello: {r.clean_level} · Stato: {r.profile_status} · Zona:{" "}
-                  {r.res_province ?? "—"} {r.res_cap ? `(${r.res_cap})` : ""}
+                  Livello: {r.clean_level ?? "—"} · Stato:{" "}
+                  {r.profile_status ?? "—"} · Zona: {r.res_province ?? "—"}{" "}
+                  {r.res_cap ? `(${r.res_cap})` : ""}
                 </div>
               </div>
 

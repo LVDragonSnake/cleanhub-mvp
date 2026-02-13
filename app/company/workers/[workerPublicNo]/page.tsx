@@ -1,4 +1,4 @@
-import WorkerDetailsClient from "./WorkerDetailsClient";
+import WorkerPageClient from "./WorkerPageClient";
 
 export default async function Page({
   params,
@@ -6,5 +6,5 @@ export default async function Page({
   params: Promise<{ workerPublicNo: string }>;
 }) {
   const { workerPublicNo } = await params;
-  return <WorkerDetailsClient workerPublicNo={workerPublicNo} />;
+  return <WorkerPageClient workerPublicNo={workerPublicNo} />;
 }

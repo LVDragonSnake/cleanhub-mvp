@@ -1,4 +1,4 @@
-import WorkerDetailsClient from "./WorkerDetailsClient";
+import WorkerDetailsClient from "./workerDetailsClient";
 
 export default function Page({
   params,

@@ -47,17 +47,21 @@ export default function CompanyWorkersPage() {
   async function load() {
     setError(null);
 
-    const p_min_level =
-      minLevel.trim() === "" ? null : Number(minLevel.trim());
+    const qTrim = q.trim();
+    const p_q = qTrim === "" ? null : qTrim;
 
-    const p_province =
-      province.trim() === "" ? null : province.trim();
+    const mlTrim = minLevel.trim();
+    const mlNum = mlTrim === "" ? null : Number(mlTrim);
+    const p_min_level = mlNum === null || Number.isNaN(mlNum) ? null : mlNum;
+
+    const provTrim = province.trim().toUpperCase();
+    const p_province = provTrim === "" ? null : provTrim;
 
     const { data, error } = await supabase.rpc("company_list_workers", {
-  p_q: q?.trim() ? q.trim() : null,
-  p_min_level: null,       // oppure Number(...) se metti il filtro
-  p_province: null,        // oppure "MI" ecc
-});
+      p_q,
+      p_min_level,
+      p_province,
+    });
 
     if (error) {
       setRows([]);
@@ -83,7 +87,7 @@ export default function CompanyWorkersPage() {
       <div className="small" style={{ marginTop: 10, display: "grid", gap: 8 }}>
         <div style={{ display: "flex", gap: 8 }}>
           <input
-            placeholder="Cerca (ID pubblico)"
+            placeholder="Cerca (ID pubblico / provincia / CAP)"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />

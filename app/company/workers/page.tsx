@@ -57,10 +57,17 @@ export default function CompanyWorkersPage() {
 
     const p_min_level =
       minLevel.trim() === "" ? null : Number(minLevel.trim());
+    if (p_min_level !== null && !Number.isFinite(p_min_level)) {
+      setRows([]);
+      setError("Livello minimo non valido.");
+      return;
+    }
 
     const p_province =
       province.trim() === "" ? null : province.trim().toUpperCase();
 
+    // IMPORTANTISSIMO: questi nomi devono combaciare con la firma SQL:
+    // company_list_workers(p_q text, p_min_level integer, p_province text)
     const { data, error } = await supabase.rpc("company_list_workers", {
       p_q,
       p_min_level,
@@ -91,7 +98,7 @@ export default function CompanyWorkersPage() {
       <div className="small" style={{ marginTop: 10, display: "grid", gap: 8 }}>
         <div style={{ display: "flex", gap: 8 }}>
           <input
-            placeholder="Cerca (ID pubblico / provincia / CAP)"
+            placeholder="Cerca (ID pubblico)"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />

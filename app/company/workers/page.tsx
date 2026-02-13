@@ -5,8 +5,8 @@ import { supabase } from "../../lib/supabaseClient";
 
 type WorkerRow = {
   worker_public_no: number;
-  clean_level: number | null;
-  profile_status: string | null;
+  clean_level: number;
+  profile_status: string;
   res_province: string | null;
   res_cap: string | null;
 };
@@ -15,8 +15,8 @@ export default function CompanyWorkersPage() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<WorkerRow[]>([]);
   const [q, setQ] = useState("");
-  const [minLevel, setMinLevel] = useState<string>("");
-  const [province, setProvince] = useState<string>("");
+  const [minLevel, setMinLevel] = useState("");
+  const [province, setProvince] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,17 +27,11 @@ export default function CompanyWorkersPage() {
         return;
       }
 
-      const { data: prof, error: profErr } = await supabase
+      const { data: prof } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("id", auth.user.id)
         .single();
-
-      if (profErr) {
-        setError(profErr.message);
-        setLoading(false);
-        return;
-      }
 
       if ((prof?.user_type ?? "") !== "company") {
         window.location.href = "/dashboard";
@@ -53,13 +47,10 @@ export default function CompanyWorkersPage() {
   async function load() {
     setError(null);
 
-    const p_q = q.trim() === "" ? null : q.trim();
-
     const p_min_level =
       minLevel.trim() === "" ? null : Number(minLevel.trim());
-
-    const p_province =
-      province.trim() === "" ? null : province.trim().toUpperCase();
+    const p_province = province.trim() === "" ? null : province.trim().toUpperCase();
+    const p_q = q.trim() === "" ? null : q.trim();
 
     const { data, error } = await supabase.rpc("company_list_workers", {
       p_q,
@@ -134,9 +125,8 @@ export default function CompanyWorkersPage() {
                   Operatore #{r.worker_public_no}
                 </div>
                 <div className="small">
-                  Livello: {r.clean_level ?? "—"} · Stato:{" "}
-                  {r.profile_status ?? "—"} · Zona: {r.res_province ?? "—"}{" "}
-                  {r.res_cap ? `(${r.res_cap})` : ""}
+                  Livello: {r.clean_level} · Stato: {r.profile_status} · Zona:{" "}
+                  {r.res_province ?? "—"} {r.res_cap ? `(${r.res_cap})` : ""}
                 </div>
               </div>
 

@@ -15,10 +15,12 @@ export default function CompanyWorkersPage() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<WorkerRow[]>([]);
   const [q, setQ] = useState("");
+  const [minLevel, setMinLevel] = useState<string>("");
+  const [province, setProvince] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  // per ora: niente checkbox "solo completi" (la togliamo come hai chiesto)
-  const [onlyComplete] = useState(false);
+  // Checkbox "solo completi" tolto (come hai chiesto)
+  const onlyComplete = false;
 
   useEffect(() => {
     (async () => {
@@ -48,9 +50,15 @@ export default function CompanyWorkersPage() {
   async function load() {
     setError(null);
 
+    const min = minLevel.trim() ? Number(minLevel.trim()) : null;
+    const prov = province.trim() ? province.trim() : null;
+    const query = q.trim() ? q.trim() : null;
+
     const { data, error } = await supabase.rpc("company_list_workers", {
-      p_q: q?.trim() ? q.trim() : null,
+      p_q: query,
       p_only_complete: onlyComplete,
+      p_min_level: Number.isFinite(min as any) ? (min as number) : null,
+      p_province: prov,
     });
 
     if (error) {
@@ -74,15 +82,28 @@ export default function CompanyWorkersPage() {
         </div>
       ) : null}
 
-      <div className="small" style={{ marginTop: 10 }}>
+      <div className="small" style={{ marginTop: 10, display: "grid", gap: 8 }}>
         <input
           placeholder="Cerca (ID pubblico / provincia / CAP)"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <button onClick={load} style={{ marginLeft: 8 }}>
-          Cerca
-        </button>
+
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <input
+            style={{ width: 140 }}
+            placeholder="Livello min (es. 3)"
+            value={minLevel}
+            onChange={(e) => setMinLevel(e.target.value)}
+          />
+          <input
+            style={{ width: 140 }}
+            placeholder="Provincia (es. MI)"
+            value={province}
+            onChange={(e) => setProvince(e.target.value)}
+          />
+          <button onClick={load}>Cerca</button>
+        </div>
       </div>
 
       <div style={{ marginTop: 14, display: "grid", gap: 10 }}>

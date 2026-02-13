@@ -19,9 +19,6 @@ export default function CompanyWorkersPage() {
   const [province, setProvince] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  // Checkbox "solo completi" tolto (come hai chiesto)
-  const onlyComplete = false;
-
   useEffect(() => {
     (async () => {
       const { data: auth } = await supabase.auth.getUser();
@@ -50,15 +47,17 @@ export default function CompanyWorkersPage() {
   async function load() {
     setError(null);
 
-    const min = minLevel.trim() ? Number(minLevel.trim()) : null;
-    const prov = province.trim() ? province.trim() : null;
-    const query = q.trim() ? q.trim() : null;
+    const p_min_level =
+      minLevel.trim() === "" ? null : Number(minLevel.trim());
+
+    const p_province =
+      province.trim() === "" ? null : province.trim();
 
     const { data, error } = await supabase.rpc("company_list_workers", {
-      p_q: query,
-      p_only_complete: onlyComplete,
-      p_min_level: Number.isFinite(min as any) ? (min as number) : null,
-      p_province: prov,
+      p_q: q?.trim() ? q.trim() : null,
+      p_only_complete: false,
+      p_min_level,
+      p_province,
     });
 
     if (error) {
@@ -83,26 +82,27 @@ export default function CompanyWorkersPage() {
       ) : null}
 
       <div className="small" style={{ marginTop: 10, display: "grid", gap: 8 }}>
-        <input
-          placeholder="Cerca (ID pubblico / provincia / CAP)"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8 }}>
           <input
-            style={{ width: 140 }}
-            placeholder="Livello min (es. 3)"
+            placeholder="Cerca (ID pubblico)"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          <button onClick={load}>Cerca</button>
+        </div>
+
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            placeholder="Livello minimo (es. 3)"
             value={minLevel}
             onChange={(e) => setMinLevel(e.target.value)}
           />
           <input
-            style={{ width: 140 }}
             placeholder="Provincia (es. MI)"
             value={province}
             onChange={(e) => setProvince(e.target.value)}
           />
-          <button onClick={load}>Cerca</button>
+          <button onClick={load}>Applica filtri</button>
         </div>
       </div>
 
@@ -123,7 +123,9 @@ export default function CompanyWorkersPage() {
               }}
             >
               <div>
-                <div style={{ fontWeight: 700 }}>Operatore #{r.worker_public_no}</div>
+                <div style={{ fontWeight: 700 }}>
+                  Operatore #{r.worker_public_no}
+                </div>
                 <div className="small">
                   Livello: {r.clean_level} · Stato: {r.profile_status} · Zona:{" "}
                   {r.res_province ?? "—"} {r.res_cap ? `(${r.res_cap})` : ""}

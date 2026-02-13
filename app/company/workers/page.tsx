@@ -54,11 +54,10 @@ export default function CompanyWorkersPage() {
       province.trim() === "" ? null : province.trim();
 
     const { data, error } = await supabase.rpc("company_list_workers", {
-      p_q: q?.trim() ? q.trim() : null,
-      p_only_complete: false,
-      p_min_level,
-      p_province,
-    });
+  p_q: q?.trim() ? q.trim() : null,
+  p_min_level: null,       // oppure Number(...) se metti il filtro
+  p_province: null,        // oppure "MI" ecc
+});
 
     if (error) {
       setRows([]);

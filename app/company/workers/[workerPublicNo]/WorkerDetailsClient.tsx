@@ -1,10 +1,98 @@
-// app/company/workers/[workerPublicNo]/page.tsx
-import WorkerDetailsClient from "./WorkerDetailsClient";
+"use client";
 
-export default function Page({
-  params,
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { supabase } from "../../../lib/supabaseClient";
+
+type WorkerDetail = {
+  worker_public_no: number;
+  clean_level: number | null;
+  profile_status: string | null;
+  res_province: string | null;
+  res_cap: string | null;
+};
+
+export default function WorkerDetailsClient({
+  workerPublicNo,
 }: {
-  params: { workerPublicNo: string };
+  workerPublicNo: string;
 }) {
-  return <WorkerDetailsClient workerPublicNo={params.workerPublicNo} />;
+  const [loading, setLoading] = useState(true);
+  const [row, setRow] = useState<WorkerDetail | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const publicNo = Number(workerPublicNo);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      setErr(null);
+
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) {
+        window.location.href = "/login";
+        return;
+      }
+
+      if (!Number.isFinite(publicNo)) {
+        setErr("ID operatore non valido.");
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.rpc("company_get_worker", {
+        p_worker_public_no: publicNo,
+      });
+
+      if (error) {
+        setErr(error.message);
+        setRow(null);
+      } else {
+        const first = Array.isArray(data) ? data[0] : data;
+        setRow((first ?? null) as WorkerDetail | null);
+      }
+
+      setLoading(false);
+    })();
+  }, [publicNo]);
+
+  if (loading) return <div className="card">Caricamento...</div>;
+
+  if (err)
+    return (
+      <div className="card">
+        <h2>Operatore</h2>
+        <div className="small">{err}</div>
+        <div style={{ marginTop: 12 }}>
+          <Link href="/company/workers">← Torna alla lista</Link>
+        </div>
+      </div>
+    );
+
+  if (!row)
+    return (
+      <div className="card">
+        <h2>Operatore</h2>
+        <div className="small">Operatore non trovato.</div>
+        <div style={{ marginTop: 12 }}>
+          <Link href="/company/workers">← Torna alla lista</Link>
+        </div>
+      </div>
+    );
+
+  return (
+    <div className="card">
+      <h2>Operatore #{row.worker_public_no}</h2>
+
+      <div className="small" style={{ marginBottom: 10 }}>
+        Livello: <b>{row.clean_level ?? "—"}</b> · Stato:{" "}
+        <b>{row.profile_status ?? "—"}</b> · Zona:{" "}
+        <b>{row.res_province ?? "—"}</b> {row.res_cap ? `(${row.res_cap})` : ""}
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <Link href="/company/workers">← Torna alla lista</Link>
+      </div>
+    </div>
+  );
 }

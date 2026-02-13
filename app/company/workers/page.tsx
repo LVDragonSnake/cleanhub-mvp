@@ -34,7 +34,7 @@ export default function CompanyWorkersPage() {
         .single();
 
       if (profErr) {
-        setError("Errore profilo");
+        setError(profErr.message);
         setLoading(false);
         return;
       }
@@ -53,15 +53,17 @@ export default function CompanyWorkersPage() {
   async function load() {
     setError(null);
 
+    const p_q = q.trim() === "" ? null : q.trim();
+
     const p_min_level =
       minLevel.trim() === "" ? null : Number(minLevel.trim());
 
     const p_province =
-      province.trim() === "" ? null : province.trim();
+      province.trim() === "" ? null : province.trim().toUpperCase();
 
     const { data, error } = await supabase.rpc("company_list_workers", {
-      p_q: q.trim() ? q.trim() : null,
-      p_min_level: Number.isFinite(p_min_level as any) ? p_min_level : null,
+      p_q,
+      p_min_level,
       p_province,
     });
 

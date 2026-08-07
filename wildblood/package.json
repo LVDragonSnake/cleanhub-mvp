@@ -10,7 +10,5 @@
     "placeholders": "node make-placeholders.mjs",
     "serve": "node --experimental-strip-types -e \"import('node:http').then(async({default:h})=>{const fs=await import('node:fs/promises'),p=await import('node:path');const T={'.html':'text/html;charset=utf-8','.css':'text/css','.js':'text/javascript','.svg':'image/svg+xml','.woff2':'font/woff2','.xml':'application/xml','.txt':'text/plain'};h.createServer(async(q,s)=>{let f=p.join('site',decodeURI(q.url.split('?')[0]));try{if((await fs.stat(f)).isDirectory())f=p.join(f,'index.html');s.writeHead(200,{'content-type':T[p.extname(f)]||'application/octet-stream'});s.end(await fs.readFile(f))}catch{s.writeHead(404);s.end('404')}}).listen(4173,()=>console.log('http://localhost:4173'))})\""
   },
-  "devDependencies": {
-    "playwright": "^1.62.1"
-  }
+  "devDependencies": {}
 }

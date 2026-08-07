@@ -131,15 +131,15 @@ export default {
     label: 'Locations',
     title: 'Where the earth remembers',
     items: [
-      { key: 'kenya',  name: 'Kenya',     coord: '01°29′S 35°08′E · Savannah',     vol: 'Volume 01',
+      { key: 'kenya', pin: [57,56],  name: 'Kenya',     coord: '01°29′S 35°08′E · Savannah',     vol: 'Volume 01',
         desc: 'Where it all begins. A holiday meant to break the routine, the attack of an impossible creature, and a life that will never go back to what it was.' },
-      { key: 'city',   name: 'Milan',     coord: '45°28′N 09°11′E · Italy',        vol: 'Volume 01–02',
+      { key: 'city', pin: [50,33],   name: 'Milan',     coord: '45°28′N 09°11′E · Italy',        vol: 'Volume 01–02',
         desc: 'The impossible homecoming. A part-time job, a girl, a façade of normality. Inside, the sharpened senses never fade and the nightmares keep getting more real.' },
-      { key: 'ruins',  name: 'Cairo',     coord: '30°02′N 31°14′E · Egypt',        vol: 'Volume 02',
+      { key: 'ruins', pin: [55,42],  name: 'Cairo',     coord: '30°02′N 31°14′E · Egypt',        vol: 'Volume 02',
         desc: 'Under the merciless sun, through dusty markets and crowded alleyways, the hunt for a stolen artifact. And, beyond collapsed corridors, a chamber sealed for millennia.' },
-      { key: 'jungle', name: 'Pulau Api', coord: '03°12′S 127°45′E · Indonesia',   vol: 'Volume 02',
+      { key: 'jungle', pin: [80,58], name: 'Pulau Api', coord: '03°12′S 127°45′E · Indonesia',   vol: 'Volume 02',
         desc: 'Ancient ruins and new dangers. In the wild heart of the island, death, transformation and betrayal sever Leonardo’s bond with the human world.' },
-      { key: 'sea',    name: 'Maldives',  coord: '03°12′N 73°13′E · Indian Ocean', vol: 'Volume 03',
+      { key: 'sea', pin: [67,53],    name: 'Maldives',  coord: '03°12′N 73°13′E · Indian Ocean', vol: 'Volume 03',
         desc: 'The abyss. A catastrophic event, a single survivor, and a sector ARGOS would rather never have opened.' },
     ],
   },
@@ -191,5 +191,49 @@ export default {
   },
 
   buybar: { title: 'Savage Heart', sub: 'Wildblood · Volume 1', cta: 'Buy' },
+  boot: {
+    sys: 'ARGOS NETWORK',
+    lines: [
+      '<b>&gt;</b> ARGOS NETWORK // <s>ESTABLISHING LINK</s>',
+      '<b>&gt;</b> NODE 07 — MILAN .......... <s>ONLINE</s>',
+      '<b>&gt;</b> ARCHIVE DECRYPTION ...... <s>RUNNING</s>',
+      '<b>&gt;</b> ANOMALY INDEX ........... <s>5 SECTORS</s>',
+      '<b>&gt;</b> CLEARANCE ............... <s>LEVEL 4</s>',
+      '<b>&gt;</b> ACCESS GRANTED. <s>WELCOME.</s>',
+    ],
+  },
+
+  hud: {
+    left: 'ARGOS // CLASSIFIED ARCHIVE',
+    right: 'SIGNAL ACTIVE',
+    sec: 'Section', pct: 'Scroll',
+  },
+
+  ticker: [
+    'Anomaly detected — Pulau Api sector',
+    'Artifact recovery in progress',
+    'Subject 01 — location unknown',
+    'Containment failed — Maldives',
+    'The Cult — activity rising',
+    'Amkh-Ra — anomalous energy signature',
+  ],
+
+  stats: [
+    { n: 5,   unit: '',  label: 'Volumes in the saga' },
+    { n: 170, unit: 'K', label: 'Words of manuscript' },
+    { n: 4,   unit: '',  label: 'Continents crossed' },
+    { n: 2,   unit: '',  label: 'Languages available' },
+  ],
+
+  rail: { hint: 'Scroll to explore', of: 'of' },
+
+  map: {
+    label: 'Anomaly grid',
+    title: 'Where the earth remembers',
+    intro: 'Every sector maps to an artifact, a mutation or a failed containment. ARGOS monitors them all.',
+    hudL: 'ARG-NET02 // GLOBAL MONITORING',
+    hudR: 'LIVE',
+  },
+
   skip: 'Skip to content',
 };

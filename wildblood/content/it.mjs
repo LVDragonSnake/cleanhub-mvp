@@ -131,15 +131,15 @@ export default {
     label: 'Luoghi',
     title: 'Dove la terra ricorda',
     items: [
-      { key: 'kenya',  name: 'Kenya',        coord: '01°29′S 35°08′E · Savana',      vol: 'Volume 01',
+      { key: 'kenya', pin: [57,56],  name: 'Kenya',        coord: '01°29′S 35°08′E · Savana',      vol: 'Volume 01',
         desc: 'Dove tutto comincia. Una vacanza per spezzare la routine, l’attacco di una creatura impossibile, e una vita che non tornerà più quella di prima.' },
-      { key: 'city',   name: 'Milano',       coord: '45°28′N 09°11′E · Italia',      vol: 'Volume 01–02',
+      { key: 'city', pin: [50,33],   name: 'Milano',       coord: '45°28′N 09°11′E · Italia',      vol: 'Volume 01–02',
         desc: 'Il ritorno impossibile. Un lavoro part-time, una ragazza, una facciata di normalità. Dentro, i sensi affilati non si spengono e gli incubi diventano sempre più concreti.' },
-      { key: 'ruins',  name: 'Il Cairo',     coord: '30°02′N 31°14′E · Egitto',      vol: 'Volume 02',
+      { key: 'ruins', pin: [55,42],  name: 'Il Cairo',     coord: '30°02′N 31°14′E · Egitto',      vol: 'Volume 02',
         desc: 'Sotto il sole spietato, tra mercati polverosi e vicoli affollati, la caccia a un artefatto rubato. E, oltre corridoi crollati, una stanza sepolta da millenni.' },
-      { key: 'jungle', name: 'Pulau Api',    coord: '03°12′S 127°45′E · Indonesia',  vol: 'Volume 02',
+      { key: 'jungle', pin: [80,58], name: 'Pulau Api',    coord: '03°12′S 127°45′E · Indonesia',  vol: 'Volume 02',
         desc: 'Rovine antiche e pericoli nuovi. Nel cuore selvaggio dell’isola, morte, trasformazione e tradimento recidono il legame di Leonardo con il mondo umano.' },
-      { key: 'sea',    name: 'Maldive',      coord: '03°12′N 73°13′E · Oceano Indiano', vol: 'Volume 03',
+      { key: 'sea', pin: [67,53],    name: 'Maldive',      coord: '03°12′N 73°13′E · Oceano Indiano', vol: 'Volume 03',
         desc: 'L’abisso. Un evento catastrofico, un solo sopravvissuto, e un settore che ARGOS preferirebbe non avere mai aperto.' },
     ],
   },
@@ -191,5 +191,49 @@ export default {
   },
 
   buybar: { title: 'Savage Heart', sub: 'Wildblood · Volume 1', cta: 'Acquista' },
+  boot: {
+    sys: 'ARGOS NETWORK',
+    lines: [
+      '<b>&gt;</b> ARGOS NETWORK // <s>ESTABLISHING LINK</s>',
+      '<b>&gt;</b> NODO 07 — MILANO ......... <s>ONLINE</s>',
+      '<b>&gt;</b> DECRITTAZIONE ARCHIVIO ... <s>IN CORSO</s>',
+      '<b>&gt;</b> INDICE ANOMALIE ......... <s>5 SETTORI</s>',
+      '<b>&gt;</b> AUTORIZZAZIONE ......... <s>LIVELLO 4</s>',
+      '<b>&gt;</b> ACCESSO CONCESSO. <s>BENVENUTO.</s>',
+    ],
+  },
+
+  hud: {
+    left: 'ARGOS // ARCHIVIO CLASSIFICATO',
+    right: 'SEGNALE ATTIVO',
+    sec: 'Sezione', pct: 'Scorrimento',
+  },
+
+  ticker: [
+    'Anomalia rilevata — settore Pulau Api',
+    'Recupero artefatto in corso',
+    'Soggetto 01 — non localizzato',
+    'Contenimento fallito — Maldive',
+    'Il Culto — attivita in aumento',
+    'Amkh-Ra — firma energetica anomala',
+  ],
+
+  stats: [
+    { n: 5,   unit: '',  label: 'Volumi della saga' },
+    { n: 170, unit: 'K', label: 'Parole di manoscritto' },
+    { n: 4,   unit: '',  label: 'Continenti attraversati' },
+    { n: 2,   unit: '',  label: 'Lingue disponibili' },
+  ],
+
+  rail: { hint: 'Scorri per esplorare', of: 'di' },
+
+  map: {
+    label: 'Griglia anomalie',
+    title: 'Dove la terra ricorda',
+    intro: 'Ogni settore corrisponde a un artefatto, a una mutazione o a un contenimento fallito. ARGOS li monitora tutti.',
+    hudL: 'ARG-NET02 // MONITORAGGIO GLOBALE',
+    hudR: 'LIVE',
+  },
+
   skip: 'Vai al contenuto',
 };

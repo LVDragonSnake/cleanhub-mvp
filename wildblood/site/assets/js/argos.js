@@ -390,3 +390,93 @@
     })();
   })();
 })();
+
+/* ================= VISORE FASCICOLI ================= */
+(function () {
+  var raw = document.getElementById('argos-docs');
+  var vw = document.getElementById('viewer');
+  if (!raw || !vw) return;
+  var DATA;
+  try { DATA = JSON.parse(raw.textContent); } catch (e) { return; }
+
+  var q = function (s) { return vw.querySelector(s); };
+  var stage = q('[data-vw-stage]'), image = q('[data-vw-img]'), strip = q('[data-vw-strip]');
+  var elCode = q('[data-vw-code]'), elTitle = q('[data-vw-title]'), elN = q('[data-vw-n]'), elDl = q('[data-vw-dl]');
+  var sec = null, idx = 0, lastFocus = null;
+
+  function show(i) {
+    if (!sec || !sec.docs.length) return;
+    idx = (i + sec.docs.length) % sec.docs.length;
+    var d = sec.docs[idx];
+    image.classList.remove('on');
+    stage.classList.remove('zoom');
+    var pre = new Image();
+    pre.onload = function () { image.src = d.u; image.alt = d.t; image.classList.add('on'); };
+    pre.onerror = function () { image.src = d.raw; image.alt = d.t; image.classList.add('on'); };
+    pre.src = d.u;
+    elCode.textContent = d.c;
+    elTitle.textContent = d.t;
+    elN.textContent = (idx + 1) + ' / ' + sec.docs.length;
+    elDl.href = d.raw;
+    [].forEach.call(strip.children, function (b, n) { b.classList.toggle('on', n === idx); });
+    var act = strip.children[idx];
+    if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    // precarica il successivo
+    var nx = sec.docs[(idx + 1) % sec.docs.length]; if (nx) { var p2 = new Image(); p2.src = nx.u; }
+  }
+
+  function open(i) {
+    sec = DATA[i];
+    if (!sec || !sec.docs.length) return;
+    lastFocus = document.activeElement;
+    strip.innerHTML = '';
+    sec.docs.forEach(function (d, n) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.title = d.t;
+      var im = document.createElement('img');
+      im.src = d.th; im.alt = ''; im.loading = 'lazy';
+      im.onerror = function () { im.src = d.raw; };
+      b.appendChild(im);
+      b.addEventListener('click', function () { show(n); });
+      strip.appendChild(b);
+    });
+    vw.hidden = false;
+    requestAnimationFrame(function () { vw.classList.add('on'); });
+    document.body.classList.add('lock');
+    show(0);
+    q('[data-vw-close]').focus();
+  }
+
+  function close() {
+    vw.classList.remove('on');
+    document.body.classList.remove('lock');
+    setTimeout(function () { vw.hidden = true; image.removeAttribute('src'); }, 300);
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  [].forEach.call(document.querySelectorAll('[data-open]'), function (b) {
+    b.addEventListener('click', function () { open(+b.dataset.open); });
+  });
+  q('[data-vw-close]').addEventListener('click', close);
+  q('[data-vw-prev]').addEventListener('click', function () { show(idx - 1); });
+  q('[data-vw-next]').addEventListener('click', function () { show(idx + 1); });
+  stage.addEventListener('click', function (e) {
+    if (e.target === stage) { close(); return; }
+    if (e.target === image) stage.classList.toggle('zoom');
+  });
+  document.addEventListener('keydown', function (e) {
+    if (vw.hidden) return;
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowLeft') show(idx - 1);
+    else if (e.key === 'ArrowRight') show(idx + 1);
+  });
+  // scorrimento col dito
+  var x0 = null;
+  stage.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', function (e) {
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 55 && !stage.classList.contains('zoom')) show(idx + (dx < 0 ? 1 : -1));
+    x0 = null;
+  }, { passive: true });
+})();

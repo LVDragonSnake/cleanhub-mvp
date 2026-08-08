@@ -84,17 +84,21 @@ export default function renderArgos(t, cfg, d, home) {
         <span data-decl-l>${e(t.archive.declassifyOff)}</span></button>
     </p>
     <div class="files">
-      ${t.archive.items.map((f,i)=>`
-      <article class="file ${f.locked?'file--lk':''}" data-r style="--d:${i*55}ms">
+      ${t.archive.items.map((f,i)=>{
+        const docs = f.docs || [];
+        const dis  = docs.length ? '' : ' disabled';
+        return `
+      <button type="button" class="file${docs.length?'':' file--lk'}" data-open="${i}"${dis} data-r style="--d:${i*55}ms">
         <div class="file__i">${img(f.key,{w:560,h:385,alt:f.name})}
           <span class="file__sc"></span><span class="file__sw"></span>
-          ${f.locked?`<span class="file__lk">${e(t.archive.locked)}</span>`:''}</div>
+          <span class="file__lk">${docs.length ? docs.length+' '+e(t.archive.viewer.count) : e(t.archive.locked)}</span></div>
         <div class="file__bd">
           <span class="file__c">${e(f.code)}-<span class="rd">${pad(i+1)}</span></span>
           <h3 class="file__n">${e(f.name)}</h3>
           <p class="file__d">${e(f.desc)}</p>
+          <span class="file__go">${docs.length ? e(t.archive.viewer.open) : e(t.archive.viewer.empty)}${docs.length?ICONS.arrow:''}</span>
         </div>
-      </article>`).join('')}
+      </button>`;}).join('')}
     </div>
   </div>
 </section>
@@ -144,6 +148,32 @@ export default function renderArgos(t, cfg, d, home) {
   </div>
 </section>
 </main>
+
+<!-- VISORE FASCICOLI -->
+<div class="vw" id="viewer" hidden>
+  <div class="vw__bar">
+    <span class="vw__code" data-vw-code></span>
+    <span class="vw__title" data-vw-title></span>
+    <span class="vw__n" data-vw-n></span>
+    <a class="vw__dl" data-vw-dl target="_blank" rel="noopener" title="${e(t.archive.viewer.zoom)}">${ICONS.ext}</a>
+    <button class="vw__x" type="button" data-vw-close aria-label="${e(t.archive.viewer.close)}">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l12 12M14 2L2 14" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <button class="vw__nav vw__nav--p" type="button" data-vw-prev aria-label="${e(t.archive.viewer.prev)}">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 2L4 8l6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button class="vw__nav vw__nav--n" type="button" data-vw-next aria-label="${e(t.archive.viewer.next)}">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <div class="vw__stage" data-vw-stage><img alt="" data-vw-img></div>
+  <div class="vw__strip" data-vw-strip></div>
+</div>
+
+<script type="application/json" id="argos-docs">${JSON.stringify(
+  t.archive.items.map((f)=>({
+    name:f.name, code:f.code,
+    docs:(f.docs||[]).map((x)=>({c:x.c,t:x.t,u:wix(x.k,1800),th:wix(x.k,220,150),raw:raw(x.k)})),
+  }))
+)}</script>
 
 <script>
 (function(){

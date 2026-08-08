@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /argos/
+Disallow: /en/argos/
+
+Sitemap: https://www.wildbloodsaga.com/sitemap.xml

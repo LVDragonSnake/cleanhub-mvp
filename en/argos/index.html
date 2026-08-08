@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ARGOS Archive — Wildblood Saga</title>
+<meta name="description" content="Restricted files, incident reports, field logs. Material produced by the organisation hunting the artifacts — and everyone who touches them.">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#050406">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/css/argos.css">
+<script>document.documentElement.className='js'</script>
+</head>
+<body class="lock">
+
+<!-- SCHERMATA DI ACCESSO -->
+<div class="boot" id="gate">
+  <div class="boot__in">
+    <div class="boot__l on"><b>&gt;</b> ARGOS NETWORK // <s>ARGOS ARCHIVE</s></div>
+    <div class="boot__l on" style="color:var(--ash)">The code is sent to newsletter subscribers.</div>
+    <form class="form" id="gateForm" style="margin-top:18px;justify-content:flex-start">
+      <label class="sr" for="code">Access code</label>
+      <input id="code" type="text" inputmode="text" autocomplete="off" spellcheck="false"
+             placeholder="Access code" style="flex:1 1 220px">
+      <button class="btn" type="submit">Enter<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </form>
+    <div class="boot__bar"><i></i></div>
+    <div class="boot__pct"><span id="gateMsg"></span><a href="../" style="color:var(--ash)">Return to surface</a></div>
+  </div>
+</div>
+
+<div class="hud" aria-hidden="true">
+  <div class="hud__b hud__b--t"></div><div class="hud__b hud__b--b"></div>
+  <div class="hud__b hud__b--l"></div><div class="hud__b hud__b--r"></div>
+  <span class="hud__c hud__c--tl"></span><span class="hud__c hud__c--tr"></span>
+  <span class="hud__c hud__c--bl"></span><span class="hud__c hud__c--br"></span>
+  <span class="hud__tag hud__tag--l">ARGOS // CLASSIFIED ARCHIVE — <b data-hud-sec></b></span>
+  <span class="hud__tag hud__tag--r"><b>●</b> SIGNAL ACTIVE — <span data-clock></span> — <b data-hud-pct>000</b>%</span>
+  <div class="hud__scan"></div>
+</div>
+<div class="scanlines" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div><div class="vig" aria-hidden="true"></div>
+
+<header class="nav stuck">
+  <div class="nav__in">
+    <a class="brand" href="../">
+      <img src="https://static.wixstatic.com/media/82d24b_e31c129abbf344ed82523822a23878ad~mv2.png/v1/fill/w_52,h_52,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos.png" data-fallback="https://static.wixstatic.com/media/82d24b_e31c129abbf344ed82523822a23878ad~mv2.png" width="26" height="26" alt="">
+      <span>ARGOS Archive</span>
+    </a>
+    <nav class="links" aria-label="Menu">
+      <a href="#files" data-n="01">ARGOS Archive</a>
+      <a href="#subjects" data-n="02">Characters</a>
+      <a href="#factions" data-n="03">The world</a>
+      <a href="../" data-n="04">Return to surface</a>
+    </nav>
+    <div class="nav__r">
+      <button class="burger" type="button" aria-label="Menu" aria-expanded="false"><i></i><i></i></button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<section class="sec arch" id="files" data-name="ARGOS Archive" data-decl-scope>
+  <div class="arch__bg" aria-hidden="true"><img src="https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg/v1/fill/w_1800,h_1647,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-archive-bg.jpg" srcset="https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg/v1/fill/w_1800,h_1647,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-archive-bg.jpg 1x, https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg/v1/fill/w_3000,h_2745,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-archive-bg.jpg 2x" width="1800" height="1647" alt="" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg"></div>
+  <div class="wrap arch__in">
+    <header class="sh" data-r>
+      <div>
+        <div class="sh__idx"><span class="n">[ 01 / 03 ]</span><span class="r"></span></div>
+        <p class="lab">ARGOS Archive</p>
+        <h1 class="d d2" data-dec>Archive access</h1>
+      </div>
+      <p class="lede">Restricted files, incident reports, field logs. Material produced by the organisation hunting the artifacts — and everyone who touches them.</p>
+    </header>
+    <p data-r style="margin-bottom:26px">
+      <button class="btn btn--g btn--s" type="button" data-decl aria-pressed="false"
+        data-on="Reclassify" data-off="Declassify">
+        <span data-decl-l>Declassify</span></button>
+    </p>
+    <div class="files">
+      
+      <button type="button" class="file" data-open="0" data-r style="--d:0ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_022eda4bb43a4b91afd948d2d54bd8be~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-dossier.png" srcset="https://static.wixstatic.com/media/82d24b_022eda4bb43a4b91afd948d2d54bd8be~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-dossier.png 1x, https://static.wixstatic.com/media/82d24b_022eda4bb43a4b91afd948d2d54bd8be~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-dossier.png 2x" width="560" height="385" alt="ARGOS Dossier" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_022eda4bb43a4b91afd948d2d54bd8be~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          <span class="file__lk">4 documents</span>
+          <span class="file__pdf">2 PDF</span></div>
+        <div class="file__bd">
+          <span class="file__c">ARG-DSR-<span class="rd">01</span></span>
+          <h3 class="file__n">ARGOS Dossier</h3>
+          <p class="file__d">Subject records, surveillance profiles and risk assessments on identified hybrids.</p>
+          <span class="file__go">Open file<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+      </button>
+      <button type="button" class="file" data-open="1" data-r style="--d:55ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/classified-files.png" srcset="https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/classified-files.png 1x, https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/classified-files.png 2x" width="560" height="385" alt="Classified Files" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          <span class="file__lk">4 documents</span>
+          <span class="file__pdf">3 PDF</span></div>
+        <div class="file__bd">
+          <span class="file__c">ARG-CLF-<span class="rd">02</span></span>
+          <h3 class="file__n">Classified Files</h3>
+          <p class="file__d">Limited-distribution documents. Unacknowledged operations, redacted sites, erased names.</p>
+          <span class="file__go">Open file<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+      </button>
+      <button type="button" class="file" data-open="2" data-r style="--d:110ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_0ffa488bcaed44dfa8ce6082e3ae4c23~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/field-logs.png" srcset="https://static.wixstatic.com/media/82d24b_0ffa488bcaed44dfa8ce6082e3ae4c23~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/field-logs.png 1x, https://static.wixstatic.com/media/82d24b_0ffa488bcaed44dfa8ce6082e3ae4c23~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/field-logs.png 2x" width="560" height="385" alt="Field Logs" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_0ffa488bcaed44dfa8ce6082e3ae4c23~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          <span class="file__lk">8 documents</span>
+          </div>
+        <div class="file__bd">
+          <span class="file__c">ARG-FL-<span class="rd">03</span></span>
+          <h3 class="file__n">Field Logs</h3>
+          <p class="file__d">Readings from the field: cavern expeditions, subglacial structures, artifact recoveries.</p>
+          <span class="file__go">Open file<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+      </button>
+      <button type="button" class="file" data-open="3" data-r style="--d:165ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_13afe57c6d804c24b6153ecf0d26ca79~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/incident-reports.png" srcset="https://static.wixstatic.com/media/82d24b_13afe57c6d804c24b6153ecf0d26ca79~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/incident-reports.png 1x, https://static.wixstatic.com/media/82d24b_13afe57c6d804c24b6153ecf0d26ca79~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/incident-reports.png 2x" width="560" height="385" alt="Incident Reports" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_13afe57c6d804c24b6153ecf0d26ca79~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          <span class="file__lk">3 documents</span>
+          <span class="file__pdf">2 PDF</span></div>
+        <div class="file__bd">
+          <span class="file__c">ARG-IR-<span class="rd">04</span></span>
+          <h3 class="file__n">Incident Reports</h3>
+          <p class="file__d">What went wrong. Failed containments, unidentified survivors, compromised sectors.</p>
+          <span class="file__go">Open file<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+      </button>
+      <button type="button" class="file" data-open="4" data-r style="--d:220ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_3c69ee4c420a4f688b75efcef0c55a11~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/visual-records.png" srcset="https://static.wixstatic.com/media/82d24b_3c69ee4c420a4f688b75efcef0c55a11~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/visual-records.png 1x, https://static.wixstatic.com/media/82d24b_3c69ee4c420a4f688b75efcef0c55a11~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/visual-records.png 2x" width="560" height="385" alt="Visual Records" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_3c69ee4c420a4f688b75efcef0c55a11~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          <span class="file__lk">3 documents</span>
+          </div>
+        <div class="file__bd">
+          <span class="file__c">ARG-VR-<span class="rd">05</span></span>
+          <h3 class="file__n">Visual Records</h3>
+          <p class="file__d">Satellite imagery, surveillance stills, recovered visual material.</p>
+          <span class="file__go">Open file<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+      </button>
+      <button type="button" class="file file--lk" data-open="5" disabled data-r style="--d:275ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_22d756a8fe6145e699e9ce29d13a5297~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/author-archive.png" srcset="https://static.wixstatic.com/media/82d24b_22d756a8fe6145e699e9ce29d13a5297~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/author-archive.png 1x, https://static.wixstatic.com/media/82d24b_22d756a8fe6145e699e9ce29d13a5297~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/author-archive.png 2x" width="560" height="385" alt="Author Archive" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_22d756a8fe6145e699e9ce29d13a5297~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          <span class="file__lk">Locked</span>
+          </div>
+        <div class="file__bd">
+          <span class="file__c">AUT-ARC-<span class="rd">06</span></span>
+          <h3 class="file__n">Author Archive</h3>
+          <p class="file__d">Author’s notes, worldbuilding material and behind-the-scenes of the saga.</p>
+          <span class="file__go">No declassified documents in this section.</span>
+        </div>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="subjects" data-name="Characters">
+  <div class="wrap">
+    <header class="sh" data-r>
+      <div><div class="sh__idx"><span class="n">[ 02 / 03 ]</span><span class="r"></span></div>
+        <p class="lab">Characters</p><h2 class="d d2" data-dec>Those who carry the blood</h2></div>
+      <p class="lede">Three bloodlines, five volumes, one question: how much can you lose before you stop being yourself.</p>
+    </header>
+    <div class="cast">
+      
+      <article class="dos" style="--d:0ms">
+        <div class="dos__i">
+          <img src="../../assets/img/char-leonardo.svg" width="900" height="1200" loading="lazy" decoding="async" alt="Leonardo">
+          <span class="dos__tag">No visual on record</span>
+        </div>
+        <div class="dos__bd">
+          <span class="dos__r">Subject 01 · The first</span>
+          <h3 class="dos__n">Leonardo</h3>
+          <p class="dos__x">Seventeen, from Lecco. Survivor of the attack in the savannah. The feline mutation never stopped — and over the years it stopped feeling like an illness.</p>
+          <div class="dos__m"><span class="lb"><span>INDEX</span><span>92%</span></span>
+            <span class="bar"><i style="--m:92%"></i></span></div>
+        </div>
+      </article>
+      <article class="dos" style="--d:55ms">
+        <div class="dos__i">
+          <img src="../../assets/img/char-maya.svg" width="900" height="1200" loading="lazy" decoding="async" alt="Maya">
+          <span class="dos__tag">No visual on record</span>
+        </div>
+        <div class="dos__bd">
+          <span class="dos__r">Milan · The anchor</span>
+          <h3 class="dos__n">Maya</h3>
+          <p class="dos__x">Of Indonesian descent. The only human thing left in Leonardo’s life. Without knowing it, she keeps a childhood legend worth more than any artifact.</p>
+          <div class="dos__m"><span class="lb"><span>INDEX</span><span>34%</span></span>
+            <span class="bar"><i style="--m:34%"></i></span></div>
+        </div>
+      </article>
+      <article class="dos" style="--d:110ms">
+        <div class="dos__i">
+          <img src="../../assets/img/char-nohea.svg" width="900" height="1200" loading="lazy" decoding="async" alt="Nohea">
+          <span class="dos__tag">No visual on record</span>
+        </div>
+        <div class="dos__bd">
+          <span class="dos__r">Subject 02 · Maldives</span>
+          <h3 class="dos__n">Nohea</h3>
+          <p class="dos__x">Survivor of a catastrophic event, marked by a mutation he does not understand. Captured by ARGOS and used as a test subject for a new generation of experiments.</p>
+          <div class="dos__m"><span class="lb"><span>INDEX</span><span>76%</span></span>
+            <span class="bar"><i style="--m:76%"></i></span></div>
+        </div>
+      </article>
+      <article class="dos" style="--d:165ms">
+        <div class="dos__i">
+          <img src="../../assets/img/char-ginevra.svg" width="900" height="1200" loading="lazy" decoding="async" alt="Ginevra">
+          <span class="dos__tag">No visual on record</span>
+        </div>
+        <div class="dos__bd">
+          <span class="dos__r">Subject 03 · Shapeshifter</span>
+          <h3 class="dos__n">Ginevra</h3>
+          <p class="dos__x">She lives on the fringes and defends those who cannot defend themselves. In the forgotten outskirts they call her an urban legend. She doesn’t know where her abilities come from — and she needs to.</p>
+          <div class="dos__m"><span class="lb"><span>INDEX</span><span>84%</span></span>
+            <span class="bar"><i style="--m:84%"></i></span></div>
+        </div>
+      </article>
+      <article class="dos" style="--d:220ms">
+        <div class="dos__i">
+          <img src="../../assets/img/char-noah.svg" width="900" height="1200" loading="lazy" decoding="async" alt="Noah">
+          <span class="dos__tag">No visual on record</span>
+        </div>
+        <div class="dos__bd">
+          <span class="dos__r">Escapee · ARGOS</span>
+          <h3 class="dos__n">Noah</h3>
+          <p class="dos__x">He carries the scars of the experiments he endured. He got out of the facility alive. Not alone, and not whole.</p>
+          <div class="dos__m"><span class="lb"><span>INDEX</span><span>68%</span></span>
+            <span class="bar"><i style="--m:68%"></i></span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="factions" data-name="The world">
+  <div class="wrap">
+    <header class="sh" data-r>
+      <div><div class="sh__idx"><span class="n">[ 03 / 03 ]</span><span class="r"></span></div>
+        <p class="lab">The world</p><h2 class="d d2" data-dec>Who pulls the strings</h2></div>
+      <p class="lede">Four forces fighting over the same buried truth. None of them wants you to know it.</p>
+    </header>
+    <div class="facs">
+      
+      <article class="fac" data-r style="--d:0ms">
+        <p class="fac__id">FACTION 01</p><h3 class="fac__n">ARGOS</h3>
+        <p class="fac__d">A shadowy government organisation. It tracks the artifacts, studies them, seizes them. To ARGOS they are the key to a forgotten past. Anyone who gets in the way becomes an open file.</p>
+        <div class="tags"><span class="tag">Government</span><span class="tag">Shadow</span><span class="tag">Global</span></div>
+      </article>
+      <article class="fac" data-r style="--d:70ms">
+        <p class="fac__id">FACTION 02</p><h3 class="fac__n">The Cult</h3>
+        <p class="fac__d">Founded by a former ARGOS scientist consumed by fanaticism. It preaches that hybrids are satanic aberrations to be eradicated. Armed, organised, expanding.</p>
+        <div class="tags"><span class="tag">Fanatics</span><span class="tag">Armed</span><span class="tag">Clandestine</span></div>
+      </article>
+      <article class="fac" data-r style="--d:140ms">
+        <p class="fac__id">FACTION 03</p><h3 class="fac__n">The Ancients</h3>
+        <p class="fac__d">Witnesses of an era when humans and hybrid creatures walked side by side. Very little remains: a lineage, a body of knowledge, and a mission to hand over before it vanishes for good.</p>
+        <div class="tags"><span class="tag">Near extinct</span><span class="tag">Keepers</span></div>
+      </article>
+      <article class="fac" data-r style="--d:210ms">
+        <p class="fac__id">FACTION 04</p><h3 class="fac__n">The Hybrids</h3>
+        <p class="fac__d">Those who carry the change in their blood. Not a power: an inheritance that cannot be given back. Some learn to live with it. Others are devoured from the inside.</p>
+        <div class="tags"><span class="tag">Hunted</span><span class="tag">Mutating</span></div>
+      </article>
+    </div>
+    <p style="margin-top:44px"><a class="btn btn--g" href="../">Return to surface<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></p>
+  </div>
+</section>
+</main>
+
+<!-- VISORE FASCICOLI -->
+<div class="vw" id="viewer" hidden>
+  <div class="vw__bar">
+    <span class="vw__code" data-vw-code></span>
+    <span class="vw__title" data-vw-title></span>
+    <span class="vw__n" data-vw-n></span>
+    <a class="vw__dl" data-vw-dl target="_blank" rel="noopener" download>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 1v9M4.5 6.5L8 10l3.5-3.5M2 13.5h12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span data-vw-dl-l>Download PDF</span><em data-vw-dl-s></em></a>
+    <button class="vw__x" type="button" data-vw-close aria-label="Close">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l12 12M14 2L2 14" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <button class="vw__nav vw__nav--p" type="button" data-vw-prev aria-label="Previous">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 2L4 8l6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button class="vw__nav vw__nav--n" type="button" data-vw-next aria-label="Next">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <div class="vw__stage" data-vw-stage><img alt="" data-vw-img></div>
+  <div class="vw__strip" data-vw-strip></div>
+</div>
+
+<script>window.__WB_DL={"download":"Download PDF","preview":"Preview only"}</script>
+<script type="application/json" id="argos-docs">[{"name":"ARGOS Dossier","code":"ARG-DSR","docs":[{"c":"ARG-N01","t":"Subject record — Nereus-3","u":"https://static.wixstatic.com/media/82d24b_d27c9759b64c4ed0a64dd4d9a42a9119~mv2.png/v1/fill/w_1024,h_1536,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-n01-nereus3.png","th":"https://static.wixstatic.com/media/82d24b_d27c9759b64c4ed0a64dd4d9a42a9119~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-n01-nereus3.png","raw":"https://static.wixstatic.com/media/82d24b_d27c9759b64c4ed0a64dd4d9a42a9119~mv2.png","pdf":"https://6f0ea2c5-da9b-4566-886c-8701cb2e582f.usrfiles.com/ugd/82d24b_33275dcbcc4247058af37035b5ceecf2.pdf","size":"0,9 MB"},{"c":"ARG-A17","t":"Artifact dossier — China sector","u":"https://static.wixstatic.com/media/82d24b_d4de7b39f19b48d28d96288e78eb4176~mv2.png/v1/fill/w_1024,h_1536,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-a17-china.png","th":"https://static.wixstatic.com/media/82d24b_d4de7b39f19b48d28d96288e78eb4176~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-a17-china.png","raw":"https://static.wixstatic.com/media/82d24b_d4de7b39f19b48d28d96288e78eb4176~mv2.png","pdf":"https://6f0ea2c5-da9b-4566-886c-8701cb2e582f.usrfiles.com/ugd/82d24b_a2e5b56353be49c9a5e5395db7e7b4d5.pdf","size":"0,8 MB"},{"c":"ARG-INT07","t":"Interrogation transcript (redacted)","u":"https://static.wixstatic.com/media/82d24b_2d416229fb964631986ce08244bf1eba~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-int07-transcript.png","th":"https://static.wixstatic.com/media/82d24b_2d416229fb964631986ce08244bf1eba~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-int07-transcript.png","raw":"https://static.wixstatic.com/media/82d24b_2d416229fb964631986ce08244bf1eba~mv2.png","pdf":"","size":""},{"c":"ARG-INT07","t":"Interrogation — case file","u":"https://static.wixstatic.com/media/82d24b_b54e1302e9d0471d98148ec4277ddcdb~mv2.png/v1/fill/w_1122,h_1402,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-int07-dossier.png","th":"https://static.wixstatic.com/media/82d24b_b54e1302e9d0471d98148ec4277ddcdb~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-int07-dossier.png","raw":"https://static.wixstatic.com/media/82d24b_b54e1302e9d0471d98148ec4277ddcdb~mv2.png","pdf":"","size":""}]},{"name":"Classified Files","code":"ARG-CLF","docs":[{"c":"ARG-CLF12","t":"Operation Nightfall — Site 07","u":"https://static.wixstatic.com/media/82d24b_2c6c1078ff374012872e2fadbbddde56~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-clf12-nightfall.png","th":"https://static.wixstatic.com/media/82d24b_2c6c1078ff374012872e2fadbbddde56~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-clf12-nightfall.png","raw":"https://static.wixstatic.com/media/82d24b_2c6c1078ff374012872e2fadbbddde56~mv2.png","pdf":"","size":""},{"c":"ARG-MAIL02","t":"Containment directive — Nereus-3","u":"https://static.wixstatic.com/media/82d24b_59b9793c05d842f09ad72060e2a95908~mv2.png/v1/fill/w_1024,h_1536,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-mail02-containment.png","th":"https://static.wixstatic.com/media/82d24b_59b9793c05d842f09ad72060e2a95908~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-mail02-containment.png","raw":"https://static.wixstatic.com/media/82d24b_59b9793c05d842f09ad72060e2a95908~mv2.png","pdf":"https://6f0ea2c5-da9b-4566-886c-8701cb2e582f.usrfiles.com/ugd/82d24b_992ec4d5445d4996b759aee9d2e4d27a.pdf","size":"2,7 MB"},{"c":"ARG-MAIL06","t":"Protocol anomaly log","u":"https://static.wixstatic.com/media/82d24b_b9b8aad67dc145658a6471c05aa5e472~mv2.png/v1/fill/w_1024,h_1536,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-mail06-protocol.png","th":"https://static.wixstatic.com/media/82d24b_b9b8aad67dc145658a6471c05aa5e472~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-mail06-protocol.png","raw":"https://static.wixstatic.com/media/82d24b_b9b8aad67dc145658a6471c05aa5e472~mv2.png","pdf":"https://6f0ea2c5-da9b-4566-886c-8701cb2e582f.usrfiles.com/ugd/82d24b_ba57c33954b845a0b5b3452f921b3db2.pdf","size":"3,0 MB"},{"c":"ARG-MAIL17","t":"Alert — containment failure","u":"https://static.wixstatic.com/media/82d24b_8bae203a5bfc4d14846cc07f1c4606c1~mv2.png/v1/fill/w_1024,h_1536,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-mail17-failure.png","th":"https://static.wixstatic.com/media/82d24b_8bae203a5bfc4d14846cc07f1c4606c1~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-mail17-failure.png","raw":"https://static.wixstatic.com/media/82d24b_8bae203a5bfc4d14846cc07f1c4606c1~mv2.png","pdf":"https://6f0ea2c5-da9b-4566-886c-8701cb2e582f.usrfiles.com/ugd/82d24b_2146c814395b452ab3ee56415de52c94.pdf","size":"3,1 MB"}]},{"name":"Field Logs","code":"ARG-FL","docs":[{"c":"ARG-FL09","t":"Cavern expedition — Delta-6","u":"https://static.wixstatic.com/media/82d24b_a1e70072aeb54606bed88608cc6ebd5d~mv2.png/v1/fill/w_1800,h_1200,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl09-cavern.png","th":"https://static.wixstatic.com/media/82d24b_a1e70072aeb54606bed88608cc6ebd5d~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl09-cavern.png","raw":"https://static.wixstatic.com/media/82d24b_a1e70072aeb54606bed88608cc6ebd5d~mv2.png","pdf":"","size":""},{"c":"ARG-FL09","t":"Delta-6 — case file","u":"https://static.wixstatic.com/media/82d24b_afb3156e977342d9b1caabf583baddf5~mv2.png/v1/fill/w_1800,h_2249,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl09-dossier.png","th":"https://static.wixstatic.com/media/82d24b_afb3156e977342d9b1caabf583baddf5~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl09-dossier.png","raw":"https://static.wixstatic.com/media/82d24b_afb3156e977342d9b1caabf583baddf5~mv2.png","pdf":"","size":""},{"c":"ARG-FL12","t":"Subglacial structure — Antarctic shelf","u":"https://static.wixstatic.com/media/82d24b_49924743fdcd4f3e9d37cf5ae2597377~mv2.png/v1/fill/w_1800,h_1200,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl12-subglacial.png","th":"https://static.wixstatic.com/media/82d24b_49924743fdcd4f3e9d37cf5ae2597377~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl12-subglacial.png","raw":"https://static.wixstatic.com/media/82d24b_49924743fdcd4f3e9d37cf5ae2597377~mv2.png","pdf":"","size":""},{"c":"ARG-FL12","t":"Antarctic — case file","u":"https://static.wixstatic.com/media/82d24b_612b0b594ea344f8af24ef71bc40e7d3~mv2.png/v1/fill/w_1800,h_2249,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl12-dossier.png","th":"https://static.wixstatic.com/media/82d24b_612b0b594ea344f8af24ef71bc40e7d3~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl12-dossier.png","raw":"https://static.wixstatic.com/media/82d24b_612b0b594ea344f8af24ef71bc40e7d3~mv2.png","pdf":"","size":""},{"c":"ARG-FL14","t":"Forest entity tracking — Chugach sector","u":"https://static.wixstatic.com/media/82d24b_7475f14d2d504b8c855e4900309db8a1~mv2.png/v1/fill/w_1800,h_1200,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl14-forest.png","th":"https://static.wixstatic.com/media/82d24b_7475f14d2d504b8c855e4900309db8a1~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl14-forest.png","raw":"https://static.wixstatic.com/media/82d24b_7475f14d2d504b8c855e4900309db8a1~mv2.png","pdf":"","size":""},{"c":"ARG-FL14","t":"Chugach — case file","u":"https://static.wixstatic.com/media/82d24b_bdd2a8d85db84e2dadc457fba5a960d5~mv2.png/v1/fill/w_1800,h_2249,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl14-dossier.png","th":"https://static.wixstatic.com/media/82d24b_bdd2a8d85db84e2dadc457fba5a960d5~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl14-dossier.png","raw":"https://static.wixstatic.com/media/82d24b_bdd2a8d85db84e2dadc457fba5a960d5~mv2.png","pdf":"","size":""},{"c":"ARG-FL18","t":"Artifact recovery — Karakorum Delta-6","u":"https://static.wixstatic.com/media/82d24b_b8e1461834d747e0ac61886396b22d69~mv2.png/v1/fill/w_1800,h_1200,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl18-karakorum.png","th":"https://static.wixstatic.com/media/82d24b_b8e1461834d747e0ac61886396b22d69~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl18-karakorum.png","raw":"https://static.wixstatic.com/media/82d24b_b8e1461834d747e0ac61886396b22d69~mv2.png","pdf":"","size":""},{"c":"ARG-FL18","t":"Karakorum — case file","u":"https://static.wixstatic.com/media/82d24b_a25ad619e3f447aeb3086559b55b71a0~mv2.png/v1/fill/w_1800,h_1200,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl18-dossier.png","th":"https://static.wixstatic.com/media/82d24b_a25ad619e3f447aeb3086559b55b71a0~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-fl18-dossier.png","raw":"https://static.wixstatic.com/media/82d24b_a25ad619e3f447aeb3086559b55b71a0~mv2.png","pdf":"","size":""}]},{"name":"Incident Reports","code":"ARG-IR","docs":[{"c":"ARG-IR03","t":"Incident report — Maldives sector","u":"https://static.wixstatic.com/media/82d24b_5f314fed93ce494b994c5ae4e4bcbc10~mv2.png/v1/fill/w_1024,h_1536,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-ir03-maldives.png","th":"https://static.wixstatic.com/media/82d24b_5f314fed93ce494b994c5ae4e4bcbc10~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-ir03-maldives.png","raw":"https://static.wixstatic.com/media/82d24b_5f314fed93ce494b994c5ae4e4bcbc10~mv2.png","pdf":"https://6f0ea2c5-da9b-4566-886c-8701cb2e582f.usrfiles.com/ugd/82d24b_445a19dde4cd4cbc9e3d541b60ef0e51.pdf","size":"0,8 MB"},{"c":"ARG-IR07","t":"Unidentified survivor — Socotra sector","u":"https://static.wixstatic.com/media/82d24b_d667cdd7915a47f9912449387530036b~mv2.png/v1/fill/w_1800,h_2700,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-ir07-socotra.png","th":"https://static.wixstatic.com/media/82d24b_d667cdd7915a47f9912449387530036b~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-ir07-socotra.png","raw":"https://static.wixstatic.com/media/82d24b_d667cdd7915a47f9912449387530036b~mv2.png","pdf":"https://6f0ea2c5-da9b-4566-886c-8701cb2e582f.usrfiles.com/ugd/82d24b_2a51e9e8b7c743c1813815756846eb27.pdf","size":"13,4 MB"},{"c":"ARG-IR12","t":"Reopened casefile — Karakorum sector","u":"https://static.wixstatic.com/media/82d24b_6b4823d53ad645feb669c3323e7ed65b~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-ir12-karakorum.png","th":"https://static.wixstatic.com/media/82d24b_6b4823d53ad645feb669c3323e7ed65b~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-ir12-karakorum.png","raw":"https://static.wixstatic.com/media/82d24b_6b4823d53ad645feb669c3323e7ed65b~mv2.png","pdf":"","size":""}]},{"name":"Visual Records","code":"ARG-VR","docs":[{"c":"ARG-NET02","t":"Global anomaly monitoring grid","u":"https://static.wixstatic.com/media/82d24b_9b429622a4544a36ab3142de308783f7~mv2.png/v1/fill/w_1672,h_941,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-net02-grid.png","th":"https://static.wixstatic.com/media/82d24b_9b429622a4544a36ab3142de308783f7~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-net02-grid.png","raw":"https://static.wixstatic.com/media/82d24b_9b429622a4544a36ab3142de308783f7~mv2.png","pdf":"","size":""},{"c":"ARG-SAT01","t":"Anomalous activity detected — satellite","u":"https://static.wixstatic.com/media/82d24b_308c44f681154ff9b4d06009f5beb742~mv2.png/v1/fill/w_1672,h_941,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-sat01-satellite.png","th":"https://static.wixstatic.com/media/82d24b_308c44f681154ff9b4d06009f5beb742~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-sat01-satellite.png","raw":"https://static.wixstatic.com/media/82d24b_308c44f681154ff9b4d06009f5beb742~mv2.png","pdf":"","size":""},{"c":"ARG-SYS03","t":"Unauthorized access detected","u":"https://static.wixstatic.com/media/82d24b_29ea772d68f64221ba70488693781fd0~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-sys03-access.png","th":"https://static.wixstatic.com/media/82d24b_29ea772d68f64221ba70488693781fd0~mv2.png/v1/fill/w_220,h_150,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/arg-sys03-access.png","raw":"https://static.wixstatic.com/media/82d24b_29ea772d68f64221ba70488693781fd0~mv2.png","pdf":"","size":""}]},{"name":"Author Archive","code":"AUT-ARC","docs":[]}]</script>
+
+<script>
+(function(){
+  var CODE="AMKH-RA";
+  var KEY='wb-argos';
+  var gate=document.getElementById('gate'),f=document.getElementById('gateForm'),
+      msg=document.getElementById('gateMsg'),inp=document.getElementById('code');
+  function open(){gate.classList.add('done');document.body.classList.remove('lock');}
+  try{ if(sessionStorage.getItem(KEY)==='1') open(); }catch(err){}
+  f.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    var v=(inp.value||'').trim().toUpperCase().replace(/\s+/g,'');
+    if(v===CODE.replace(/\s+/g,'')){
+      msg.textContent="Access granted.";
+      try{sessionStorage.setItem(KEY,'1')}catch(err){}
+      setTimeout(open,450);
+    } else { msg.textContent="Access denied. Code not recognised."; inp.value=''; }
+  });
+})();
+</script>
+<script src="../../assets/js/argos.js" defer></script>
+</body>
+</html>

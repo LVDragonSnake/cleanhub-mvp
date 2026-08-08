@@ -91,7 +91,8 @@ export default function renderArgos(t, cfg, d, home) {
       <button type="button" class="file${docs.length?'':' file--lk'}" data-open="${i}"${dis} data-r style="--d:${i*55}ms">
         <div class="file__i">${img(f.key,{w:560,h:385,alt:f.name})}
           <span class="file__sc"></span><span class="file__sw"></span>
-          <span class="file__lk">${docs.length ? docs.length+' '+e(t.archive.viewer.count) : e(t.archive.locked)}</span></div>
+          <span class="file__lk">${docs.length ? docs.length+' '+e(t.archive.viewer.count) : e(t.archive.locked)}</span>
+          ${docs.filter((x)=>x.pdf).length ? `<span class="file__pdf">${docs.filter((x)=>x.pdf).length} PDF</span>` : ''}</div>
         <div class="file__bd">
           <span class="file__c">${e(f.code)}-<span class="rd">${pad(i+1)}</span></span>
           <h3 class="file__n">${e(f.name)}</h3>
@@ -155,7 +156,9 @@ export default function renderArgos(t, cfg, d, home) {
     <span class="vw__code" data-vw-code></span>
     <span class="vw__title" data-vw-title></span>
     <span class="vw__n" data-vw-n></span>
-    <a class="vw__dl" data-vw-dl target="_blank" rel="noopener" title="${e(t.archive.viewer.zoom)}">${ICONS.ext}</a>
+    <a class="vw__dl" data-vw-dl target="_blank" rel="noopener" download>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 1v9M4.5 6.5L8 10l3.5-3.5M2 13.5h12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span data-vw-dl-l>${e(t.archive.viewer.download)}</span><em data-vw-dl-s></em></a>
     <button class="vw__x" type="button" data-vw-close aria-label="${e(t.archive.viewer.close)}">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l12 12M14 2L2 14" stroke-linecap="round"/></svg>
     </button>
@@ -168,10 +171,11 @@ export default function renderArgos(t, cfg, d, home) {
   <div class="vw__strip" data-vw-strip></div>
 </div>
 
+<script>window.__WB_DL=${JSON.stringify({download:t.archive.viewer.download, preview:t.archive.viewer.preview})}</script>
 <script type="application/json" id="argos-docs">${JSON.stringify(
   t.archive.items.map((f)=>({
     name:f.name, code:f.code,
-    docs:(f.docs||[]).map((x)=>({c:x.c,t:x.t,u:wix(x.k,1800),th:wix(x.k,220,150),raw:raw(x.k)})),
+    docs:(f.docs||[]).map((x)=>({c:x.c,t:x.t,u:wix(x.k,1800),th:wix(x.k,220,150),raw:raw(x.k),pdf:x.pdf||'',size:x.size||''})),
   }))
 )}</script>
 

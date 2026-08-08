@@ -403,6 +403,7 @@
   var stage = q('[data-vw-stage]'), image = q('[data-vw-img]'), strip = q('[data-vw-strip]');
   var elCode = q('[data-vw-code]'), elTitle = q('[data-vw-title]'), elN = q('[data-vw-n]'), elDl = q('[data-vw-dl]');
   var sec = null, idx = 0, lastFocus = null;
+  var DL = (window.__WB_DL || { download: 'Download', preview: 'Preview' });
 
   function show(i) {
     if (!sec || !sec.docs.length) return;
@@ -417,7 +418,13 @@
     elCode.textContent = d.c;
     elTitle.textContent = d.t;
     elN.textContent = (idx + 1) + ' / ' + sec.docs.length;
-    elDl.href = d.raw;
+    // il pulsante punta al PDF vero quando c'e'; altrimenti all'immagine originale
+    var dlL = vw.querySelector('[data-vw-dl-l]'), dlS = vw.querySelector('[data-vw-dl-s]');
+    elDl.href = d.pdf || d.raw;
+    elDl.classList.toggle('vw__dl--pdf', !!d.pdf);
+    if (dlL) dlL.textContent = d.pdf ? DL.download : DL.preview;
+    if (dlS) dlS.textContent = d.pdf ? ' · PDF ' + d.size : '';
+    if (d.pdf) elDl.setAttribute('download', ''); else elDl.removeAttribute('download');
     [].forEach.call(strip.children, function (b, n) { b.classList.toggle('on', n === idx); });
     var act = strip.children[idx];
     if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });

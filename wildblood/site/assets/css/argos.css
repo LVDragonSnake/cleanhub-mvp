@@ -601,3 +601,14 @@ section[id]{scroll-margin-top:calc(var(--nav) + 16px)}
   .vw__nav{width:38px;height:38px}
   .vw__strip button{width:58px;height:42px}
 }
+
+/* download del documento vero */
+.file__pdf{position:absolute;top:11px;left:11px;z-index:2;font-family:var(--ff-m);font-size:.52rem;
+  letter-spacing:.14em;padding:4px 7px;background:var(--blood);color:#fff}
+.vw__dl{width:auto;padding:0 14px;gap:9px;font-family:var(--ff-m);font-size:.6rem;letter-spacing:.14em;
+  text-transform:uppercase;white-space:nowrap}
+.vw__dl em{font-style:normal;color:var(--ash)}
+.vw__dl--pdf{border-color:var(--blood);background:var(--blood);color:#fff}
+.vw__dl--pdf em{color:rgba(255,255,255,.7)}
+.vw__dl--pdf:hover{background:var(--flare);border-color:var(--flare);color:#fff}
+@media (max-width:640px){.vw__dl span,.vw__dl em{display:none}.vw__dl{width:36px;padding:0}}

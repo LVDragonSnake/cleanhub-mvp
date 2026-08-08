@@ -33,7 +33,11 @@ jobs:
         working-directory: wildblood
         run: node build.mjs
 
+      # enablement: true fa attivare Pages al workflow stesso,
+      # senza bisogno di toccare le impostazioni del repository
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

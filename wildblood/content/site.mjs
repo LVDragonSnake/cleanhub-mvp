@@ -22,4 +22,9 @@ export default {
   // Endpoint del form newsletter. Vuoto = fallback mailto.
   // Incollando qui l'action di Mailchimp/Brevo/Substack il form invia lì direttamente.
   newsletterAction: '',
+
+  // Codice dell'area riservata ARGOS.
+  // NB: il controllo avviene nel browser — e' scenografico, non e' una protezione
+  // reale. Per un accesso davvero protetto serve l'area membri di Wix o un server.
+  argosCode: 'AMKH-RA',
 };

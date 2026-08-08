@@ -12,11 +12,31 @@ wildblood/
 │   ├── media.mjs     ← mappa delle immagini
 │   └── site.mjs      ← link d'acquisto, social, email, newsletter
 ├── src/
-│   ├── template.mjs  ← la struttura HTML della pagina
+│   ├── template.mjs  ← sito pubblico (il trailer)
+│   ├── argos.mjs     ← area riservata ARGOS
 │   └── icons.mjs
 ├── build.mjs         ← genera site/ da content/ + src/
 └── site/             ← OUTPUT: è questo che va online
+    ├── index.html        IT pubblico
+    ├── en/index.html     EN pubblico
+    ├── argos/            IT area riservata
+    └── en/argos/         EN area riservata
 ```
+
+## Le due facce del sito
+
+**Pubblico** (`index.html`) — un trailer interattivo: una sequenza di otto
+fotogrammi a tutto schermo guidata dallo scroll, che si dissolvono l'uno
+nell'altro con una spinta in avanti continua. Poi il libro, i volumi, la porta
+dell'archivio, l'autore, la newsletter.
+
+**Area riservata** (`argos/`) — l'ARGOS Archive: registro da terminale
+classificato, protetto da un codice. Il codice sta in `content/site.mjs`
+(`argosCode`).
+
+> ⚠︎ Il controllo del codice avviene **nel browser**: è scenografico, non è una
+> protezione reale. Chiunque guardi il sorgente lo trova. Per un accesso davvero
+> protetto serve l'area membri di Wix o un server.
 
 ## Comandi
 

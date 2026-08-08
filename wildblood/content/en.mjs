@@ -235,5 +235,40 @@ export default {
     hudR: 'LIVE',
   },
 
+  film: {
+    skip: 'Skip the intro',
+    beats: [
+      { key:'heroWide', hero:true, kicker:'The saga by Alexander Lawrence',
+        title:'Wildblood', text:'Dark fantasy · Mutation · Relics' },
+      { key:'kenya',   kicker:'Kenya · 01°29′S 35°08′E', title:'The savannah',
+        text:'A trip meant to break the routine. Seventeen years old, a holiday, nothing more.' },
+      { key:'beast',   kicker:'The predator', title:'The attack',
+        text:'A massive feline. Its coat white and gold. Amber eyes burning like fire.' },
+      { key:'fire',    kicker:'The awakening', title:'Something has awakened',
+        text:'Leonardo survives. But his blood is no longer entirely human.' },
+      { key:'ruins',   kicker:'Cairo · 30°02′N 31°14′E', title:'The Amkh-Ra',
+        text:'Beneath a forgotten pyramid, an amulet of blood and amber that speaks to the mind.' },
+      { key:'jungle',  kicker:'Pulau Api · Indonesia', title:'The jungle',
+        text:'Ancient ruins and new dangers. Here he will lose everything he thought he could protect.' },
+      { key:'sea',     kicker:'Maldives · The abyss', title:'The abyss',
+        text:'A catastrophic event. A single survivor. A sector ARGOS would rather never have opened.' },
+      { key:'warriors',kicker:'Three bloodlines', title:'Wild Legacy',
+        text:'The boundary between human and beast was only the starting point.' },
+    ],
+  },
+
+  gate: {
+    label: 'Restricted area',
+    title: 'ARGOS Archive',
+    intro: 'Restricted files, incident reports, field logs. Material produced by the organisation hunting the artifacts — and everyone who touches them.',
+    cta: 'Request access',
+    enter: 'Enter',
+    codeLabel: 'Access code',
+    codeHint: 'The code is sent to newsletter subscribers.',
+    denied: 'Access denied. Code not recognised.',
+    granted: 'Access granted.',
+    back: 'Return to surface',
+  },
+
   skip: 'Skip to content',
 };

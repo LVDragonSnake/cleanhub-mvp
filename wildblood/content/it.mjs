@@ -235,5 +235,40 @@ export default {
     hudR: 'LIVE',
   },
 
+  film: {
+    skip: 'Salta l’introduzione',
+    beats: [
+      { key:'heroWide', hero:true, kicker:'La saga di Alexander Lawrence',
+        title:'Wildblood', text:'Dark fantasy · Mutazione · Artefatti' },
+      { key:'kenya',   kicker:'Kenya · 01°29′S 35°08′E', title:'La savana',
+        text:'Un viaggio pensato per spezzare la routine. Diciassette anni, una vacanza, nient’altro.' },
+      { key:'beast',   kicker:'Il predatore', title:'L’attacco',
+        text:'Un felino enorme. Il manto bianco e oro. Gli occhi d’ambra che bruciano come fuoco.' },
+      { key:'fire',    kicker:'Il risveglio', title:'Qualcosa si è svegliato',
+        text:'Leonardo sopravvive. Ma il suo sangue non è più del tutto umano.' },
+      { key:'ruins',   kicker:'Il Cairo · 30°02′N 31°14′E', title:'L’Amkh-Ra',
+        text:'Sotto una piramide dimenticata, un amuleto di sangue e ambra che parla alla mente.' },
+      { key:'jungle',  kicker:'Pulau Api · Indonesia', title:'La giungla',
+        text:'Rovine antiche e pericoli nuovi. Qui perderà tutto ciò che credeva di poter proteggere.' },
+      { key:'sea',     kicker:'Maldive · L’abisso', title:'L’abisso',
+        text:'Un evento catastrofico. Un solo sopravvissuto. Un settore che ARGOS preferirebbe non aver mai aperto.' },
+      { key:'warriors',kicker:'Tre linee di sangue', title:'Wild Legacy',
+        text:'Il confine tra uomo e bestia era soltanto il punto di partenza.' },
+    ],
+  },
+
+  gate: {
+    label: 'Area riservata',
+    title: 'ARGOS Archive',
+    intro: 'Fascicoli riservati, rapporti d’incidente, log di campo. Materiale prodotto dall’organizzazione che dà la caccia agli artefatti — e a chi li tocca.',
+    cta: 'Richiedi accesso',
+    enter: 'Entra',
+    codeLabel: 'Codice di accesso',
+    codeHint: 'Il codice arriva agli iscritti alla newsletter.',
+    denied: 'Accesso negato. Codice non riconosciuto.',
+    granted: 'Accesso concesso.',
+    back: 'Torna in superficie',
+  },
+
   skip: 'Vai al contenuto',
 };

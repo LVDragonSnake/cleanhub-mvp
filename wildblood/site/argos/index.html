@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="it" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ARGOS Archive — Wildblood Saga</title>
+<meta name="description" content="Fascicoli riservati, rapporti d’incidente, log di campo. Materiale prodotto dall’organizzazione che dà la caccia agli artefatti — e a chi li tocca.">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#050406">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/argos.css">
+<script>document.documentElement.className='js'</script>
+</head>
+<body class="lock">
+
+<!-- SCHERMATA DI ACCESSO -->
+<div class="boot" id="gate">
+  <div class="boot__in">
+    <div class="boot__l on"><b>&gt;</b> ARGOS NETWORK // <s>ARGOS ARCHIVE</s></div>
+    <div class="boot__l on" style="color:var(--ash)">Il codice arriva agli iscritti alla newsletter.</div>
+    <form class="form" id="gateForm" style="margin-top:18px;justify-content:flex-start">
+      <label class="sr" for="code">Codice di accesso</label>
+      <input id="code" type="text" inputmode="text" autocomplete="off" spellcheck="false"
+             placeholder="Codice di accesso" style="flex:1 1 220px">
+      <button class="btn" type="submit">Entra<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </form>
+    <div class="boot__bar"><i></i></div>
+    <div class="boot__pct"><span id="gateMsg"></span><a href="../" style="color:var(--ash)">Torna in superficie</a></div>
+  </div>
+</div>
+
+<div class="hud" aria-hidden="true">
+  <div class="hud__b hud__b--t"></div><div class="hud__b hud__b--b"></div>
+  <div class="hud__b hud__b--l"></div><div class="hud__b hud__b--r"></div>
+  <span class="hud__c hud__c--tl"></span><span class="hud__c hud__c--tr"></span>
+  <span class="hud__c hud__c--bl"></span><span class="hud__c hud__c--br"></span>
+  <span class="hud__tag hud__tag--l">ARGOS // ARCHIVIO CLASSIFICATO — <b data-hud-sec></b></span>
+  <span class="hud__tag hud__tag--r"><b>●</b> SEGNALE ATTIVO — <span data-clock></span> — <b data-hud-pct>000</b>%</span>
+  <div class="hud__scan"></div>
+</div>
+<div class="scanlines" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div><div class="vig" aria-hidden="true"></div>
+
+<header class="nav stuck">
+  <div class="nav__in">
+    <a class="brand" href="../">
+      <img src="https://static.wixstatic.com/media/82d24b_e31c129abbf344ed82523822a23878ad~mv2.png/v1/fill/w_52,h_52,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos.png" data-fallback="https://static.wixstatic.com/media/82d24b_e31c129abbf344ed82523822a23878ad~mv2.png" width="26" height="26" alt="">
+      <span>ARGOS Archive</span>
+    </a>
+    <nav class="links" aria-label="Menu">
+      <a href="#files" data-n="01">ARGOS Archive</a>
+      <a href="#subjects" data-n="02">Personaggi</a>
+      <a href="#factions" data-n="03">Il mondo</a>
+      <a href="../" data-n="04">Torna in superficie</a>
+    </nav>
+    <div class="nav__r">
+      <button class="burger" type="button" aria-label="Menu" aria-expanded="false"><i></i><i></i></button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<section class="sec arch" id="files" data-name="ARGOS Archive" data-decl-scope>
+  <div class="arch__bg" aria-hidden="true"><img src="https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg/v1/fill/w_1800,h_1647,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-archive-bg.jpg" srcset="https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg/v1/fill/w_1800,h_1647,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-archive-bg.jpg 1x, https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg/v1/fill/w_3000,h_2745,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-archive-bg.jpg 2x" width="1800" height="1647" alt="" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg"></div>
+  <div class="wrap arch__in">
+    <header class="sh" data-r>
+      <div>
+        <div class="sh__idx"><span class="n">[ 01 / 03 ]</span><span class="r"></span></div>
+        <p class="lab">ARGOS Archive</p>
+        <h1 class="d d2" data-dec>Accesso all’archivio</h1>
+      </div>
+      <p class="lede">Fascicoli riservati, rapporti d’incidente, log di campo. Materiale prodotto dall’organizzazione che dà la caccia agli artefatti — e a chi li tocca.</p>
+    </header>
+    <p data-r style="margin-bottom:26px">
+      <button class="btn btn--g btn--s" type="button" data-decl aria-pressed="false"
+        data-on="Riclassifica" data-off="Declassifica">
+        <span data-decl-l>Declassifica</span></button>
+    </p>
+    <div class="files">
+      
+      <article class="file " data-r style="--d:0ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_022eda4bb43a4b91afd948d2d54bd8be~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-dossier.png" srcset="https://static.wixstatic.com/media/82d24b_022eda4bb43a4b91afd948d2d54bd8be~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-dossier.png 1x, https://static.wixstatic.com/media/82d24b_022eda4bb43a4b91afd948d2d54bd8be~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-dossier.png 2x" width="560" height="385" alt="ARGOS Dossier" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_022eda4bb43a4b91afd948d2d54bd8be~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          </div>
+        <div class="file__bd">
+          <span class="file__c">ARG-DSR-<span class="rd">01</span></span>
+          <h3 class="file__n">ARGOS Dossier</h3>
+          <p class="file__d">Schede soggetto, profili di sorveglianza e valutazioni di rischio sugli ibridi identificati.</p>
+        </div>
+      </article>
+      <article class="file " data-r style="--d:55ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/classified-files.png" srcset="https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/classified-files.png 1x, https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/classified-files.png 2x" width="560" height="385" alt="Classified Files" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          </div>
+        <div class="file__bd">
+          <span class="file__c">ARG-CLF-<span class="rd">02</span></span>
+          <h3 class="file__n">Classified Files</h3>
+          <p class="file__d">Documenti a diffusione limitata. Operazioni non riconosciute, siti oscurati, nomi cancellati.</p>
+        </div>
+      </article>
+      <article class="file " data-r style="--d:110ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_0ffa488bcaed44dfa8ce6082e3ae4c23~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/field-logs.png" srcset="https://static.wixstatic.com/media/82d24b_0ffa488bcaed44dfa8ce6082e3ae4c23~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/field-logs.png 1x, https://static.wixstatic.com/media/82d24b_0ffa488bcaed44dfa8ce6082e3ae4c23~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/field-logs.png 2x" width="560" height="385" alt="Field Logs" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_0ffa488bcaed44dfa8ce6082e3ae4c23~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          </div>
+        <div class="file__bd">
+          <span class="file__c">ARG-FL-<span class="rd">03</span></span>
+          <h3 class="file__n">Field Logs</h3>
+          <p class="file__d">Rilievi dal campo: spedizioni in caverna, strutture subglaciali, recuperi di artefatti.</p>
+        </div>
+      </article>
+      <article class="file " data-r style="--d:165ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_13afe57c6d804c24b6153ecf0d26ca79~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/incident-reports.png" srcset="https://static.wixstatic.com/media/82d24b_13afe57c6d804c24b6153ecf0d26ca79~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/incident-reports.png 1x, https://static.wixstatic.com/media/82d24b_13afe57c6d804c24b6153ecf0d26ca79~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/incident-reports.png 2x" width="560" height="385" alt="Incident Reports" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_13afe57c6d804c24b6153ecf0d26ca79~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          </div>
+        <div class="file__bd">
+          <span class="file__c">ARG-IR-<span class="rd">04</span></span>
+          <h3 class="file__n">Incident Reports</h3>
+          <p class="file__d">Ciò che è andato storto. Contenimenti falliti, sopravvissuti non identificati, settori compromessi.</p>
+        </div>
+      </article>
+      <article class="file file--lk" data-r style="--d:220ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_3c69ee4c420a4f688b75efcef0c55a11~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/visual-records.png" srcset="https://static.wixstatic.com/media/82d24b_3c69ee4c420a4f688b75efcef0c55a11~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/visual-records.png 1x, https://static.wixstatic.com/media/82d24b_3c69ee4c420a4f688b75efcef0c55a11~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/visual-records.png 2x" width="560" height="385" alt="Visual Records" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_3c69ee4c420a4f688b75efcef0c55a11~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          <span class="file__lk">Bloccato</span></div>
+        <div class="file__bd">
+          <span class="file__c">ARG-VR-<span class="rd">05</span></span>
+          <h3 class="file__n">Visual Records</h3>
+          <p class="file__d">Immagini satellitari, fotogrammi di sorveglianza, materiale visivo recuperato.</p>
+        </div>
+      </article>
+      <article class="file " data-r style="--d:275ms">
+        <div class="file__i"><img src="https://static.wixstatic.com/media/82d24b_22d756a8fe6145e699e9ce29d13a5297~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/author-archive.png" srcset="https://static.wixstatic.com/media/82d24b_22d756a8fe6145e699e9ce29d13a5297~mv2.png/v1/fill/w_560,h_385,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/author-archive.png 1x, https://static.wixstatic.com/media/82d24b_22d756a8fe6145e699e9ce29d13a5297~mv2.png/v1/fill/w_1120,h_770,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/author-archive.png 2x" width="560" height="385" alt="Author Archive" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_22d756a8fe6145e699e9ce29d13a5297~mv2.png">
+          <span class="file__sc"></span><span class="file__sw"></span>
+          </div>
+        <div class="file__bd">
+          <span class="file__c">AUT-ARC-<span class="rd">06</span></span>
+          <h3 class="file__n">Author Archive</h3>
+          <p class="file__d">Note dell’autore, appunti di worldbuilding e materiale dietro le quinte della saga.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="subjects" data-name="Personaggi">
+  <div class="wrap">
+    <header class="sh" data-r>
+      <div><div class="sh__idx"><span class="n">[ 02 / 03 ]</span><span class="r"></span></div>
+        <p class="lab">Personaggi</p><h2 class="d d2" data-dec>Chi porta il sangue</h2></div>
+      <p class="lede">Tre linee di sangue, cinque volumi, un’unica domanda: quanto si può perdere prima di non essere più se stessi.</p>
+    </header>
+    <div class="cast">
+      
+      <article class="dos" style="--d:0ms">
+        <div class="dos__i">
+          <img src="../assets/img/char-leonardo.svg" width="900" height="1200" loading="lazy" decoding="async" alt="Leonardo">
+          <span class="dos__tag">Nessun visual agli atti</span>
+        </div>
+        <div class="dos__bd">
+          <span class="dos__r">Soggetto 01 · Il primo</span>
+          <h3 class="dos__n">Leonardo</h3>
+          <p class="dos__x">Diciassette anni, Lecco. Sopravvissuto all’attacco nella savana. La mutazione felina non si è mai fermata — e con gli anni ha smesso di sembrare una malattia.</p>
+          <div class="dos__m"><span class="lb"><span>INDEX</span><span>92%</span></span>
+            <span class="bar"><i style="--m:92%"></i></span></div>
+        </div>
+      </article>
+      <article class="dos" style="--d:55ms">
+        <div class="dos__i">
+          <img src="../assets/img/char-maya.svg" width="900" height="1200" loading="lazy" decoding="async" alt="Maya">
+          <span class="dos__tag">Nessun visual agli atti</span>
+        </div>
+        <div class="dos__bd">
+          <span class="dos__r">Milano · L’ancora</span>
+          <h3 class="dos__n">Maya</h3>
+          <p class="dos__x">Origini indonesiane. L’unica cosa umana rimasta nella vita di Leonardo. Custodisce, senza saperlo, una leggenda d’infanzia che vale più di qualsiasi artefatto.</p>
+          <div class="dos__m"><span class="lb"><span>INDEX</span><span>34%</span></span>
+            <span class="bar"><i style="--m:34%"></i></span></div>
+        </div>
+      </article>
+      <article class="dos" style="--d:110ms">
+        <div class="dos__i">
+          <img src="../assets/img/char-nohea.svg" width="900" height="1200" loading="lazy" decoding="async" alt="Nohea">
+          <span class="dos__tag">Nessun visual agli atti</span>
+        </div>
+        <div class="dos__bd">
+          <span class="dos__r">Soggetto 02 · Maldive</span>
+          <h3 class="dos__n">Nohea</h3>
+          <p class="dos__x">Sopravvissuto a un evento catastrofico, marchiato da una mutazione che non comprende. Catturato da ARGOS e usato come cavia per una nuova generazione di esperimenti.</p>
+          <div class="dos__m"><span class="lb"><span>INDEX</span><span>76%</span></span>
+            <span class="bar"><i style="--m:76%"></i></span></div>
+        </div>
+      </article>
+      <article class="dos" style="--d:165ms">
+        <div class="dos__i">
+          <img src="../assets/img/char-ginevra.svg" width="900" height="1200" loading="lazy" decoding="async" alt="Ginevra">
+          <span class="dos__tag">Nessun visual agli atti</span>
+        </div>
+        <div class="dos__bd">
+          <span class="dos__r">Soggetto 03 · Mutaforma</span>
+          <h3 class="dos__n">Ginevra</h3>
+          <p class="dos__x">Vive ai margini e difende chi non può difendersi. Nelle periferie dimenticate la chiamano leggenda urbana. Non sa da dove venga ciò che sa fare — e ha bisogno di saperlo.</p>
+          <div class="dos__m"><span class="lb"><span>INDEX</span><span>84%</span></span>
+            <span class="bar"><i style="--m:84%"></i></span></div>
+        </div>
+      </article>
+      <article class="dos" style="--d:220ms">
+        <div class="dos__i">
+          <img src="../assets/img/char-noah.svg" width="900" height="1200" loading="lazy" decoding="async" alt="Noah">
+          <span class="dos__tag">Nessun visual agli atti</span>
+        </div>
+        <div class="dos__bd">
+          <span class="dos__r">Evaso · ARGOS</span>
+          <h3 class="dos__n">Noah</h3>
+          <p class="dos__x">Porta addosso le cicatrici degli esperimenti che ha subito. È uscito vivo dalla struttura. Non da solo, e non intero.</p>
+          <div class="dos__m"><span class="lb"><span>INDEX</span><span>68%</span></span>
+            <span class="bar"><i style="--m:68%"></i></span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="factions" data-name="Il mondo">
+  <div class="wrap">
+    <header class="sh" data-r>
+      <div><div class="sh__idx"><span class="n">[ 03 / 03 ]</span><span class="r"></span></div>
+        <p class="lab">Il mondo</p><h2 class="d d2" data-dec>Chi muove i fili</h2></div>
+      <p class="lede">Quattro forze si contendono la stessa verità sepolta. Nessuna di loro vuole che tu la conosca.</p>
+    </header>
+    <div class="facs">
+      
+      <article class="fac" data-r style="--d:0ms">
+        <p class="fac__id">FAZIONE 01</p><h3 class="fac__n">ARGOS</h3>
+        <p class="fac__d">Organizzazione governativa ombra. Traccia gli artefatti, li studia, li sequestra. Per loro sono la chiave d’accesso a un passato dimenticato. Chi si mette in mezzo diventa un file aperto.</p>
+        <div class="tags"><span class="tag">Governativa</span><span class="tag">Ombra</span><span class="tag">Globale</span></div>
+      </article>
+      <article class="fac" data-r style="--d:70ms">
+        <p class="fac__id">FAZIONE 02</p><h3 class="fac__n">Il Culto</h3>
+        <p class="fac__d">Fondato da un ex scienziato di ARGOS consumato dal fanatismo. Predica che gli ibridi siano aberrazioni sataniche da estirpare. Armato, organizzato, in espansione.</p>
+        <div class="tags"><span class="tag">Fanatici</span><span class="tag">Armati</span><span class="tag">Clandestini</span></div>
+      </article>
+      <article class="fac" data-r style="--d:140ms">
+        <p class="fac__id">FAZIONE 03</p><h3 class="fac__n">Gli Antichi</h3>
+        <p class="fac__d">Testimoni di un’epoca in cui uomini e creature ibride camminavano fianco a fianco. Ne resta pochissimo: una stirpe, una conoscenza, e una missione da consegnare prima che sparisca del tutto.</p>
+        <div class="tags"><span class="tag">Quasi estinti</span><span class="tag">Custodi</span></div>
+      </article>
+      <article class="fac" data-r style="--d:210ms">
+        <p class="fac__id">FAZIONE 04</p><h3 class="fac__n">Gli Ibridi</h3>
+        <p class="fac__d">Chi porta il cambiamento nel sangue. Non un potere: un’eredità che non si può restituire. Alcuni imparano a conviverci. Altri vengono divorati da dentro.</p>
+        <div class="tags"><span class="tag">Braccati</span><span class="tag">In mutazione</span></div>
+      </article>
+    </div>
+    <p style="margin-top:44px"><a class="btn btn--g" href="../">Torna in superficie<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></p>
+  </div>
+</section>
+</main>
+
+<script>
+(function(){
+  var CODE="AMKH-RA";
+  var KEY='wb-argos';
+  var gate=document.getElementById('gate'),f=document.getElementById('gateForm'),
+      msg=document.getElementById('gateMsg'),inp=document.getElementById('code');
+  function open(){gate.classList.add('done');document.body.classList.remove('lock');}
+  try{ if(sessionStorage.getItem(KEY)==='1') open(); }catch(err){}
+  f.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    var v=(inp.value||'').trim().toUpperCase().replace(/\s+/g,'');
+    if(v===CODE.replace(/\s+/g,'')){
+      msg.textContent="Accesso concesso.";
+      try{sessionStorage.setItem(KEY,'1')}catch(err){}
+      setTimeout(open,450);
+    } else { msg.textContent="Accesso negato. Codice non riconosciuto."; inp.value=''; }
+  });
+})();
+</script>
+<script src="../assets/js/argos.js" defer></script>
+</body>
+</html>

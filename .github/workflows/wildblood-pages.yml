@@ -1,4 +1,9 @@
-name: Deploy Wildblood site to GitHub Pages
+name: Deploy Wildblood site
+
+# actions/deploy-pages non e' utilizzabile: l'app GitHub di questa integrazione
+# non ha il permesso di creare il sito Pages ("Resource not accessible by
+# integration"). Pages e' invece attivo sul branch gh-pages, quindi il deploy
+# consiste nel pubblicare li' il contenuto di wildblood/site.
 
 on:
   push:
@@ -7,19 +12,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
+  group: wildblood-pages
   cancel-in-progress: true
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,20 +28,20 @@ jobs:
         with:
           node-version: 22
 
-      # site/ è già committato; il build lo rigenera per sicurezza dai sorgenti
       - name: Build
         working-directory: wildblood
         run: node build.mjs
 
-      # enablement: true fa attivare Pages al workflow stesso,
-      # senza bisogno di toccare le impostazioni del repository
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: wildblood/site
-
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish to gh-pages
+        run: |
+          set -euo pipefail
+          cd wildblood/site
+          touch .nojekyll
+          git init -q -b gh-pages
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy da ${GITHUB_SHA::10}"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

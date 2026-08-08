@@ -27,4 +27,8 @@ export default {
   // NB: il controllo avviene nel browser — e' scenografico, non e' una protezione
   // reale. Per un accesso davvero protetto serve l'area membri di Wix o un server.
   argosCode: 'AMKH-RA',
+
+  // Video dell'hero. Appena hai un trailer (mp4, muto, 8-15s, in loop),
+  // metti qui la URL e prende il posto dell'immagine animata.
+  heroVideo: '',
 };

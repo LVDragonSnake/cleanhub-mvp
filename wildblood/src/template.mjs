@@ -8,9 +8,9 @@ const local = (d, f) => `${d}assets/img/${f}`;
 export default function render(t, cfg) {
   const d = t.dir;
   const buyUrl = t.lang === 'it' ? cfg.buy.it : cfg.buy.en;
-  const NAV = [['#libri', t.nav.books], ['#saga', t.nav.saga], ['#argos', t.nav.archive],
-               ['#autore', t.nav.author], ['#join', t.nav.join]];
-  const B = t.film.beats;
+  const NAV = [['#libri', t.nav.books], ['#saga', t.nav.saga], ['#luoghi', t.nav.places],
+               ['#argos', t.nav.archive], ['#autore', t.nav.author], ['#join', t.nav.join]];
+  const PANELS = t.places.items.slice(0, 4);
 
   const jsonld = JSON.stringify({
     '@context':'https://schema.org','@type':'Book',name:'Wildblood: Savage Heart',
@@ -21,6 +21,10 @@ export default function render(t, cfg) {
     offers:{'@type':'Offer',url:buyUrl,availability:'https://schema.org/InStock'},
   });
 
+  const media = cfg.heroVideo
+    ? `<video autoplay muted loop playsinline poster="${wix('heroWide',1600)}"><source src="${cfg.heroVideo}" type="video/mp4"></video>`
+    : img('heroWide',{w:2200,h:1240,alt:t.meta.ogAlt,lazy:false,sizes:'100vw'});
+
   return `<!doctype html>
 <html lang="${t.lang}" class="no-js">
 <head>
@@ -29,7 +33,7 @@ export default function render(t, cfg) {
 <title>${e(t.meta.title)}</title>
 <meta name="description" content="${e(t.meta.desc)}">
 <meta name="author" content="${e(cfg.author)}">
-<meta name="theme-color" content="#070505">
+<meta name="theme-color" content="#F3EDE3">
 <link rel="canonical" href="${cfg.domain}/${t.lang==='it'?'':'en/'}">
 <link rel="alternate" hreflang="it" href="${cfg.domain}/">
 <link rel="alternate" hreflang="en" href="${cfg.domain}/en/">
@@ -48,7 +52,15 @@ export default function render(t, cfg) {
 </head>
 <body>
 <a class="skip" href="#libri">${e(t.skip)}</a>
-<div class="grain" aria-hidden="true"></div>
+
+<!-- filtro dell'aria calda che fa "respirare" l'immagine dell'hero -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="wbHaze" x="-6%" y="-6%" width="112%" height="112%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.006 0.014" numOctaves="2" seed="7" result="n">
+      <animate attributeName="baseFrequency" dur="24s" values="0.006 0.014;0.011 0.020;0.006 0.014" repeatCount="indefinite"/>
+    </feTurbulence>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="26" xChannelSelector="R" yChannelSelector="G"/>
+  </filter></defs></svg>
 
 <header class="nav">
   <div class="wrap nav__in">
@@ -70,71 +82,65 @@ export default function render(t, cfg) {
 </header>
 
 <main>
-<!-- ============ IL FILM ============ -->
-<section class="film" id="top" style="height:calc(${B.length} * 82svh)">
-  <div class="film__stage">
-    ${B.map((b,i)=>`<div class="frame"${i===0?' style="opacity:1"':''}>
-      ${img(b.key,{w:1920,h:1080,alt:b.title,lazy:false,sizes:'100vw'})}
-      <span class="frame__grade"></span><span class="frame__vig"></span>
-    </div>`).join('\n    ')}
-    <span class="flash" aria-hidden="true"></span>
+<!-- ============ HERO CINEMATOGRAFICO ============ -->
+<section class="cine" id="top">
+  <div class="cine__media"><div class="cine__ken">${media}</div></div>
+  <div class="cine__haze" aria-hidden="true">${img('heroWide',{w:1400,alt:''})}</div>
+  <div class="cine__rays" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="cine__glow" aria-hidden="true"></div>
+  <div class="cine__flare" aria-hidden="true"></div>
+  <div class="cine__dust" aria-hidden="true"></div>
+  <div class="cine__veil" aria-hidden="true"></div>
 
-    <div class="beats">
-      ${B.map((b,i)=>`<article class="beat ${b.hero?'beat--hero':''}"${i===0?' style="opacity:1"':''}>
-        <div class="wrap beat__in">
-          <p class="kick">${e(b.kicker)}</p>
-          <h${b.hero?'1':'2'} class="beat__t">${e(b.title)}</h${b.hero?'1':'2'}>
-          <p class="beat__x">${e(b.text)}</p>
-        </div>
-      </article>`).join('\n      ')}
+  <div class="wrap cine__in">
+    <div class="eyeb" data-r><span class="dot"></span><span class="kick">${e(t.hero.eyebrow)}</span></div>
+    <div class="wm" data-r style="--d:60ms"><h1>${e(t.hero.title)}</h1></div>
+    <p class="cine__tag" data-r style="--d:130ms">${e(t.hero.tagline)}</p>
+    <p class="cine__pitch lede" data-r style="--d:190ms">${t.hero.pitch}</p>
+    <div class="btns" data-r style="--d:250ms">
+      <a class="btn" href="${buyUrl}" target="_blank" rel="noopener">${e(t.hero.ctaPrimary)}${ICONS.ext}</a>
+      <a class="btn btn--g" href="#argos">${e(t.hero.ctaSecondary)}${ICONS.arrow}</a>
     </div>
-
-    <a class="film__skip" href="#libri">${e(t.film.skip)}</a>
-    <div class="scrollcue" aria-hidden="true"><span class="bar"></span><span>${e(t.hero.scroll)}</span></div>
-    <div class="film__hud" aria-hidden="true">
-      <span class="film__n" data-film-n>01 / ${String(B.length).padStart(2,'0')}</span>
-      <span class="film__ticks">${B.map(()=>'<i></i>').join('')}</span>
+    <div class="cine__foot" data-r style="--d:320ms">
+      <div class="sdown"><span class="bar"></span><span class="mono">${e(t.hero.scroll)}</span></div>
+      <span class="mono">${e(t.hero.stat)}</span>
     </div>
   </div>
 </section>
 
-<!-- ============ IL LIBRO ============ -->
-<section class="full" id="libri">
-  <div class="full__bg" data-para="0.08" aria-hidden="true">${img('beast',{w:1800,alt:''})}</div>
-  <div class="wrap full__in">
-    <div class="book">
-      <div class="book__art" data-tilt data-r>
-        <span class="gl" aria-hidden="true"></span>
-        <figure>${img('coverSH',{w:620,alt:'Wildblood — Savage Heart'})}</figure>
-      </div>
-      <div>
-        <p class="kick" data-r>${e(t.spot.label)} · ${e(t.spot.sub)}</p>
-        <h2 class="book__t" data-r style="--d:70ms">${e(t.spot.title)}</h2>
-        <p class="lede" data-r style="--d:130ms">${e(t.spot.pitch)}</p>
-        <p class="mono" data-r style="--d:180ms">${e(t.spot.price)}</p>
-        <div class="btns" data-r style="--d:230ms">
-          <a class="btn" href="${buyUrl}" target="_blank" rel="noopener">${e(t.spot.buy)}${ICONS.ext}</a>
-          <a class="btn btn--g" href="${cfg.buy.kindle}" target="_blank" rel="noopener">${e(t.spot.preview)}${ICONS.ext}</a>
-        </div>
+<!-- ============ IL LIBRO (chiaro) ============ -->
+<section class="sec" id="libri">
+  <div class="wrap book">
+    <div class="book__art" data-tilt data-r>
+      <span class="gl" aria-hidden="true"></span>
+      <figure>${img('coverSH',{w:640,alt:'Wildblood — Savage Heart'})}</figure>
+    </div>
+    <div>
+      <p class="kick" data-r>${e(t.spot.label)} · ${e(t.spot.sub)}</p>
+      <h2 class="book__t" data-r style="--d:70ms">${e(t.spot.title)}</h2>
+      <p class="lede" data-r style="--d:130ms">${e(t.spot.pitch)}</p>
+      <ul class="facts" data-r style="--d:190ms">${t.spot.facts.map((f)=>`<li>${e(f)}</li>`).join('')}</ul>
+      <div class="btns" data-r style="--d:250ms">
+        <a class="btn" href="${buyUrl}" target="_blank" rel="noopener">${e(t.spot.buy)}${ICONS.ext}</a>
+        <a class="btn btn--g" href="${cfg.buy.kindle}" target="_blank" rel="noopener">${e(t.spot.preview)}${ICONS.ext}</a>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ I VOLUMI ============ -->
-<section class="full full--r" id="saga">
-  <div class="full__bg" data-para="0.06" aria-hidden="true">${img('archiveBg',{w:1800,alt:''})}</div>
-  <div class="wrap full__in">
+<!-- ============ I VOLUMI (chiaro) ============ -->
+<section class="sec" id="saga" style="background:var(--sand)">
+  <div class="wrap">
     <p class="kick" data-r>${e(t.saga.label)}</p>
     <h2 class="book__t" data-r style="--d:70ms">${e(t.saga.title)}</h2>
     <p class="lede" data-r style="--d:130ms">${e(t.saga.intro)}</p>
-    <div class="vols" data-r style="--d:190ms">
-      ${t.saga.items.map((v,i)=>{
+    <div class="vols" data-r style="--d:190ms;margin-top:40px">
+      ${t.saga.items.map((v)=>{
         const live = v.status==='out';
         const lbl = {out:t.saga.statusOut,soon:t.saga.statusSoon,writing:t.saga.statusWriting,dev:t.saga.statusDev}[v.status];
-        const tag = live ? `<a class="vol" href="${buyUrl}" target="_blank" rel="noopener">` : `<div class="vol ${v.status==='soon'?'':'vol--tba'}">`;
-        return `${tag}
-        ${img(v.key,{w:420,h:630,alt:v.title})}
+        const o = live ? `<a class="vol" href="${buyUrl}" target="_blank" rel="noopener">` : `<div class="vol ${v.status==='soon'?'':'vol--tba'}">`;
+        return `${o}
+        ${img(v.key,{w:440,h:660,alt:v.title})}
         <span class="vol__n">${v.n}</span>
         <div class="vol__b"><h3 class="vol__t">${e(v.title)}</h3><span class="vol__s ${live?'live':''}">${e(lbl)}</span></div>
       ${live?'</a>':'</div>'}`;}).join('\n      ')}
@@ -142,25 +148,37 @@ export default function render(t, cfg) {
   </div>
 </section>
 
+<!-- ============ LUOGHI (scuri, cinematografici) ============ -->
+<section id="luoghi">
+  ${PANELS.map((p,i)=>`
+  <article class="panel">
+    <div class="panel__bg" data-para="0.09" aria-hidden="true">${img(p.key,{w:1800,alt:p.name})}</div>
+    <div class="panel__veil" aria-hidden="true"></div>
+    <div class="wrap panel__in">
+      <p class="kick" data-r>${e(p.coord)}</p>
+      <h2 class="panel__t" data-r style="--d:70ms">${e(p.name)}</h2>
+      <p class="panel__x" data-r style="--d:130ms">${e(p.desc)}</p>
+    </div>
+  </article>`).join('')}
+</section>
+
 <!-- ============ PORTA ARGOS ============ -->
-<section class="gate" id="argos">
+<section class="sec gate dark" id="argos">
   <div class="gate__bg" aria-hidden="true">${img('arcClassified',{w:1600,alt:''})}</div>
   <span class="gate__scan" aria-hidden="true"></span>
-  <div class="wrap gate__in">
+  <div class="wrap">
     <p class="kick" data-r>${e(t.gate.label)}</p>
-    <h2 class="gate__t" data-r style="--d:70ms">${e(t.gate.title)}</h2>
+    <h2 class="book__t" data-r style="--d:70ms">${e(t.gate.title)}</h2>
     <p class="lede" data-r style="--d:130ms">${e(t.gate.intro)}</p>
-    <div class="btns" data-r style="--d:200ms">
+    <div class="btns" data-r style="--d:200ms;margin-top:28px">
       <a class="btn" href="${P(d,'argos/')}">${e(t.gate.cta)}${ICONS.arrow}</a>
-      <a class="btn btn--g" href="#join">${e(t.join.label)}${ICONS.arrow}</a>
     </div>
   </div>
 </section>
 
-<!-- ============ AUTORE ============ -->
-<section class="full" id="autore">
-  <div class="full__bg" data-para="0.07" aria-hidden="true">${img('warriors',{w:1800,alt:''})}</div>
-  <div class="wrap full__in auth__in">
+<!-- ============ AUTORE (chiaro) ============ -->
+<section class="sec" id="autore">
+  <div class="wrap auth__in">
     <div class="auth__p" data-r>
       <img src="${local(d,'author.svg')}" width="1200" height="1500" loading="lazy" decoding="async" alt="${e(cfg.author)}">
     </div>
@@ -178,7 +196,7 @@ export default function render(t, cfg) {
 </section>
 
 <!-- ============ NEWSLETTER ============ -->
-<section class="join" id="join">
+<section class="sec join dark" id="join">
   <div class="wrap join__in">
     <p class="kick" data-r>${e(t.join.label)}</p>
     <h2 class="join__t" data-r style="--d:70ms">${e(t.join.title)}</h2>
@@ -215,7 +233,6 @@ export default function render(t, cfg) {
       <p class="mono">© <span data-year></span> ${e(cfg.author)}. ${e(t.foot.rights)}</p>
       <p class="mono">Wildblood Saga</p>
     </div>
-    <p class="mono" style="margin-top:16px;max-width:82ch;line-height:1.8;text-transform:none;letter-spacing:.03em">${e(t.foot.legal)}</p>
   </div>
 </footer>
 <script src="${P(d,'assets/js/site.js')}" defer></script>

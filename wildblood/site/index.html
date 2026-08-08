@@ -6,7 +6,7 @@
 <title>Wildblood Saga — Dark fantasy di Alexander Lawrence</title>
 <meta name="description" content="Wildblood: la saga dark fantasy di Alexander Lawrence. Mutazione, artefatti antichi e il predatore che cresce sotto la pelle. Savage Heart è solo l’inizio.">
 <meta name="author" content="Alexander Lawrence">
-<meta name="theme-color" content="#070505">
+<meta name="theme-color" content="#F3EDE3">
 <link rel="canonical" href="https://www.wildbloodsaga.com/">
 <link rel="alternate" hreflang="it" href="https://www.wildbloodsaga.com/">
 <link rel="alternate" hreflang="en" href="https://www.wildbloodsaga.com/en/">
@@ -25,7 +25,15 @@
 </head>
 <body>
 <a class="skip" href="#libri">Vai al contenuto</a>
-<div class="grain" aria-hidden="true"></div>
+
+<!-- filtro dell'aria calda che fa "respirare" l'immagine dell'hero -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="wbHaze" x="-6%" y="-6%" width="112%" height="112%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.006 0.014" numOctaves="2" seed="7" result="n">
+      <animate attributeName="baseFrequency" dur="24s" values="0.006 0.014;0.011 0.020;0.006 0.014" repeatCount="indefinite"/>
+    </feTurbulence>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="26" xChannelSelector="R" yChannelSelector="G"/>
+  </filter></defs></svg>
 
 <header class="nav">
   <div class="wrap nav__in">
@@ -36,6 +44,7 @@
     <nav class="links" aria-label="Menu">
       <a href="#libri">I libri</a>
       <a href="#saga">La saga</a>
+      <a href="#luoghi">Luoghi</a>
       <a href="#argos">Archivio</a>
       <a href="#autore">Autore</a>
       <a href="#join">Newsletter</a>
@@ -51,164 +60,81 @@
 </header>
 
 <main>
-<!-- ============ IL FILM ============ -->
-<section class="film" id="top" style="height:calc(8 * 82svh)">
-  <div class="film__stage">
-    <div class="frame" style="opacity:1">
-      <img src="https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg/v1/fill/w_1920,h_1080,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/hero-saga.jpg" srcset="https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg/v1/fill/w_1920,h_1080,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/hero-saga.jpg 1x, https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg/v1/fill/w_3000,h_2121,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/hero-saga.jpg 2x" sizes="100vw" width="1920" height="1080" alt="Wildblood" fetchpriority="high" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg">
-      <span class="frame__grade"></span><span class="frame__vig"></span>
-    </div>
-    <div class="frame">
-      <img src="https://static.wixstatic.com/media/82d24b_c181f3b3032e483cab5df0223700fbd3~mv2.png/v1/fill/w_1024,h_1080,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/kenya.png" srcset="https://static.wixstatic.com/media/82d24b_c181f3b3032e483cab5df0223700fbd3~mv2.png/v1/fill/w_1024,h_1080,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/kenya.png 1x, https://static.wixstatic.com/media/82d24b_c181f3b3032e483cab5df0223700fbd3~mv2.png/v1/fill/w_1024,h_1365,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/kenya.png 2x" sizes="100vw" width="1920" height="1080" alt="La savana" fetchpriority="high" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_c181f3b3032e483cab5df0223700fbd3~mv2.png">
-      <span class="frame__grade"></span><span class="frame__vig"></span>
-    </div>
-    <div class="frame">
-      <img src="https://static.wixstatic.com/media/82d24b_98a3c4aa1fa0476887f3b68f5031e473~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/the-beast.png" srcset="https://static.wixstatic.com/media/82d24b_98a3c4aa1fa0476887f3b68f5031e473~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/the-beast.png 1x, https://static.wixstatic.com/media/82d24b_98a3c4aa1fa0476887f3b68f5031e473~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/the-beast.png 2x" sizes="100vw" width="1920" height="1080" alt="L’attacco" fetchpriority="high" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_98a3c4aa1fa0476887f3b68f5031e473~mv2.png">
-      <span class="frame__grade"></span><span class="frame__vig"></span>
-    </div>
-    <div class="frame">
-      <img src="https://static.wixstatic.com/media/82d24b_360e7b137e7c441ba8858fc389c2a070~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/fire.png" srcset="https://static.wixstatic.com/media/82d24b_360e7b137e7c441ba8858fc389c2a070~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/fire.png 1x, https://static.wixstatic.com/media/82d24b_360e7b137e7c441ba8858fc389c2a070~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/fire.png 2x" sizes="100vw" width="1920" height="1080" alt="Qualcosa si è svegliato" fetchpriority="high" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_360e7b137e7c441ba8858fc389c2a070~mv2.png">
-      <span class="frame__grade"></span><span class="frame__vig"></span>
-    </div>
-    <div class="frame">
-      <img src="https://static.wixstatic.com/media/82d24b_cb0bc7dd5b5142c69327ef353e9f6308~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/ruins.png" srcset="https://static.wixstatic.com/media/82d24b_cb0bc7dd5b5142c69327ef353e9f6308~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/ruins.png 1x, https://static.wixstatic.com/media/82d24b_cb0bc7dd5b5142c69327ef353e9f6308~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/ruins.png 2x" sizes="100vw" width="1920" height="1080" alt="L’Amkh-Ra" fetchpriority="high" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_cb0bc7dd5b5142c69327ef353e9f6308~mv2.png">
-      <span class="frame__grade"></span><span class="frame__vig"></span>
-    </div>
-    <div class="frame">
-      <img src="https://static.wixstatic.com/media/82d24b_dbf388fc295342abb0824f34f2db27c2~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/jungle.png" srcset="https://static.wixstatic.com/media/82d24b_dbf388fc295342abb0824f34f2db27c2~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/jungle.png 1x, https://static.wixstatic.com/media/82d24b_dbf388fc295342abb0824f34f2db27c2~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/jungle.png 2x" sizes="100vw" width="1920" height="1080" alt="La giungla" fetchpriority="high" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_dbf388fc295342abb0824f34f2db27c2~mv2.png">
-      <span class="frame__grade"></span><span class="frame__vig"></span>
-    </div>
-    <div class="frame">
-      <img src="https://static.wixstatic.com/media/82d24b_04af726605c847fc8a041d450ce95e09~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/sea.png" srcset="https://static.wixstatic.com/media/82d24b_04af726605c847fc8a041d450ce95e09~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/sea.png 1x, https://static.wixstatic.com/media/82d24b_04af726605c847fc8a041d450ce95e09~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/sea.png 2x" sizes="100vw" width="1920" height="1080" alt="L’abisso" fetchpriority="high" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_04af726605c847fc8a041d450ce95e09~mv2.png">
-      <span class="frame__grade"></span><span class="frame__vig"></span>
-    </div>
-    <div class="frame">
-      <img src="https://static.wixstatic.com/media/82d24b_a472624ad541455f9da0cf146b77f00a~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/warriors.png" srcset="https://static.wixstatic.com/media/82d24b_a472624ad541455f9da0cf146b77f00a~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/warriors.png 1x, https://static.wixstatic.com/media/82d24b_a472624ad541455f9da0cf146b77f00a~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/warriors.png 2x" sizes="100vw" width="1920" height="1080" alt="Wild Legacy" fetchpriority="high" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_a472624ad541455f9da0cf146b77f00a~mv2.png">
-      <span class="frame__grade"></span><span class="frame__vig"></span>
-    </div>
-    <span class="flash" aria-hidden="true"></span>
+<!-- ============ HERO CINEMATOGRAFICO ============ -->
+<section class="cine" id="top">
+  <div class="cine__media"><div class="cine__ken"><img src="https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg/v1/fill/w_2200,h_1240,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/hero-saga.jpg" srcset="https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg/v1/fill/w_2200,h_1240,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/hero-saga.jpg 1x, https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg/v1/fill/w_3000,h_2121,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/hero-saga.jpg 2x" sizes="100vw" width="2200" height="1240" alt="Wildblood Saga — Alexander Lawrence" fetchpriority="high" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg"></div></div>
+  <div class="cine__haze" aria-hidden="true"><img src="https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg/v1/fill/w_1400,h_990,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/hero-saga.jpg" srcset="https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg/v1/fill/w_1400,h_990,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/hero-saga.jpg 1x, https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg/v1/fill/w_2800,h_1980,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/hero-saga.jpg 2x" width="1400" height="990" alt="" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_88c5a1d9b0494a589d0386aa21f5d107~mv2.jpg"></div>
+  <div class="cine__rays" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="cine__glow" aria-hidden="true"></div>
+  <div class="cine__flare" aria-hidden="true"></div>
+  <div class="cine__dust" aria-hidden="true"></div>
+  <div class="cine__veil" aria-hidden="true"></div>
 
-    <div class="beats">
-      <article class="beat beat--hero" style="opacity:1">
-        <div class="wrap beat__in">
-          <p class="kick">La saga di Alexander Lawrence</p>
-          <h1 class="beat__t">Wildblood</h1>
-          <p class="beat__x">Dark fantasy · Mutazione · Artefatti</p>
-        </div>
-      </article>
-      <article class="beat ">
-        <div class="wrap beat__in">
-          <p class="kick">Kenya · 01°29′S 35°08′E</p>
-          <h2 class="beat__t">La savana</h2>
-          <p class="beat__x">Un viaggio pensato per spezzare la routine. Diciassette anni, una vacanza, nient’altro.</p>
-        </div>
-      </article>
-      <article class="beat ">
-        <div class="wrap beat__in">
-          <p class="kick">Il predatore</p>
-          <h2 class="beat__t">L’attacco</h2>
-          <p class="beat__x">Un felino enorme. Il manto bianco e oro. Gli occhi d’ambra che bruciano come fuoco.</p>
-        </div>
-      </article>
-      <article class="beat ">
-        <div class="wrap beat__in">
-          <p class="kick">Il risveglio</p>
-          <h2 class="beat__t">Qualcosa si è svegliato</h2>
-          <p class="beat__x">Leonardo sopravvive. Ma il suo sangue non è più del tutto umano.</p>
-        </div>
-      </article>
-      <article class="beat ">
-        <div class="wrap beat__in">
-          <p class="kick">Il Cairo · 30°02′N 31°14′E</p>
-          <h2 class="beat__t">L’Amkh-Ra</h2>
-          <p class="beat__x">Sotto una piramide dimenticata, un amuleto di sangue e ambra che parla alla mente.</p>
-        </div>
-      </article>
-      <article class="beat ">
-        <div class="wrap beat__in">
-          <p class="kick">Pulau Api · Indonesia</p>
-          <h2 class="beat__t">La giungla</h2>
-          <p class="beat__x">Rovine antiche e pericoli nuovi. Qui perderà tutto ciò che credeva di poter proteggere.</p>
-        </div>
-      </article>
-      <article class="beat ">
-        <div class="wrap beat__in">
-          <p class="kick">Maldive · L’abisso</p>
-          <h2 class="beat__t">L’abisso</h2>
-          <p class="beat__x">Un evento catastrofico. Un solo sopravvissuto. Un settore che ARGOS preferirebbe non aver mai aperto.</p>
-        </div>
-      </article>
-      <article class="beat ">
-        <div class="wrap beat__in">
-          <p class="kick">Tre linee di sangue</p>
-          <h2 class="beat__t">Wild Legacy</h2>
-          <p class="beat__x">Il confine tra uomo e bestia era soltanto il punto di partenza.</p>
-        </div>
-      </article>
+  <div class="wrap cine__in">
+    <div class="eyeb" data-r><span class="dot"></span><span class="kick">La saga · Alexander Lawrence</span></div>
+    <div class="wm" data-r style="--d:60ms"><h1>Wildblood</h1></div>
+    <p class="cine__tag" data-r style="--d:130ms">Dark fantasy · Mutazione · Artefatti</p>
+    <p class="cine__pitch lede" data-r style="--d:190ms">Diciassette anni. Un safari in Kenya. L’attacco di una creatura impossibile: un felino enorme, il manto bianco e oro, gli occhi d’ambra che bruciano come fuoco. <em>Leonardo sopravvive.</em> Ma qualcosa, dentro di lui, si è svegliato.</p>
+    <div class="btns" data-r style="--d:250ms">
+      <a class="btn" href="https://www.amazon.it/dp/B0GZC1NTQV" target="_blank" rel="noopener">Acquista Savage Heart<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2H2v12h12v-4M10 2h4v4M14 2 7 9" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="btn btn--g" href="#argos">Entra nell’Archivio<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
-
-    <a class="film__skip" href="#libri">Salta l’introduzione</a>
-    <div class="scrollcue" aria-hidden="true"><span class="bar"></span><span>Scorri</span></div>
-    <div class="film__hud" aria-hidden="true">
-      <span class="film__n" data-film-n>01 / 08</span>
-      <span class="film__ticks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+    <div class="cine__foot" data-r style="--d:320ms">
+      <div class="sdown"><span class="bar"></span><span class="mono">Scorri</span></div>
+      <span class="mono">5 volumi · Vol. 1 disponibile</span>
     </div>
   </div>
 </section>
 
-<!-- ============ IL LIBRO ============ -->
-<section class="full" id="libri">
-  <div class="full__bg" data-para="0.08" aria-hidden="true"><img src="https://static.wixstatic.com/media/82d24b_98a3c4aa1fa0476887f3b68f5031e473~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/the-beast.png" srcset="https://static.wixstatic.com/media/82d24b_98a3c4aa1fa0476887f3b68f5031e473~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/the-beast.png 1x, https://static.wixstatic.com/media/82d24b_98a3c4aa1fa0476887f3b68f5031e473~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/the-beast.png 2x" width="1800" height="1200" alt="" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_98a3c4aa1fa0476887f3b68f5031e473~mv2.png"></div>
-  <div class="wrap full__in">
-    <div class="book">
-      <div class="book__art" data-tilt data-r>
-        <span class="gl" aria-hidden="true"></span>
-        <figure><img src="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_620,h_898,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png" srcset="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_620,h_898,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png 1x, https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_1042,h_1509,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png 2x" width="620" height="898" alt="Wildblood — Savage Heart" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png"></figure>
-      </div>
-      <div>
-        <p class="kick" data-r>Libro primo · Wildblood · Volume 1</p>
-        <h2 class="book__t" data-r style="--d:70ms">Savage Heart</h2>
-        <p class="lede" data-r style="--d:130ms">Un’organizzazione conosciuta come ARGOS insegue reliquie che non sarebbero mai dovute riemergere: sepolte in templi sommersi, sotto le piramidi, in caverne vulcaniche perdute nei mari dell’Indonesia. Ognuna è una chiave. Ognuna è una minaccia.</p>
-        <p class="mono" data-r style="--d:180ms">Disponibile in brossura ed ebook</p>
-        <div class="btns" data-r style="--d:230ms">
-          <a class="btn" href="https://www.amazon.it/dp/B0GZC1NTQV" target="_blank" rel="noopener">Acquista su Amazon<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2H2v12h12v-4M10 2h4v4M14 2 7 9" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-          <a class="btn btn--g" href="https://www.amazon.com/dp/B0GZ7GK5FT" target="_blank" rel="noopener">Leggi l’anteprima<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2H2v12h12v-4M10 2h4v4M14 2 7 9" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-        </div>
+<!-- ============ IL LIBRO (chiaro) ============ -->
+<section class="sec" id="libri">
+  <div class="wrap book">
+    <div class="book__art" data-tilt data-r>
+      <span class="gl" aria-hidden="true"></span>
+      <figure><img src="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_640,h_927,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png" srcset="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_640,h_927,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png 1x, https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_1042,h_1509,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png 2x" width="640" height="927" alt="Wildblood — Savage Heart" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png"></figure>
+    </div>
+    <div>
+      <p class="kick" data-r>Libro primo · Wildblood · Volume 1</p>
+      <h2 class="book__t" data-r style="--d:70ms">Savage Heart</h2>
+      <p class="lede" data-r style="--d:130ms">Un’organizzazione conosciuta come ARGOS insegue reliquie che non sarebbero mai dovute riemergere: sepolte in templi sommersi, sotto le piramidi, in caverne vulcaniche perdute nei mari dell’Indonesia. Ognuna è una chiave. Ognuna è una minaccia.</p>
+      <ul class="facts" data-r style="--d:190ms"><li>Dark fantasy, avventura e thriller psicologico</li><li>Young Adult / New Adult</li><li>Narrazione cinematografica, tensione crescente</li><li>Disponibile in italiano e in inglese</li></ul>
+      <div class="btns" data-r style="--d:250ms">
+        <a class="btn" href="https://www.amazon.it/dp/B0GZC1NTQV" target="_blank" rel="noopener">Acquista su Amazon<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2H2v12h12v-4M10 2h4v4M14 2 7 9" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="btn btn--g" href="https://www.amazon.com/dp/B0GZ7GK5FT" target="_blank" rel="noopener">Leggi l’anteprima<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2H2v12h12v-4M10 2h4v4M14 2 7 9" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ I VOLUMI ============ -->
-<section class="full full--r" id="saga">
-  <div class="full__bg" data-para="0.06" aria-hidden="true"><img src="https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg/v1/fill/w_1800,h_1647,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-archive-bg.jpg" srcset="https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg/v1/fill/w_1800,h_1647,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-archive-bg.jpg 1x, https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg/v1/fill/w_3000,h_2745,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/argos-archive-bg.jpg 2x" width="1800" height="1647" alt="" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_e5d4669b8bc84548afe23844bf15436d~mv2.jpg"></div>
-  <div class="wrap full__in">
+<!-- ============ I VOLUMI (chiaro) ============ -->
+<section class="sec" id="saga" style="background:var(--sand)">
+  <div class="wrap">
     <p class="kick" data-r>La saga</p>
     <h2 class="book__t" data-r style="--d:70ms">Cinque volumi. Una sola discesa.</h2>
     <p class="lede" data-r style="--d:130ms">Wildblood è una saga dark fantasy in cinque volumi che attraversa continenti, rovine sepolte e memorie ancestrali. Il confine tra uomo e bestia è soltanto l’inizio.</p>
-    <div class="vols" data-r style="--d:190ms">
+    <div class="vols" data-r style="--d:190ms;margin-top:40px">
       <a class="vol" href="https://www.amazon.it/dp/B0GZC1NTQV" target="_blank" rel="noopener">
-        <img src="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_420,h_630,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png" srcset="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_420,h_630,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png 1x, https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_840,h_1260,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png 2x" width="420" height="630" alt="Savage Heart" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png">
+        <img src="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_440,h_660,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png" srcset="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_440,h_660,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png 1x, https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png/v1/fill/w_880,h_1320,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/savage-heart.png 2x" width="440" height="660" alt="Savage Heart" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_32a0bf1f1395482ea660d4367725f9e7~mv2.png">
         <span class="vol__n">01</span>
         <div class="vol__b"><h3 class="vol__t">Savage Heart</h3><span class="vol__s live">Disponibile</span></div>
       </a>
       <div class="vol ">
-        <img src="https://static.wixstatic.com/media/82d24b_b14107500d3b4dd19955a325ad6ce729~mv2.png/v1/fill/w_420,h_630,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/rise-of-the-beast.png" srcset="https://static.wixstatic.com/media/82d24b_b14107500d3b4dd19955a325ad6ce729~mv2.png/v1/fill/w_420,h_630,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/rise-of-the-beast.png 1x, https://static.wixstatic.com/media/82d24b_b14107500d3b4dd19955a325ad6ce729~mv2.png/v1/fill/w_840,h_1260,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/rise-of-the-beast.png 2x" width="420" height="630" alt="Rise of the Beast" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_b14107500d3b4dd19955a325ad6ce729~mv2.png">
+        <img src="https://static.wixstatic.com/media/82d24b_b14107500d3b4dd19955a325ad6ce729~mv2.png/v1/fill/w_440,h_660,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/rise-of-the-beast.png" srcset="https://static.wixstatic.com/media/82d24b_b14107500d3b4dd19955a325ad6ce729~mv2.png/v1/fill/w_440,h_660,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/rise-of-the-beast.png 1x, https://static.wixstatic.com/media/82d24b_b14107500d3b4dd19955a325ad6ce729~mv2.png/v1/fill/w_880,h_1320,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/rise-of-the-beast.png 2x" width="440" height="660" alt="Rise of the Beast" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_b14107500d3b4dd19955a325ad6ce729~mv2.png">
         <span class="vol__n">02</span>
         <div class="vol__b"><h3 class="vol__t">Rise of the Beast</h3><span class="vol__s ">In arrivo</span></div>
       </div>
       <div class="vol vol--tba">
-        <img src="https://static.wixstatic.com/media/82d24b_e74d0a24ef0743e5957f2ac0af1ec1ef~mv2.jpg/v1/fill/w_420,h_630,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/abyss.jpg" srcset="https://static.wixstatic.com/media/82d24b_e74d0a24ef0743e5957f2ac0af1ec1ef~mv2.jpg/v1/fill/w_420,h_630,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/abyss.jpg 1x, https://static.wixstatic.com/media/82d24b_e74d0a24ef0743e5957f2ac0af1ec1ef~mv2.jpg/v1/fill/w_700,h_985,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/abyss.jpg 2x" width="420" height="630" alt="Abyss" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_e74d0a24ef0743e5957f2ac0af1ec1ef~mv2.jpg">
+        <img src="https://static.wixstatic.com/media/82d24b_e74d0a24ef0743e5957f2ac0af1ec1ef~mv2.jpg/v1/fill/w_440,h_660,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/abyss.jpg" srcset="https://static.wixstatic.com/media/82d24b_e74d0a24ef0743e5957f2ac0af1ec1ef~mv2.jpg/v1/fill/w_440,h_660,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/abyss.jpg 1x, https://static.wixstatic.com/media/82d24b_e74d0a24ef0743e5957f2ac0af1ec1ef~mv2.jpg/v1/fill/w_700,h_985,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/abyss.jpg 2x" width="440" height="660" alt="Abyss" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_e74d0a24ef0743e5957f2ac0af1ec1ef~mv2.jpg">
         <span class="vol__n">03</span>
         <div class="vol__b"><h3 class="vol__t">Abyss</h3><span class="vol__s ">In scrittura</span></div>
       </div>
       <div class="vol vol--tba">
-        <img src="https://static.wixstatic.com/media/82d24b_efdebee61bb242c08afc2b2eb9d71cda~mv2.jpg/v1/fill/w_420,h_630,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/metamorphosis.jpg" srcset="https://static.wixstatic.com/media/82d24b_efdebee61bb242c08afc2b2eb9d71cda~mv2.jpg/v1/fill/w_420,h_630,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/metamorphosis.jpg 1x, https://static.wixstatic.com/media/82d24b_efdebee61bb242c08afc2b2eb9d71cda~mv2.jpg/v1/fill/w_700,h_985,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/metamorphosis.jpg 2x" width="420" height="630" alt="Metamorphosis" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_efdebee61bb242c08afc2b2eb9d71cda~mv2.jpg">
+        <img src="https://static.wixstatic.com/media/82d24b_efdebee61bb242c08afc2b2eb9d71cda~mv2.jpg/v1/fill/w_440,h_660,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/metamorphosis.jpg" srcset="https://static.wixstatic.com/media/82d24b_efdebee61bb242c08afc2b2eb9d71cda~mv2.jpg/v1/fill/w_440,h_660,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/metamorphosis.jpg 1x, https://static.wixstatic.com/media/82d24b_efdebee61bb242c08afc2b2eb9d71cda~mv2.jpg/v1/fill/w_700,h_985,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/metamorphosis.jpg 2x" width="440" height="660" alt="Metamorphosis" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_efdebee61bb242c08afc2b2eb9d71cda~mv2.jpg">
         <span class="vol__n">04</span>
         <div class="vol__b"><h3 class="vol__t">Metamorphosis</h3><span class="vol__s ">In sviluppo</span></div>
       </div>
       <div class="vol vol--tba">
-        <img src="https://static.wixstatic.com/media/82d24b_11b42d5a30b848189de98ef1f622d663~mv2.jpg/v1/fill/w_420,h_630,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/wild-legacy.jpg" srcset="https://static.wixstatic.com/media/82d24b_11b42d5a30b848189de98ef1f622d663~mv2.jpg/v1/fill/w_420,h_630,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/wild-legacy.jpg 1x, https://static.wixstatic.com/media/82d24b_11b42d5a30b848189de98ef1f622d663~mv2.jpg/v1/fill/w_700,h_985,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/wild-legacy.jpg 2x" width="420" height="630" alt="Wild Legacy" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_11b42d5a30b848189de98ef1f622d663~mv2.jpg">
+        <img src="https://static.wixstatic.com/media/82d24b_11b42d5a30b848189de98ef1f622d663~mv2.jpg/v1/fill/w_440,h_660,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/wild-legacy.jpg" srcset="https://static.wixstatic.com/media/82d24b_11b42d5a30b848189de98ef1f622d663~mv2.jpg/v1/fill/w_440,h_660,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/wild-legacy.jpg 1x, https://static.wixstatic.com/media/82d24b_11b42d5a30b848189de98ef1f622d663~mv2.jpg/v1/fill/w_700,h_985,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/wild-legacy.jpg 2x" width="440" height="660" alt="Wild Legacy" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_11b42d5a30b848189de98ef1f622d663~mv2.jpg">
         <span class="vol__n">05</span>
         <div class="vol__b"><h3 class="vol__t">Wild Legacy</h3><span class="vol__s ">In sviluppo</span></div>
       </div>
@@ -216,25 +142,64 @@
   </div>
 </section>
 
+<!-- ============ LUOGHI (scuri, cinematografici) ============ -->
+<section id="luoghi">
+  
+  <article class="panel">
+    <div class="panel__bg" data-para="0.09" aria-hidden="true"><img src="https://static.wixstatic.com/media/82d24b_c181f3b3032e483cab5df0223700fbd3~mv2.png/v1/fill/w_1024,h_1365,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/kenya.png" srcset="https://static.wixstatic.com/media/82d24b_c181f3b3032e483cab5df0223700fbd3~mv2.png/v1/fill/w_1024,h_1365,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/kenya.png 1x, https://static.wixstatic.com/media/82d24b_c181f3b3032e483cab5df0223700fbd3~mv2.png/v1/fill/w_1024,h_1365,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/kenya.png 2x" width="1800" height="2399" alt="Kenya" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_c181f3b3032e483cab5df0223700fbd3~mv2.png"></div>
+    <div class="panel__veil" aria-hidden="true"></div>
+    <div class="wrap panel__in">
+      <p class="kick" data-r>01°29′S 35°08′E · Savana</p>
+      <h2 class="panel__t" data-r style="--d:70ms">Kenya</h2>
+      <p class="panel__x" data-r style="--d:130ms">Dove tutto comincia. Una vacanza per spezzare la routine, l’attacco di una creatura impossibile, e una vita che non tornerà più quella di prima.</p>
+    </div>
+  </article>
+  <article class="panel">
+    <div class="panel__bg" data-para="0.09" aria-hidden="true"><img src="https://static.wixstatic.com/media/82d24b_9ea4f7c1aa87470db7d4be160e7a60a1~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/places.png" srcset="https://static.wixstatic.com/media/82d24b_9ea4f7c1aa87470db7d4be160e7a60a1~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/places.png 1x, https://static.wixstatic.com/media/82d24b_9ea4f7c1aa87470db7d4be160e7a60a1~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/places.png 2x" width="1800" height="1200" alt="Milano" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_9ea4f7c1aa87470db7d4be160e7a60a1~mv2.png"></div>
+    <div class="panel__veil" aria-hidden="true"></div>
+    <div class="wrap panel__in">
+      <p class="kick" data-r>45°28′N 09°11′E · Italia</p>
+      <h2 class="panel__t" data-r style="--d:70ms">Milano</h2>
+      <p class="panel__x" data-r style="--d:130ms">Il ritorno impossibile. Un lavoro part-time, una ragazza, una facciata di normalità. Dentro, i sensi affilati non si spengono e gli incubi diventano sempre più concreti.</p>
+    </div>
+  </article>
+  <article class="panel">
+    <div class="panel__bg" data-para="0.09" aria-hidden="true"><img src="https://static.wixstatic.com/media/82d24b_cb0bc7dd5b5142c69327ef353e9f6308~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/ruins.png" srcset="https://static.wixstatic.com/media/82d24b_cb0bc7dd5b5142c69327ef353e9f6308~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/ruins.png 1x, https://static.wixstatic.com/media/82d24b_cb0bc7dd5b5142c69327ef353e9f6308~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/ruins.png 2x" width="1800" height="1200" alt="Il Cairo" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_cb0bc7dd5b5142c69327ef353e9f6308~mv2.png"></div>
+    <div class="panel__veil" aria-hidden="true"></div>
+    <div class="wrap panel__in">
+      <p class="kick" data-r>30°02′N 31°14′E · Egitto</p>
+      <h2 class="panel__t" data-r style="--d:70ms">Il Cairo</h2>
+      <p class="panel__x" data-r style="--d:130ms">Sotto il sole spietato, tra mercati polverosi e vicoli affollati, la caccia a un artefatto rubato. E, oltre corridoi crollati, una stanza sepolta da millenni.</p>
+    </div>
+  </article>
+  <article class="panel">
+    <div class="panel__bg" data-para="0.09" aria-hidden="true"><img src="https://static.wixstatic.com/media/82d24b_dbf388fc295342abb0824f34f2db27c2~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/jungle.png" srcset="https://static.wixstatic.com/media/82d24b_dbf388fc295342abb0824f34f2db27c2~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/jungle.png 1x, https://static.wixstatic.com/media/82d24b_dbf388fc295342abb0824f34f2db27c2~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/jungle.png 2x" width="1800" height="1200" alt="Pulau Api" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_dbf388fc295342abb0824f34f2db27c2~mv2.png"></div>
+    <div class="panel__veil" aria-hidden="true"></div>
+    <div class="wrap panel__in">
+      <p class="kick" data-r>03°12′S 127°45′E · Indonesia</p>
+      <h2 class="panel__t" data-r style="--d:70ms">Pulau Api</h2>
+      <p class="panel__x" data-r style="--d:130ms">Rovine antiche e pericoli nuovi. Nel cuore selvaggio dell’isola, morte, trasformazione e tradimento recidono il legame di Leonardo con il mondo umano.</p>
+    </div>
+  </article>
+</section>
+
 <!-- ============ PORTA ARGOS ============ -->
-<section class="gate" id="argos">
+<section class="sec gate dark" id="argos">
   <div class="gate__bg" aria-hidden="true"><img src="https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png/v1/fill/w_1600,h_1579,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/classified-files.png" srcset="https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png/v1/fill/w_1600,h_1579,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/classified-files.png 1x, https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png/v1/fill/w_2026,h_2000,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/classified-files.png 2x" width="1600" height="1579" alt="" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_08f3b818f3c648fc97c2481cc2972a7e~mv2.png"></div>
   <span class="gate__scan" aria-hidden="true"></span>
-  <div class="wrap gate__in">
+  <div class="wrap">
     <p class="kick" data-r>Area riservata</p>
-    <h2 class="gate__t" data-r style="--d:70ms">ARGOS Archive</h2>
+    <h2 class="book__t" data-r style="--d:70ms">ARGOS Archive</h2>
     <p class="lede" data-r style="--d:130ms">Fascicoli riservati, rapporti d’incidente, log di campo. Materiale prodotto dall’organizzazione che dà la caccia agli artefatti — e a chi li tocca.</p>
-    <div class="btns" data-r style="--d:200ms">
+    <div class="btns" data-r style="--d:200ms;margin-top:28px">
       <a class="btn" href="argos/">Richiedi accesso<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-      <a class="btn btn--g" href="#join">Unisciti al branco<svg class="btn__ic" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8h13M9 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
   </div>
 </section>
 
-<!-- ============ AUTORE ============ -->
-<section class="full" id="autore">
-  <div class="full__bg" data-para="0.07" aria-hidden="true"><img src="https://static.wixstatic.com/media/82d24b_a472624ad541455f9da0cf146b77f00a~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/warriors.png" srcset="https://static.wixstatic.com/media/82d24b_a472624ad541455f9da0cf146b77f00a~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/warriors.png 1x, https://static.wixstatic.com/media/82d24b_a472624ad541455f9da0cf146b77f00a~mv2.png/v1/fill/w_1536,h_1024,al_c,q_82,usm_0.66_1.00_0.01,enc_auto/warriors.png 2x" width="1800" height="1200" alt="" loading="lazy" decoding="async" data-fallback="https://static.wixstatic.com/media/82d24b_a472624ad541455f9da0cf146b77f00a~mv2.png"></div>
-  <div class="wrap full__in auth__in">
+<!-- ============ AUTORE (chiaro) ============ -->
+<section class="sec" id="autore">
+  <div class="wrap auth__in">
     <div class="auth__p" data-r>
       <img src="assets/img/author.svg" width="1200" height="1500" loading="lazy" decoding="async" alt="Alexander Lawrence">
     </div>
@@ -252,7 +217,7 @@
 </section>
 
 <!-- ============ NEWSLETTER ============ -->
-<section class="join" id="join">
+<section class="sec join dark" id="join">
   <div class="wrap join__in">
     <p class="kick" data-r>Unisciti al branco</p>
     <h2 class="join__t" data-r style="--d:70ms">Il prossimo volume arriva prima a chi è dentro</h2>
@@ -273,7 +238,7 @@
   <div class="wrap">
     <p class="foot__mk" aria-hidden="true">Wildblood</p>
     <div class="foot__g">
-      <div><h5>Naviga</h5><ul><li><a href="#libri">I libri</a></li><li><a href="#saga">La saga</a></li><li><a href="#argos">Archivio</a></li><li><a href="#autore">Autore</a></li><li><a href="#join">Newsletter</a></li></ul></div>
+      <div><h5>Naviga</h5><ul><li><a href="#libri">I libri</a></li><li><a href="#saga">La saga</a></li><li><a href="#luoghi">Luoghi</a></li><li><a href="#argos">Archivio</a></li><li><a href="#autore">Autore</a></li><li><a href="#join">Newsletter</a></li></ul></div>
       <div><h5>I libri</h5><ul><li><a href="#saga">01 · Savage Heart</a></li><li><a href="#saga">02 · Rise of the Beast</a></li><li><a href="#saga">03 · Abyss</a></li><li><a href="#saga">04 · Metamorphosis</a></li><li><a href="#saga">05 · Wild Legacy</a></li></ul></div>
       <div><h5>Informazioni</h5><ul>
         <li><a href="argos/">ARGOS Archive</a></li>
@@ -289,7 +254,6 @@
       <p class="mono">© <span data-year></span> Alexander Lawrence. Tutti i diritti riservati.</p>
       <p class="mono">Wildblood Saga</p>
     </div>
-    <p class="mono" style="margin-top:16px;max-width:82ch;line-height:1.8;text-transform:none;letter-spacing:.03em">Wildblood e tutti i contenuti associati sono protetti dalle leggi internazionali sul diritto d’autore. Nessuna parte di quest’opera può essere copiata, riprodotta, distribuita o trasmessa in alcuna forma senza previa autorizzazione scritta dell’autore.</p>
   </div>
 </footer>
 <script src="assets/js/site.js" defer></script>

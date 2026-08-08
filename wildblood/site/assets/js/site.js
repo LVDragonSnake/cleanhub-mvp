@@ -16,62 +16,83 @@
     }
   }, true);
 
-  /* ================= IL FILM ================= */
+  /* ================= HERO: pulviscolo e braci su canvas ================= */
   (function () {
-    var film = $('.film'); if (!film) return;
-    var frames = $$('.frame', film), beats = $$('.beat', film);
-    var ticks = $$('.film__ticks i', film), num = $('[data-film-n]', film), flash = $('.flash', film);
-    var cue = $('.scrollcue', film);
-    var n = frames.length;
-    if (n < 2 || RM) { film.classList.add('film--flat'); return; }
-
-    var running = false;
-    function paint() {
-      var r = film.getBoundingClientRect();
-      var total = film.offsetHeight - innerHeight;
-      var p = total > 0 ? cl(-r.top / total, 0, 1) : 0;
-      var local = p * (n - 1);          // 0 .. n-1
-
-      for (var i = 0; i < n; i++) {
-        var d = local - i;              // <0 in arrivo · 0 al centro · >0 passato
-        var a = ease(cl(1 - Math.abs(d), 0, 1));
-        var f = frames[i];
-        f.style.opacity = a.toFixed(3);
-        if (a > 0.001) {
-          // spinta in avanti continua: ogni fotogramma entra largo e si stringe
-          var s = 1 + 0.15 * cl((d + 1) / 2, 0, 1);
-          f.style.transform = 'scale(' + s.toFixed(4) + ') translate3d(0,' + (d * -1.6).toFixed(2) + '%,0)';
-          f.style.visibility = 'visible';
-        } else { f.style.visibility = 'hidden'; }
-
-        if (beats[i]) {
-          var ba = ease(cl(1 - Math.abs(d) / 0.62, 0, 1));
-          beats[i].style.opacity = ba.toFixed(3);
-          beats[i].style.transform = 'translate3d(0,' + (d * -34).toFixed(1) + 'px,0)';
-          beats[i].style.visibility = ba > 0.001 ? 'visible' : 'hidden';
-        }
-      }
-
-      if (flash) {
-        var t = local - Math.floor(local);
-        var k = Math.sin(t * Math.PI);
-        flash.style.opacity = (0.085 * k * k * k).toFixed(4);
-      }
-      if (cue) cue.style.opacity = cl(1 - local / 0.35, 0, 1).toFixed(2);
-      for (var j = 0; j < ticks.length; j++) ticks[j].classList.toggle('done', local >= j - 0.02);
-      if (num) num.textContent = String(Math.min(n, Math.floor(local + 1.02))).padStart(2, '0') + ' / ' + String(n).padStart(2, '0');
-      running = false;
+    var host = document.querySelector('.cine__dust'); if (!host || RM) return;
+    var cv = document.createElement('canvas'); cv.style.cssText = 'width:100%;height:100%;display:block';
+    host.appendChild(cv);
+    var ctx = cv.getContext('2d'), W, H, dpr = Math.min(devicePixelRatio || 1, 2), ps = [], live = true;
+    function mk(y) {
+      var ember = Math.random() < 0.34;
+      return { x: Math.random() * W, y: y, r: (ember ? 1.5 : 0.9) * (Math.random() * 1.4 + 0.5),
+        vy: -(Math.random() * (ember ? 0.34 : 0.16) + 0.05), vx: (Math.random() - 0.5) * 0.22,
+        a: Math.random() * (ember ? 0.6 : 0.3) + 0.08, t: Math.random() * 6.3, e: ember };
     }
-    addEventListener('scroll', function () { if (!running) { running = true; requestAnimationFrame(paint); } }, { passive: true });
-    addEventListener('resize', paint, { passive: true });
-    addEventListener('load', paint);
-    paint();
+    function size() {
+      W = host.offsetWidth; H = host.offsetHeight;
+      cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ps = []; var n = Math.round(Math.min(120, W / 11));
+      for (var i = 0; i < n; i++) ps.push(mk(Math.random() * H));
+    }
+    function frame() {
+      if (!live) return;
+      ctx.clearRect(0, 0, W, H);
+      for (var i = 0; i < ps.length; i++) {
+        var p = ps[i];
+        p.y += p.vy; p.t += 0.016; p.x += p.vx + Math.sin(p.t) * 0.26;
+        if (p.y < -12) { ps[i] = mk(H + 12); continue; }
+        var fl = p.e ? (0.72 + 0.28 * Math.sin(p.t * 3.1)) : 1;
+        var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4.5);
+        if (p.e) {
+          g.addColorStop(0, 'rgba(255,206,150,' + p.a * fl + ')');
+          g.addColorStop(0.35, 'rgba(255,128,60,' + p.a * 0.55 * fl + ')');
+          g.addColorStop(1, 'rgba(255,110,50,0)');
+        } else {
+          g.addColorStop(0, 'rgba(255,240,215,' + p.a * 0.7 + ')');
+          g.addColorStop(1, 'rgba(255,240,215,0)');
+        }
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 4.5, 0, 6.284); ctx.fill();
+      }
+      requestAnimationFrame(frame);
+    }
+    size(); frame();
+    addEventListener('resize', size, { passive: true });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (e) {
+        var v = e[0].isIntersecting;
+        if (v && !live) { live = true; frame(); } else live = v;
+      }, { threshold: 0 }).observe(host);
+    }
+  })();
 
-    var skip = $('.film__skip');
-    if (skip) skip.addEventListener('click', function (e) {
-      e.preventDefault();
-      scrollTo({ top: film.offsetTop + film.offsetHeight - innerHeight * 0.02, behavior: 'smooth' });
-    });
+  /* ================= HERO: la camera segue il puntatore ================= */
+  (function () {
+    var hero = document.querySelector('.cine'); if (!hero || RM) return;
+    var ken = hero.querySelector('.cine__ken'), haze = hero.querySelector('.cine__haze'),
+        rays = hero.querySelector('.cine__rays'), inn = hero.querySelector('.cine__in');
+    if (FINE) {
+      hero.addEventListener('mousemove', function (e) {
+        var r = hero.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+        if (ken)  ken.style.translate  = (x * -22).toFixed(1) + 'px ' + (y * -14).toFixed(1) + 'px';
+        if (haze) haze.style.translate = (x * -34).toFixed(1) + 'px ' + (y * -20).toFixed(1) + 'px';
+        if (rays) rays.style.translate = (x * 40).toFixed(1) + 'px 0';
+      }, { passive: true });
+      hero.addEventListener('mouseleave', function () {
+        [ken, haze, rays].forEach(function (el) { if (el) el.style.translate = '0 0'; });
+      });
+    }
+    var t = false;
+    function run() {
+      var y = scrollY;
+      if (y < innerHeight * 1.2 && inn) {
+        inn.style.transform = 'translate3d(0,' + (y * 0.16).toFixed(1) + 'px,0)';
+        inn.style.opacity = String(cl(1 - y / (innerHeight * 0.62), 0, 1));
+      }
+      t = false;
+    }
+    addEventListener('scroll', function () { if (!t) { t = true; requestAnimationFrame(run); } }, { passive: true });
+    run();
   })();
 
   /* ================= NAV ================= */
